@@ -113,13 +113,25 @@ def create_grid_nodes(timeline: Timeline, node_type: str,
     return nodes
 
 
+def create_BSMNode(timeline: Timeline, bsm_nodes: dict[int, Union[Node, EntangleGenNode]],
+                   nodeA_id: int, nodeB_id: int, seed_counter: int, edge: tuple[int, int]) -> BSMNode:
+
+    bsm_node: BSMNode = BSMNode(name=f'bsm_node[{nodeA_id}, {nodeB_id}]', timeline=timeline,
+                                     other_nodes=[f'node{nodeA_id}', f'node{nodeB_id}'])
+    bsm_node.set_seed(seed_counter)
+    bsm_nodes[edge] = bsm_node # adding bsm node in a dict
+    bsm: SingleAtomBSM = bsm_node.get_components_by_type("SingleAtomBSM")[0] # <- Get the bsm without node
+    bsm.update_detectors_params('efficiency', BSM_EFFICIENCY) # <- Change the detector efficiency
+
+    return bsm_node
+
 def connect_channels(timeline: Timeline, nodes: dict[int, Union[Node, EntangleGenNode]], 
-                     nodeA_id: int, nodeB_id: int, bsm_node: BSMNode, counter: int, 
+                     nodeA_id: int, nodeB_id: int, bsm_node: BSMNode, seed_counter: int, 
                      qc_attenuation: int, qc_distance: int, cc_distance: int, cc_delay: int) -> None:
         # Quantum channel initiation
-        qc1 = QuantumChannel(name=f'qc{counter}', timeline=timeline,
+        qc1 = QuantumChannel(name=f'qc{seed_counter}', timeline=timeline,
                               attenuation=qc_attenuation, distance=qc_distance)
-        qc2 = QuantumChannel(name=f'qc{counter+1}', timeline=timeline,
+        qc2 = QuantumChannel(name=f'qc{seed_counter+1}', timeline=timeline,
                               attenuation=qc_attenuation, distance=qc_distance)
 
         qc1.set_ends(nodes[nodeA_id], bsm_node.name)
@@ -146,22 +158,19 @@ def grid_topology(rows: int, columns: int,
     # nx.draw(G=graph, with_labels=True) # to use in jupyter notebook
 
     bsm_nodes: dict[tuple[int, int], BSMNode] = dict()
-    counter: int = 0
+    seed_counter: int = 0
     for edge in graph.edges():
         nodeA_id: int = edge[0]
         nodeB_id: int = edge[1]
 
-        bsm_node: BSMNode = BSMNode(name=f'bsm_node[{nodeA_id}, {nodeB_id}]', timeline=timeline,
-                                     other_nodes=[f'node{nodeA_id}', f'node{nodeB_id}'])
-        bsm_node.set_seed(counter)
-        bsm_nodes[edge] = bsm_node # adding bsm node in a dict
-        bsm = bsm_node.get_components_by_type("SingleAtomBSM")[0] # <- Get the bsm without node
-        bsm.update_detectors_params('efficiency', BSM_EFFICIENCY) # <- Change the detector efficiency
-
+        bsm_node: BSMNode = create_BSMNode(timeline=timeline, bsm_nodes=bsm_nodes,
+                                           nodeA_id=nodeA_id, nodeB_id=nodeB_id,
+                                           seed_counter=seed_counter, edge=edge)
+        
         connect_channels(timeline=timeline, nodes=nodes, nodeA_id=nodeA_id, nodeB_id=nodeB_id, bsm_node=bsm_node,
-                          counter=counter, qc_attenuation=QCHANNEL_ATTENUATION, qc_distance=QCHANNEL_DISTANCE,
+                          seed_counter=seed_counter, qc_attenuation=QCHANNEL_ATTENUATION, qc_distance=QCHANNEL_DISTANCE,
                           cc_distance=CCHANNEL_DISTANCE, cc_delay=CCHANNEL_DELAY) 
-        counter += 2
+        seed_counter += 2 # update seed_counter
 
 
 tl = Timeline()
