@@ -16,7 +16,10 @@ from sequence.kernel.timeline import Timeline
 # To create topologies
 import networkx as nx
 
-# Constant
+# To add types
+from typing import Union
+
+# Constants
 RAW: str = 'RAW'
 MEM_FIDELITY: float = 0.9
 MEM_FREQUENCY: int = 2_000
@@ -26,6 +29,10 @@ MEM_WAVELENGHT: int = 500
 BSM_EFFICIENCY: int = 1
 QCHANNEL_DISTANCE: int = 1_000
 QCHANNEL_ATTENUATION: int = 0
+CCHANNEL_DISTANCE: int = 1_000
+CCHANNEL_DELAY: int = 1e8
+NODE: str = 'node'
+ENTANGLEGENNODE: str = 'entanglegennode'
 
 
 class SimpleManager:
@@ -73,42 +80,90 @@ class EntangleGenNode(Node):
         self.send_qubit(kwargs['dst'], photon)
 
 
-def grid_topology(rows: int, columns: int, timeline: Timeline, node_type: str) -> dict[int, Node]:
-    if node_type == "node":
+def create_grid_nodes(timeline: Timeline, node_type: str,
+                       rows: int, columns: int) -> dict[int, Union[Node, EntangleGenNode]]:
+    """
+    Create all grid nodes and return them in a dictionary
+
+    Args:
+        timeline (Timeline): Timeline to add on Nodes
+        node_type (str): The type of node to create
+        rows (int): Numbem of rows in the grid
+        columns (int): Number of columns in the grid
+
+    Returns:
+        dict[int, Union[Node, EntangleGenNode]]: A dictionary where each key is a unique 
+        integer node ID, and each value is the corresponding node instance placed in the grid.
+    """
+
+    node: Union[Node, EntangleGenNode]
+    if node_type ==  NODE:
         node = Node
-    elif node_type == "entanglegennode":
+    elif node_type == ENTANGLEGENNODE:
         node = EntangleGenNode
+    else:
+        node = Node
 
-    graph: list = nx.grid_2d_graph(rows, columns).edges()
-    print(graph) # (0, 0) <- i = 0, j = 0
-
-    '''
-    nodes: dict[int, Node] = dict()
+    nodes: dict[int, Union[Node, EntangleGenNode]] = dict()
     for c in range(0, rows*columns):
-        nodes[c] = node(name=f"node{c}", timeline=timeline, seed=c)
+        tmp_node: Union[Node, EntangleGenNode] = node(name=f"node{c}", timeline=timeline)
+        tmp_node.set_seed(c)
+        nodes[c] = tmp_node
+
+    return nodes
+
+
+def connect_channels(timeline: Timeline, nodes: dict[int, Union[Node, EntangleGenNode]], 
+                     nodeA_id: int, nodeB_id: int, bsm_node: BSMNode, counter: int, 
+                     qc_attenuation: int, qc_distance: int, cc_distance: int, cc_delay: int) -> None:
+        # Quantum channel initiation
+        qc1 = QuantumChannel(name=f'qc{counter}', timeline=timeline,
+                              attenuation=qc_attenuation, distance=qc_distance)
+        qc2 = QuantumChannel(name=f'qc{counter+1}', timeline=timeline,
+                              attenuation=qc_attenuation, distance=qc_distance)
+
+        qc1.set_ends(nodes[nodeA_id], bsm_node.name)
+        qc2.set_ends(nodes[nodeB_id], bsm_node.name)
+
+        # Classical channel initiation
+        cc = ClassicalChannel(name=f"cc[{nodeA_id}, {nodeB_id}]", timeline=timeline, 
+                              distance=cc_distance, delay=cc_delay)
+        cc.set_ends(nodes[nodeA_id], nodes[nodeB_id].name)
+
+
+def grid_topology(rows: int, columns: int,
+                   timeline: Timeline, node_type: str) -> dict[int, Node]:
     
-    for row in range(0, rows):
-        for column in range(0, columns):
-            
-            if row == 0 and column == 0:
-                pass'''
+    nodes: dict[int, Union[Node, EntangleGenNode]] = create_grid_nodes(timeline=timeline, 
+                                                                       node_type=node_type, 
+                                                                       rows=rows, 
+                                                                       columns=columns)
+
+    graph: nx.Graph =  nx.grid_2d_graph(rows, columns)
+    graph = nx.convert_node_labels_to_integers(graph)
+
+    print(graph.edges())
+    # nx.draw(G=graph, with_labels=True) # to use in jupyter notebook
+
+    bsm_nodes: dict[tuple[int, int], BSMNode] = dict()
+    counter: int = 0
+    for edge in graph.edges():
+        nodeA_id: int = edge[0]
+        nodeB_id: int = edge[1]
+
+        bsm_node: BSMNode = BSMNode(name=f'bsm_node[{nodeA_id}, {nodeB_id}]', timeline=timeline,
+                                     other_nodes=[f'node{nodeA_id}', f'node{nodeB_id}'])
+        bsm_node.set_seed(counter)
+        bsm_nodes[edge] = bsm_node # adding bsm node in a dict
+        bsm = bsm_node.get_components_by_type("SingleAtomBSM")[0] # <- Get the bsm without node
+        bsm.update_detectors_params('efficiency', BSM_EFFICIENCY) # <- Change the detector efficiency
+
+        connect_channels(timeline=timeline, nodes=nodes, nodeA_id=nodeA_id, nodeB_id=nodeB_id, bsm_node=bsm_node,
+                          counter=counter, qc_attenuation=QCHANNEL_ATTENUATION, qc_distance=QCHANNEL_DISTANCE,
+                          cc_distance=CCHANNEL_DISTANCE, cc_delay=CCHANNEL_DELAY) 
+        counter += 2
 
 
 tl = Timeline()
-
-'''
-node1: EntangleGenNode = EntangleGenNode("node1", tl)
-node2: EntangleGenNode = EntangleGenNode("node2", tl)
-bsm_node: BSMNode = BSMNode(name='bsm_node', timeline=tl, other_nodes=['node1', 'node2'])
-node1.set_seed(0)
-node2.set_seed(1)
-bsm_node.set_seed(2)
-
-bsm: SingleAtomBSM = bsm_node.get_components_by_type("SingleAtomBSM") # <- Get the bsm without node
-bsm.update_detectors_param('efficiency', BSM_EFFICIENCY) # <- Change the detector efficiency
-
-qc1 = QuantumChannel('qc1', tl, attenuation=0, distance=QCHANNEL_DISTANCE)
-qc2 = QuantumChannel('qc2', tl, attenuation=0, distance=QCHANNEL_DISTANCE)
-'''
 
 grid_topology(2, 2, timeline=tl, node_type='node')
