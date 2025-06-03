@@ -31,9 +31,7 @@ QCHANNEL_DISTANCE: int = 1_000
 QCHANNEL_ATTENUATION: int = 0
 CCHANNEL_DISTANCE: int = 1_000
 CCHANNEL_DELAY: int = 1e8
-NODE: str = 'node'
-ENTANGLEGENNODE: str = 'entanglegennode'
-
+GRID: str = 'grid'
 
 class SimpleManager:
     """
@@ -52,7 +50,7 @@ class SimpleManager:
         else:
             self.ent_counter += 1
 
-    def creat_protocol(self, middle: str, other: str) -> None:
+    def create_protocol(self, middle: str, other: str) -> None:
         self.owner.protocols = [EntanglementGenerationA(self.owner, f"{self.owner.name}.eg", 
                                                         middle, other, self.owner.components[self.memo_name])]
         
@@ -80,99 +78,140 @@ class EntangleGenNode(Node):
         self.send_qubit(kwargs['dst'], photon)
 
 
-def create_grid_nodes(timeline: Timeline, node_type: str,
-                       rows: int, columns: int) -> dict[int, Union[Node, EntangleGenNode]]:
-    """
-    Create all grid nodes and return them in a dictionary
+class TopologyGen:
+    def __init__(self, network: 'Network'):
+        self.network = network
 
-    Args:
-        timeline (Timeline): Timeline to add on Nodes
-        node_type (str): The type of node to create
-        rows (int): Numbem of rows in the grid
-        columns (int): Number of columns in the grid
+    def _create_grid_nodes(self, rows: int, columns: int) -> dict[int, EntangleGenNode]:
+        """
+        Create all grid nodes and return them in a dictionary
 
-    Returns:
-        dict[int, Union[Node, EntangleGenNode]]: A dictionary where each key is a unique 
-        integer node ID, and each value is the corresponding node instance placed in the grid.
-    """
+        Args:
+            rows (int): Numbem of rows in the grid
+            columns (int): Number of columns in the grid
 
-    node: Union[Node, EntangleGenNode]
-    if node_type ==  NODE:
-        node = Node
-    elif node_type == ENTANGLEGENNODE:
-        node = EntangleGenNode
-    else:
-        node = Node
+        Returns:
+            dict[int, EntangleGenNode]: A dictionary where each key is a unique 
+            integer node ID, and each value is the corresponding node instance placed in the grid.
+        """
 
-    nodes: dict[int, Union[Node, EntangleGenNode]] = dict()
-    for c in range(0, rows*columns):
-        tmp_node: Union[Node, EntangleGenNode] = node(name=f"node{c}", timeline=timeline)
-        tmp_node.set_seed(c)
-        nodes[c] = tmp_node
-
-    return nodes
-
-
-def create_BSMNode(timeline: Timeline, bsm_nodes: dict[int, Union[Node, EntangleGenNode]],
-                   nodeA_id: int, nodeB_id: int, seed_counter: int, edge: tuple[int, int]) -> BSMNode:
-
-    bsm_node: BSMNode = BSMNode(name=f'bsm_node[{nodeA_id}, {nodeB_id}]', timeline=timeline,
-                                     other_nodes=[f'node{nodeA_id}', f'node{nodeB_id}'])
-    bsm_node.set_seed(seed_counter)
-    bsm_nodes[edge] = bsm_node # adding bsm node in a dict
-    bsm: SingleAtomBSM = bsm_node.get_components_by_type("SingleAtomBSM")[0] # <- Get the bsm without node
-    bsm.update_detectors_params('efficiency', BSM_EFFICIENCY) # <- Change the detector efficiency
-
-    return bsm_node
-
-def connect_channels(timeline: Timeline, nodes: dict[int, Union[Node, EntangleGenNode]], 
-                     nodeA_id: int, nodeB_id: int, bsm_node: BSMNode, seed_counter: int, 
-                     qc_attenuation: int, qc_distance: int, cc_distance: int, cc_delay: int) -> None:
-        # Quantum channel initiation
-        qc1 = QuantumChannel(name=f'qc{seed_counter}', timeline=timeline,
-                              attenuation=qc_attenuation, distance=qc_distance)
-        qc2 = QuantumChannel(name=f'qc{seed_counter+1}', timeline=timeline,
-                              attenuation=qc_attenuation, distance=qc_distance)
-
-        qc1.set_ends(nodes[nodeA_id], bsm_node.name)
-        qc2.set_ends(nodes[nodeB_id], bsm_node.name)
-
-        # Classical channel initiation
-        cc = ClassicalChannel(name=f"cc[{nodeA_id}, {nodeB_id}]", timeline=timeline, 
-                              distance=cc_distance, delay=cc_delay)
-        cc.set_ends(nodes[nodeA_id], nodes[nodeB_id].name)
-
-
-def grid_topology(rows: int, columns: int,
-                   timeline: Timeline, node_type: str) -> dict[int, Node]:
-    
-    nodes: dict[int, Union[Node, EntangleGenNode]] = create_grid_nodes(timeline=timeline, 
-                                                                       node_type=node_type, 
-                                                                       rows=rows, 
-                                                                       columns=columns)
-
-    graph: nx.Graph =  nx.grid_2d_graph(rows, columns)
-    graph = nx.convert_node_labels_to_integers(graph)
-
-    print(graph.edges())
-    # nx.draw(G=graph, with_labels=True) # to use in jupyter notebook
-
-    bsm_nodes: dict[tuple[int, int], BSMNode] = dict()
-    seed_counter: int = 0
-    for edge in graph.edges():
-        nodeA_id: int = edge[0]
-        nodeB_id: int = edge[1]
-
-        bsm_node: BSMNode = create_BSMNode(timeline=timeline, bsm_nodes=bsm_nodes,
-                                           nodeA_id=nodeA_id, nodeB_id=nodeB_id,
-                                           seed_counter=seed_counter, edge=edge)
+        nodes: dict[int, EntangleGenNode] = dict()
+        for c in range(0, rows*columns):
+            tmp_node: EntangleGenNode = EntangleGenNode(name=f"node{c}", timeline=self.network.timeline)
+            tmp_node.set_seed(c)
+            nodes[c] = tmp_node
         
-        connect_channels(timeline=timeline, nodes=nodes, nodeA_id=nodeA_id, nodeB_id=nodeB_id, bsm_node=bsm_node,
-                          seed_counter=seed_counter, qc_attenuation=QCHANNEL_ATTENUATION, qc_distance=QCHANNEL_DISTANCE,
-                          cc_distance=CCHANNEL_DISTANCE, cc_delay=CCHANNEL_DELAY) 
-        seed_counter += 2 # update seed_counter
+        self.network.nodes = nodes
+
+        return nodes
+
+    def _create_BSMNode(self, nodeA_id: int, nodeB_id: int, seed_counter: int, edge: tuple[int, int]) -> BSMNode:
+
+        bsm_node: BSMNode = BSMNode(name=f'bsm_node({nodeA_id}, {nodeB_id})', timeline=self.network.timeline,
+                                        other_nodes=[f'node{nodeA_id}', f'node{nodeB_id}'])
+        bsm_node.set_seed(seed_counter)
+        self.network.bsm_nodes[edge] = bsm_node # adding bsm node in a dict
+        bsm: SingleAtomBSM = bsm_node.get_components_by_type("SingleAtomBSM")[0] # <- Get the bsm without node
+        bsm.update_detectors_params('efficiency', BSM_EFFICIENCY) # <- Change the detector efficiency
+
+        return bsm_node
+
+    def _connect_channels(self, nodes: dict[int, EntangleGenNode], 
+                        nodeA_id: int, nodeB_id: int, bsm_node: BSMNode, seed_counter: int, 
+                        qc_attenuation: int, qc_distance: int, cc_distance: int, cc_delay: int) -> None:
+            # Quantum channel initiation
+            qc1 = QuantumChannel(name=f'qc{seed_counter}', timeline=self.network.timeline,
+                                attenuation=qc_attenuation, distance=qc_distance)
+            qc2 = QuantumChannel(name=f'qc{seed_counter+1}', timeline=self.network.timeline,
+                                attenuation=qc_attenuation, distance=qc_distance)
+
+            qc1.set_ends(nodes[nodeA_id], bsm_node.name)
+            qc2.set_ends(nodes[nodeB_id], bsm_node.name)
+
+            # Classical channel initiation
+            cc = ClassicalChannel(name=f"cc({nodeA_id}, {nodeB_id})", timeline=self.network.timeline, 
+                                distance=cc_distance, delay=cc_delay)
+            cc.set_ends(nodes[nodeA_id], nodes[nodeB_id].name)
 
 
-tl = Timeline()
+    def grid_topology(self, rows: int, columns: int) -> dict[int, EntangleGenNode]:
+        
+        nodes: dict[int, EntangleGenNode] = self._create_grid_nodes(rows=rows, columns=columns)
 
-grid_topology(2, 2, timeline=tl, node_type='node')
+        graph: nx.Graph =  nx.grid_2d_graph(rows, columns)
+        graph = nx.convert_node_labels_to_integers(graph)
+
+        self.network.graph = graph
+        self.network.topology = GRID
+
+        self.network.bsm_nodes = dict()
+        seed_counter: int = 0
+        for edge in graph.edges():
+            nodeA_id: int = edge[0]
+            nodeB_id: int = edge[1]
+
+            bsm_node: BSMNode = self._create_BSMNode(nodeA_id=nodeA_id, nodeB_id=nodeB_id,
+                                            seed_counter=seed_counter, edge=edge)
+            
+            self._connect_channels(nodes=nodes, nodeA_id=nodeA_id, nodeB_id=nodeB_id, bsm_node=bsm_node,
+                            seed_counter=seed_counter, qc_attenuation=QCHANNEL_ATTENUATION, qc_distance=QCHANNEL_DISTANCE,
+                            cc_distance=CCHANNEL_DISTANCE, cc_delay=CCHANNEL_DELAY) 
+            
+            seed_counter += 2 # update seed_counter
+
+        return nodes
+
+
+class Network:
+    def __init__(self):
+        self.timeline: Timeline = Timeline()
+        self.topology: str
+        self.graph: nx.Graph
+        self.nodes: dict[int, EntangleGenNode]
+        self.bsm_nodes: dict[tuple[int, int], BSMNode]
+        self.topology_generator = TopologyGen(self)
+
+    def draw(self, labels: bool = True) -> None:
+        """
+        Draw the graph (Only can show on jupyter)
+
+        Args:
+            labels (bool): Bool to show labels
+        """
+        nx.draw(self.graph, with_labels=labels)
+
+    def edges(self) -> list[tuple[int, int]]:
+        return self.graph.edges()
+
+def pair_protocol(node1: Node, node2: Node):
+    p1 = node1.protocols[0]
+    p2 = node2.protocols[0]
+    node1_memo_name = node1.get_components_by_type("Memory")[0].name
+    node2_memo_name = node2.get_components_by_type("Memory")[0].name
+    p1.set_others(p2.name, node2.name, [node2_memo_name])
+    p2.set_others(p1.name, node1.name, [node1_memo_name])
+
+
+network = Network()
+network.topology_generator.grid_topology(2, 2)
+print(network.edges())
+print(network.nodes)
+"""node0 = nodes[0]
+node1 = nodes[1]
+print(node0.name)
+
+node0.resource_manager.create_protocol('bsm_node(0, 1)', 'node1')
+node1.resource_manager.create_protocol('bsm_node(0, 1)', 'node0')
+pair_protocol(node0, node1)
+
+memory = node0.get_components_by_type("Memory")[0]
+
+print('before', memory.entangled_memory, memory.fidelity)
+# "before node1.memo {'node_id': None, 'memo_id': None} 0"
+
+network.timeline.init()
+node0.protocols[0].start()
+node1.protocols[0].start()
+network.timeline.run()
+
+print('after', memory.entangled_memory, memory.fidelity)"""
