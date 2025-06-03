@@ -78,17 +78,17 @@ class EntangleGenNode(Node):
         self.send_qubit(kwargs['dst'], photon)
 
 
+# Topologies generator
 class TopologyGen:
     def __init__(self, network: 'Network'):
         self.network = network
 
-    def _create_grid_nodes(self, rows: int, columns: int) -> dict[int, EntangleGenNode]:
+    def _create_nodes(self, number_of_nodes: int) -> dict[int, EntangleGenNode]:
         """
         Create all grid nodes and return them in a dictionary
 
         Args:
-            rows (int): Numbem of rows in the grid
-            columns (int): Number of columns in the grid
+            number_of_nodes (int): Number of nodes on the network
 
         Returns:
             dict[int, EntangleGenNode]: A dictionary where each key is a unique 
@@ -96,12 +96,13 @@ class TopologyGen:
         """
 
         nodes: dict[int, EntangleGenNode] = dict()
-        for c in range(0, rows*columns):
+        for c in range(0, number_of_nodes):
             tmp_node: EntangleGenNode = EntangleGenNode(name=f"node{c}", timeline=self.network.timeline)
             tmp_node.set_seed(c)
             nodes[c] = tmp_node
         
-        self.network.nodes = nodes
+        self.network.update_number_of_nodes(number_of_nodes)
+        self.network.update_nodes(nodes)
 
         return nodes
 
@@ -116,8 +117,7 @@ class TopologyGen:
 
         return bsm_node
 
-    def _connect_channels(self, nodes: dict[int, EntangleGenNode], 
-                        nodeA_id: int, nodeB_id: int, bsm_node: BSMNode, seed_counter: int, 
+    def _connect_channels(self, nodeA_id: int, nodeB_id: int, bsm_node: BSMNode, seed_counter: int, 
                         qc_attenuation: int, qc_distance: int, cc_distance: int, cc_delay: int) -> None:
             # Quantum channel initiation
             qc1 = QuantumChannel(name=f'qc{seed_counter}', timeline=self.network.timeline,
@@ -125,41 +125,47 @@ class TopologyGen:
             qc2 = QuantumChannel(name=f'qc{seed_counter+1}', timeline=self.network.timeline,
                                 attenuation=qc_attenuation, distance=qc_distance)
 
-            qc1.set_ends(nodes[nodeA_id], bsm_node.name)
-            qc2.set_ends(nodes[nodeB_id], bsm_node.name)
+            qc1.set_ends(self.network.nodes[nodeA_id], bsm_node.name)
+            qc2.set_ends(self.network.nodes[nodeB_id], bsm_node.name)
 
             # Classical channel initiation
             cc = ClassicalChannel(name=f"cc({nodeA_id}, {nodeB_id})", timeline=self.network.timeline, 
                                 distance=cc_distance, delay=cc_delay)
-            cc.set_ends(nodes[nodeA_id], nodes[nodeB_id].name)
+            cc.set_ends(self.network.nodes[nodeA_id], self.network.nodes[nodeB_id].name)
 
+    def _update_network_topology(self, graph: nx.Graph, topology_name: str) -> None:
+        self.network.update_graph(graph)
+        self.network.update_topology(topology_name)
+        self.network.update_bsm_nodes(dict())
 
-    def grid_topology(self, rows: int, columns: int) -> dict[int, EntangleGenNode]:
-        
-        nodes: dict[int, EntangleGenNode] = self._create_grid_nodes(rows=rows, columns=columns)
-
-        graph: nx.Graph =  nx.grid_2d_graph(rows, columns)
-        graph = nx.convert_node_labels_to_integers(graph)
-
-        self.network.graph = graph
-        self.network.topology = GRID
-
-        self.network.bsm_nodes = dict()
+    def _connect_network(self) -> None:
         seed_counter: int = 0
-        for edge in graph.edges():
+        for edge in self.network.edges():
             nodeA_id: int = edge[0]
             nodeB_id: int = edge[1]
 
             bsm_node: BSMNode = self._create_BSMNode(nodeA_id=nodeA_id, nodeB_id=nodeB_id,
                                             seed_counter=seed_counter, edge=edge)
             
-            self._connect_channels(nodes=nodes, nodeA_id=nodeA_id, nodeB_id=nodeB_id, bsm_node=bsm_node,
-                            seed_counter=seed_counter, qc_attenuation=QCHANNEL_ATTENUATION, qc_distance=QCHANNEL_DISTANCE,
-                            cc_distance=CCHANNEL_DISTANCE, cc_delay=CCHANNEL_DELAY) 
+            self._connect_channels(nodeA_id=nodeA_id, nodeB_id=nodeB_id, bsm_node=bsm_node,
+                            seed_counter=seed_counter, qc_attenuation=QCHANNEL_ATTENUATION, 
+                            qc_distance=QCHANNEL_DISTANCE, cc_distance=CCHANNEL_DISTANCE, 
+                            cc_delay=CCHANNEL_DELAY) 
             
             seed_counter += 2 # update seed_counter
 
-        return nodes
+    def grid_topology(self, rows: int, columns: int) -> dict[int, EntangleGenNode]:
+        
+        self._create_nodes(rows*columns)
+
+        graph: nx.Graph =  nx.grid_2d_graph(rows, columns)
+        graph = nx.convert_node_labels_to_integers(graph)
+
+        self._update_network_topology(graph=graph, topology_name=GRID)
+        
+        self._connect_network()
+
+        return self.network.nodes
 
 
 class Network:
@@ -168,6 +174,7 @@ class Network:
         self.topology: str
         self.graph: nx.Graph
         self.nodes: dict[int, EntangleGenNode]
+        self.number_of_nodes: int
         self.bsm_nodes: dict[tuple[int, int], BSMNode]
         self.topology_generator = TopologyGen(self)
 
@@ -182,6 +189,21 @@ class Network:
 
     def edges(self) -> list[tuple[int, int]]:
         return self.graph.edges()
+    
+    def update_nodes(self, nodes: dict[int, EntangleGenNode]) -> None:
+        self.nodes = nodes
+
+    def update_topology(self, topology_name: str) -> None:
+        self.topology = topology_name
+
+    def update_graph(self, graph: nx.Graph) -> None:
+        self.graph = graph
+
+    def update_number_of_nodes(self, number_of_nodes: int) -> None:
+        self.number_of_nodes = number_of_nodes
+
+    def update_bsm_nodes(self, bsm_nodes: dict[tuple[int, int], BSMNode]) -> None:
+        self.bsm_nodes = bsm_nodes
 
 def pair_protocol(node1: Node, node2: Node):
     p1 = node1.protocols[0]
