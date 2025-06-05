@@ -128,18 +128,16 @@ class TopologyGen:
             qc1.set_ends(self.network.nodes[nodeA_id], bsm_node.name)
             qc2.set_ends(self.network.nodes[nodeB_id], bsm_node.name)
 
-            """# Classical channel initiation
-            cc = ClassicalChannel(name=f"cc({nodeA_id}, {nodeB_id})", timeline=self.network.timeline, 
-                                distance=cc_distance, delay=cc_delay)
-            cc.set_ends(self.network.nodes[nodeA_id], self.network.nodes[nodeB_id].name)"""
-
     def _connect_classical_channels(self, cc_distance: int, cc_delay: int) -> None:
-        for nodeA_id in range(network.number_of_nodes):
-            for nodeB_id in range(network.number_of_nodes):
+        nodes: list[Union[EntangleGenNode, BSMNode]] = list(self.network.nodes.values())
+        nodes += list(self.network.bsm_nodes.values())
+
+        for nodeA in nodes:
+            for nodeB in nodes:
                 # Classical channel initiation
-                cc = ClassicalChannel(name=f"cc({nodeA_id}, {nodeB_id})", timeline=self.network.timeline, 
+                cc = ClassicalChannel(name=f"cc({nodeA.name}, {nodeB.name})", timeline=self.network.timeline, 
                             distance=cc_distance, delay=cc_delay)
-                cc.set_ends(self.network.nodes[nodeA_id], self.network.nodes[nodeB_id].name)
+                cc.set_ends(nodeA, nodeB.name)
 
     def _update_network_topology(self, graph: nx.Graph, topology_name: str) -> None:
         self.network.update_graph(graph)
@@ -225,25 +223,21 @@ def pair_protocol(node1: Node, node2: Node):
 
 network = Network()
 network.topology_generator.grid_topology(2, 2)
-print(network.edges())
-print(network.nodes)
 
 node0: EntangleGenNode = network.nodes[0]
 node1: EntangleGenNode = network.nodes[1]
-print(node0.name)
-
-node0.resource_manager.create_protocol('bsm_node(0, 1)', 'node1')
-node1.resource_manager.create_protocol('bsm_node(0, 1)', 'node0')
-pair_protocol(node0, node1)
-
-memory = node0.get_components_by_type("Memory")[0]
-
-
-print('before', memory.entangled_memory, memory.fidelity)
 
 network.timeline.init()
-node0.protocols[0].start()
-node1.protocols[0].start()
-network.timeline.run()
+for i in range(1000):
+    network.timeline.time = network.timeline.now() + 1e11
+    node0.resource_manager.create_protocol('bsm_node(0, 1)', 'node1')
+    node1.resource_manager.create_protocol('bsm_node(0, 1)', 'node0')
+    pair_protocol(node0, node1)
 
-print('after', memory.entangled_memory, memory.fidelity)
+    node0.protocols[0].start()
+    node1.protocols[0].start()
+    network.timeline.run()
+
+print("node0 entangled memories : available memories")
+print(node0.resource_manager.ent_counter, ':', node0.resource_manager.raw_counter)
+# (around 500:500; the exact number depends on the seed of numpy.random)
