@@ -63,7 +63,7 @@ class EntangleGenNode(Node):
         memory: Memory = Memory(memo_name, timeline, MEM_FIDELITY, MEM_FREQUENCY, MEM_EFFICIENCY, MEM_COHERENCE_TIME, MEM_WAVELENGHT)
         memory.owner = self
         memory.add_receiver(self)
-        self.add_component(self)
+        self.add_component(memory)
 
         self.resource_manager: SimpleManager = SimpleManager(self, memo_name)
 
@@ -74,14 +74,14 @@ class EntangleGenNode(Node):
     def receive_message(self, src: str, msg: 'Message') -> None: # type: ignore
         self.protocols[0].received_message(src, msg)
 
-    def get(self, photon, **kwargs):
+    def get(self, photon, **kwargs) -> None:
         self.send_qubit(kwargs['dst'], photon)
 
 
 # Topologies generator
 class TopologyGen:
     def __init__(self, network: 'Network'):
-        self.network = network
+        self.network: Network = network
 
     def _create_nodes(self, number_of_nodes: int) -> dict[int, EntangleGenNode]:
         """
@@ -117,8 +117,8 @@ class TopologyGen:
 
         return bsm_node
 
-    def _connect_channels(self, nodeA_id: int, nodeB_id: int, bsm_node: BSMNode, seed_counter: int, 
-                        qc_attenuation: int, qc_distance: int, cc_distance: int, cc_delay: int) -> None:
+    def _connect_quantum_channels(self, nodeA_id: int, nodeB_id: int, bsm_node: BSMNode, 
+                                  seed_counter: int, qc_attenuation: int, qc_distance: int) -> None:
             # Quantum channel initiation
             qc1 = QuantumChannel(name=f'qc{seed_counter}', timeline=self.network.timeline,
                                 attenuation=qc_attenuation, distance=qc_distance)
@@ -128,17 +128,25 @@ class TopologyGen:
             qc1.set_ends(self.network.nodes[nodeA_id], bsm_node.name)
             qc2.set_ends(self.network.nodes[nodeB_id], bsm_node.name)
 
-            # Classical channel initiation
+            """# Classical channel initiation
             cc = ClassicalChannel(name=f"cc({nodeA_id}, {nodeB_id})", timeline=self.network.timeline, 
                                 distance=cc_distance, delay=cc_delay)
-            cc.set_ends(self.network.nodes[nodeA_id], self.network.nodes[nodeB_id].name)
+            cc.set_ends(self.network.nodes[nodeA_id], self.network.nodes[nodeB_id].name)"""
+
+    def _connect_classical_channels(self, cc_distance: int, cc_delay: int) -> None:
+        for nodeA_id in range(network.number_of_nodes):
+            for nodeB_id in range(network.number_of_nodes):
+                # Classical channel initiation
+                cc = ClassicalChannel(name=f"cc({nodeA_id}, {nodeB_id})", timeline=self.network.timeline, 
+                            distance=cc_distance, delay=cc_delay)
+                cc.set_ends(self.network.nodes[nodeA_id], self.network.nodes[nodeB_id].name)
 
     def _update_network_topology(self, graph: nx.Graph, topology_name: str) -> None:
         self.network.update_graph(graph)
         self.network.update_topology(topology_name)
         self.network.update_bsm_nodes(dict())
 
-    def _connect_network(self) -> None:
+    def _connect_network_channels(self) -> None:
         seed_counter: int = 0
         for edge in self.network.edges():
             nodeA_id: int = edge[0]
@@ -147,12 +155,13 @@ class TopologyGen:
             bsm_node: BSMNode = self._create_BSMNode(nodeA_id=nodeA_id, nodeB_id=nodeB_id,
                                             seed_counter=seed_counter, edge=edge)
             
-            self._connect_channels(nodeA_id=nodeA_id, nodeB_id=nodeB_id, bsm_node=bsm_node,
+            self._connect_quantum_channels(nodeA_id=nodeA_id, nodeB_id=nodeB_id, bsm_node=bsm_node,
                             seed_counter=seed_counter, qc_attenuation=QCHANNEL_ATTENUATION, 
-                            qc_distance=QCHANNEL_DISTANCE, cc_distance=CCHANNEL_DISTANCE, 
-                            cc_delay=CCHANNEL_DELAY) 
+                            qc_distance=QCHANNEL_DISTANCE) 
             
             seed_counter += 2 # update seed_counter
+
+        self._connect_classical_channels(cc_distance=CCHANNEL_DISTANCE, cc_delay=CCHANNEL_DELAY)
 
     def grid_topology(self, rows: int, columns: int) -> dict[int, EntangleGenNode]:
         
@@ -163,13 +172,13 @@ class TopologyGen:
 
         self._update_network_topology(graph=graph, topology_name=GRID)
         
-        self._connect_network()
+        self._connect_network_channels()
 
         return self.network.nodes
 
 
 class Network:
-    def __init__(self):
+    def __init__(self) -> None:
         self.timeline: Timeline = Timeline()
         self.topology: str
         self.graph: nx.Graph
@@ -218,8 +227,9 @@ network = Network()
 network.topology_generator.grid_topology(2, 2)
 print(network.edges())
 print(network.nodes)
-"""node0 = nodes[0]
-node1 = nodes[1]
+
+node0: EntangleGenNode = network.nodes[0]
+node1: EntangleGenNode = network.nodes[1]
 print(node0.name)
 
 node0.resource_manager.create_protocol('bsm_node(0, 1)', 'node1')
@@ -228,12 +238,12 @@ pair_protocol(node0, node1)
 
 memory = node0.get_components_by_type("Memory")[0]
 
+
 print('before', memory.entangled_memory, memory.fidelity)
-# "before node1.memo {'node_id': None, 'memo_id': None} 0"
 
 network.timeline.init()
 node0.protocols[0].start()
 node1.protocols[0].start()
 network.timeline.run()
 
-print('after', memory.entangled_memory, memory.fidelity)"""
+print('after', memory.entangled_memory, memory.fidelity)
