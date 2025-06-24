@@ -5,8 +5,8 @@ from sequence.components.optical_channel import ClassicalChannel
 from sequence.entanglement_management.swapping import EntanglementSwappingA, EntanglementSwappingB
 from sequence.message import Message
 from sequence.protocol import Protocol
-from abc import ABC, abstractmethod
-
+from abc import ABC
+from queue import Queue
 
 # CONSTANT
 LEFT: str = "left"
@@ -26,7 +26,6 @@ MEMORY_COHERENCE_TIME: int = -1
 MEMORY_WAVELENGTH: int = 500
 
 
-
 class BaseManager(ABC):
     """
     Base Manager to create to entanglement swapping managers
@@ -35,7 +34,6 @@ class BaseManager(ABC):
         self.owner: Node = owner
         self.raw_counter: int = 0
         self.ent_counter: int = 0
-        self.counter: int = 0
 
     def update(self, protocol: Protocol, memory: Memory, state: str) -> None:
         if state == 'RAW':
@@ -44,40 +42,48 @@ class BaseManager(ABC):
         else:
             self.ent_counter += 1
 
-    @abstractmethod
-    def create_protocol(self) -> None:
-        pass
-
 
 class RepeaterManager(BaseManager):
     """
-    Managerw to control repeater nodes
+    Manager to control entanglement swapping in repeater nodes
     """
     def __init__(self, owner: "QuantumRepeater") -> None:
         super().__init__(owner)
 
-    def create_protocol(self):
-        return super().create_protocol()
-
-        
     def create_protocolA(self) -> None:
+        """
+        Create a Protocol to realize the entanglement swapping in mid node
+        """
         left_memo: Memory = self.owner.components[self.owner.left_memo_name]
         right_memo: Memory = self.owner.components[self.owner.right_memo_name]
-        self.owner.protocols.append(EntanglementSwappingA(self.owner, 
+        protocol: EntanglementSwappingA = EntanglementSwappingA(self.owner, 
                                                         f'{self.owner.name}.ESA', 
                                                         left_memo, 
                                                         right_memo, 
                                                         ENTANGLEMENT_SWAPPING_PROB,  # type: ignore
-                                                        SWAP_DEGRADATION))
+                                                        SWAP_DEGRADATION)
+        self.owner.protocols_queue.put(protocol)
+        self.owner.protocols.append(protocol)
         
     def create_protocolB(self, memory_position: str) -> None:
+        """
+        Create a Protocol to Entanglement a memory in side node
+
+        Args:
+            memory_position (str): Position of the memory to entanglement (left or right)
+        """
         if memory_position == LEFT:
             left_memo: Memory = self.owner.components[self.owner.left_memo_name]
-            self.owner.protocols.append(EntanglementSwappingB(self.owner, f'{self.owner.name}.ESB', left_memo))
+            protocol: EntanglementSwappingB = EntanglementSwappingB(self.owner, f'{self.owner.name}.ESB', left_memo)
+            self.owner.protocols_queue.put(protocol)
+            self.owner.protocols.append(protocol)
         
         elif memory_position == RIGHT:
             right_memo: Memory = self.owner.components[self.owner.right_memo_name]
-            self.owner.protocols.append(EntanglementSwappingB(self.owner, f'{self.owner.name}.ESB', right_memo))
+            protocol: EntanglementSwappingB = EntanglementSwappingB(self.owner, f'{self.owner.name}.ESB', right_memo)
+            self.owner.protocols_queue.put(protocol)
+            self.owner.protocols.append(protocol)
+
         
 
 class QuantumRepeater(Node):
@@ -86,6 +92,8 @@ class QuantumRepeater(Node):
     """
     def __init__(self, name: str, tl: Timeline) -> None:
         super().__init__(name, tl)
+
+        self.protocols_queue: Queue[EntanglementSwappingA | EntanglementSwappingB] = Queue()
 
         self.left_memo_name: str = f'{name}.left_memo'
         self.right_memo_name: str = f'{name}.right_memo'
@@ -101,6 +109,19 @@ class QuantumRepeater(Node):
 
     def receive_message(self, src: str, msg: "Message") -> None:
         self.protocols[0].received_message(src, msg)
+
+    def run_protocol(self) -> None:
+        """
+        Remove first protocol in the queue and run
+        """
+        self.protocols.pop(0)
+        self.protocols_queue.get().start()
+
+    def get_protocol(self) -> Protocol:
+        """
+        Get and remove the next protocol on the queue
+        """
+        return self.protocols[0]
 
 
 def entangle_memory(tl: Timeline, memo1: Memory, memo2: Memory, fidelity: float) -> None:
@@ -119,17 +140,16 @@ def entangle_memory(tl: Timeline, memo1: Memory, memo2: Memory, fidelity: float)
     memo1.fidelity = memo2.fidelity = fidelity # type: ignore
 
 
-def pair_protocol(node1: QuantumRepeater, node2: QuantumRepeater, node_mid: QuantumRepeater, protocol_IDS: list[int]) -> None:
-    p1: EntanglementSwappingB = node1.protocols[protocol_IDS[0]]
-    p2: EntanglementSwappingB = node2.protocols[protocol_IDS[1]]
-    pmid: EntanglementSwappingA = node_mid.protocols[protocol_IDS[2]]
+def pair_protocol(node1: QuantumRepeater, node2: QuantumRepeater, node_mid: QuantumRepeater) -> None:
+    p1: EntanglementSwappingB = node1.get_protocol()
+    p2: EntanglementSwappingB = node2.get_protocol()
+    pmid: EntanglementSwappingA = node_mid.get_protocol()
     p1.set_others(pmid.name, node_mid.name,
                   [node_mid.left_memo_name, node_mid.right_memo_name])
     p2.set_others(pmid.name, node_mid.name,
                   [node_mid.left_memo_name, node_mid.right_memo_name])
     pmid.set_others(p1.name, node1.name, [node1.right_memo_name])
     pmid.set_others(p2.name, node2.name, [node2.left_memo_name])
-
 
 
 tl = Timeline()
@@ -166,17 +186,14 @@ entangle_memory(tl, node0_right_memo, node1_left_memo, MEMORY_FIDELITY)
 entangle_memory(tl, node1_right_memo, node2_left_memo, MEMORY_FIDELITY)
 entangle_memory(tl, node2_right_memo, node3_left_memo, MEMORY_FIDELITY)
 
-
-for i in range(len(nodes) - 2):
-    node0.resource_manager.create_protocolB(RIGHT)
-
+node0.resource_manager.create_protocolB(RIGHT)
+node0.resource_manager.create_protocolB(RIGHT)
 node1.resource_manager.create_protocolA()
 node2.resource_manager.create_protocolB(LEFT)
 node2.resource_manager.create_protocolA()
 node3.resource_manager.create_protocolB(LEFT)
 
-pair_protocol(node0, node2, node1, [0, 0, 0])
-pair_protocol(node0, node3, node2, [1, 0, 1])
+pair_protocol(node0, node2, node1)
 
 print('--------')
 print('Before swapping:')
@@ -191,18 +208,18 @@ print(node2_right_memo.entangled_memory)
 print(node3_left_memo.entangled_memory)
 print(node0_right_memo.fidelity)
 
-
 tl.init()
-"""nodes: list[SwapNode | QuantumRepeater] = [node0, node1, node2]
-for node in nodes:
-    node.protocols[0].start()"""
 
-node0.protocols[0].start()
-node1.protocols[0].start()
-node2.protocols[0].start()
-node0.protocols[1].start()
-node2.protocols[1].start()
-node3.protocols[0].start()
+node0.run_protocol()
+node1.run_protocol()
+node2.run_protocol()
+tl.run()
+tl.time = tl.now() + 1e11
+
+pair_protocol(node0, node3, node2)
+node0.run_protocol()
+node2.run_protocol()
+node3.run_protocol()
 tl.run()
 
 print('--------')
