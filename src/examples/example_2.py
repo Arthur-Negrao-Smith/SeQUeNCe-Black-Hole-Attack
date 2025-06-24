@@ -6,7 +6,6 @@ from sequence.entanglement_management.swapping import EntanglementSwappingA, Ent
 from sequence.message import Message
 from sequence.protocol import Protocol
 from abc import ABC
-from queue import Queue
 
 # CONSTANT
 LEFT: str = "left"
@@ -62,7 +61,6 @@ class RepeaterManager(BaseManager):
                                                         right_memo, 
                                                         ENTANGLEMENT_SWAPPING_PROB,  # type: ignore
                                                         SWAP_DEGRADATION)
-        self.owner.protocols_queue.put(protocol)
         self.owner.protocols.append(protocol)
         
     def create_protocolB(self, memory_position: str) -> None:
@@ -75,13 +73,11 @@ class RepeaterManager(BaseManager):
         if memory_position == LEFT:
             left_memo: Memory = self.owner.components[self.owner.left_memo_name]
             protocol: EntanglementSwappingB = EntanglementSwappingB(self.owner, f'{self.owner.name}.ESB', left_memo)
-            self.owner.protocols_queue.put(protocol)
             self.owner.protocols.append(protocol)
         
         elif memory_position == RIGHT:
             right_memo: Memory = self.owner.components[self.owner.right_memo_name]
             protocol: EntanglementSwappingB = EntanglementSwappingB(self.owner, f'{self.owner.name}.ESB', right_memo)
-            self.owner.protocols_queue.put(protocol)
             self.owner.protocols.append(protocol)
 
         
@@ -92,8 +88,6 @@ class QuantumRepeater(Node):
     """
     def __init__(self, name: str, tl: Timeline) -> None:
         super().__init__(name, tl)
-
-        self.protocols_queue: Queue[EntanglementSwappingA | EntanglementSwappingB] = Queue()
 
         self.left_memo_name: str = f'{name}.left_memo'
         self.right_memo_name: str = f'{name}.right_memo'
@@ -112,16 +106,21 @@ class QuantumRepeater(Node):
 
     def run_protocol(self) -> None:
         """
-        Remove first protocol in the queue and run
+        Start first protocol in the queue
         """
-        self.protocols.pop(0)
-        self.protocols_queue.get().start()
+        self.protocols[0].start()
 
     def get_protocol(self) -> Protocol:
         """
-        Get and remove the next protocol on the queue
+        Get the first protocol on the queue
         """
         return self.protocols[0]
+    
+    def remove_first_protocol(self) -> None:
+        """
+        remove first protocol on the queue
+        """
+        self.protocols.pop(0)
 
 
 def entangle_memory(tl: Timeline, memo1: Memory, memo2: Memory, fidelity: float) -> None:
@@ -187,11 +186,8 @@ entangle_memory(tl, node1_right_memo, node2_left_memo, MEMORY_FIDELITY)
 entangle_memory(tl, node2_right_memo, node3_left_memo, MEMORY_FIDELITY)
 
 node0.resource_manager.create_protocolB(RIGHT)
-node0.resource_manager.create_protocolB(RIGHT)
 node1.resource_manager.create_protocolA()
 node2.resource_manager.create_protocolB(LEFT)
-node2.resource_manager.create_protocolA()
-node3.resource_manager.create_protocolB(LEFT)
 
 pair_protocol(node0, node2, node1)
 
@@ -202,11 +198,11 @@ print(tl.quantum_manager.states[1], '\n')
 print(tl.quantum_manager.states[2], '\n')
 print(tl.quantum_manager.states[3], '\n')
 
-print(node0_right_memo.entangled_memory)
-print(node2_left_memo.entangled_memory)
-print(node2_right_memo.entangled_memory)
-print(node3_left_memo.entangled_memory)
-print(node0_right_memo.fidelity)
+print(f"node0 right memo: {node0_right_memo.entangled_memory}")
+print(f"node2 left memo: {node2_left_memo.entangled_memory}")
+print(f"node2 right memo: {node2_right_memo.entangled_memory}")
+print(f"node3 left memo: {node3_left_memo.entangled_memory}")
+print(f"node0 right memo fidelity: {node0_right_memo.fidelity}")
 
 tl.init()
 
@@ -215,6 +211,14 @@ node1.run_protocol()
 node2.run_protocol()
 tl.run()
 tl.time = tl.now() + 1e11
+
+node0.remove_first_protocol()
+node1.remove_first_protocol()
+node2.remove_first_protocol()
+
+node0.resource_manager.create_protocolB(RIGHT)
+node2.resource_manager.create_protocolA()
+node3.resource_manager.create_protocolB(LEFT)
 
 pair_protocol(node0, node3, node2)
 node0.run_protocol()
@@ -229,8 +233,8 @@ print(tl.quantum_manager.states[1], '\n')
 print(tl.quantum_manager.states[2], '\n')
 print(tl.quantum_manager.states[3], '\n')
 
-print(node0_right_memo.entangled_memory)
-print(node2_left_memo.entangled_memory)
-print(node2_right_memo.entangled_memory)
-print(node3_left_memo.entangled_memory)
-print(node0_right_memo.fidelity)
+print(f"node0 right memo: {node0_right_memo.entangled_memory}")
+print(f"node2 left memo: {node2_left_memo.entangled_memory}")
+print(f"node2 right memo: {node2_right_memo.entangled_memory}")
+print(f"node3 left memo: {node3_left_memo.entangled_memory}")
+print(f"node0 right memo fidelity: {node0_right_memo.fidelity}")
