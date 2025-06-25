@@ -1,8 +1,8 @@
-# Swap constant
+# Swap constants
 ENTANGLEMENT_SWAPPING_PROB: float = 0.9
 SWAP_DEGRADATION: float = 0.99
 
-# Memory Constant
+# Memory Constants
 MEMORY_ARRAY_SIZE: int = 10
 MEMORY_ARRAY_NAME: str = ".MemoryArray"
 MEMORY_FIDELITY: float = 0.9
