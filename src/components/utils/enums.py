@@ -16,3 +16,9 @@ class Topologies(Enum):
     RING: str = 'ring'
     ERDOS_RENYI: str = 'erdos-renyi'
     BARABASI_ALBERT: str = 'basabasi-albert'
+
+class Node_Types(Enum):
+    """
+    Types of Nodes
+    """
+    QUANTUM_REPEATER: str = 'quantum-repeater'
