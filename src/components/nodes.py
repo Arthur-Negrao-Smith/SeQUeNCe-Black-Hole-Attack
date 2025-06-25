@@ -4,7 +4,7 @@ from sequence.components.memory import Memory
 from sequence.protocol import Message, Protocol
 
 from .managers import RepeaterManager
-from .utils.constant import MEMORY_FIDELITY, MEMORY_FREQUENCY, MEMORY_EFFICIENCY, MEMORY_COHERENCE_TIME, MEMORY_WAVELENGTH
+from .utils.constants import MEMORY_FIDELITY, MEMORY_FREQUENCY, MEMORY_EFFICIENCY, MEMORY_COHERENCE_TIME, MEMORY_WAVELENGTH
 
 from typing import Type
 
