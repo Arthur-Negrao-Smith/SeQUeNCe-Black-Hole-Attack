@@ -80,7 +80,7 @@ class TopologyGen:
                             distance=cc_distance, delay=cc_delay)
                 cc.set_ends(nodeA, nodeB.name)
 
-    def _update_network_topology(self, graph: nx.Graph, topology_name: str) -> None:
+    def _update_network_topology(self, graph: nx.Graph, topology_name: Topologies) -> None:
         self.network.update_graph(graph)
         self.network.update_topology(topology_name)
         self.network.update_bsm_nodes(dict())

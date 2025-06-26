@@ -3,22 +3,25 @@ from sequence.topology.topology import Node, BSMNode
 
 import networkx as nx
 
-from .topologies import TopologyGen
+from components.nodes import QuantumRepeater
+from components.utils.enums import Topologies
 
 from typing import Type, Union
 
 
 class Network:
-    def __init__(self, topology: str, node_type: str, start_seed: Union[None, int] = None) -> None:
+    def __init__(self, topology: Topologies, start_seed: Union[None, int] = None) -> None:
+        from .topologies import TopologyGen
+        
         self.timeline: Timeline = Timeline()
        
         self.number_of_nodes: int
-        self.nodes: dict[int, Type[Node]]
+        self.nodes: dict[int, QuantumRepeater]
         self.bsm_nodes: dict[tuple[int, int], BSMNode]
         
-        self.topology: str = topology
+        self.topology: Topologies = topology
         self.graph: nx.Graph
-        self.topology_generator = TopologyGen(self, node_type=node_type, start_seed=start_seed)
+        self.topology_generator = TopologyGen(self, start_seed=start_seed)
 
     def draw(self, labels: bool = True) -> None:
         """
@@ -32,10 +35,10 @@ class Network:
     def edges(self) -> list[tuple[int, int]]:
         return self.graph.edges()
     
-    def update_nodes(self, nodes: dict[int, Type[Node]]) -> None:
+    def update_nodes(self, nodes: dict[int, QuantumRepeater]) -> None:
         self.nodes = nodes
 
-    def update_topology(self, topology_name: str) -> None:
+    def update_topology(self, topology_name: Topologies) -> None:
         self.topology = topology_name
 
     def update_graph(self, graph: nx.Graph) -> None:
