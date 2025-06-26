@@ -1,7 +1,7 @@
 from sequence.kernel.timeline import Timeline
 from sequence.topology.node import Node
 from sequence.components.memory import Memory
-from sequence.protocol import Protocol
+from sequence.entanglement_management.entanglement_protocol import EntanglementProtocol
 from sequence.message import Message
 
 from .utils.constants import MEMORY_FIDELITY, MEMORY_FREQUENCY, MEMORY_EFFICIENCY, MEMORY_COHERENCE_TIME, MEMORY_WAVELENGTH
@@ -38,7 +38,7 @@ class QuantumRepeater(Node):
         """
         self.protocols[0].start()
 
-    def get_protocol(self) -> Type[Protocol]:
+    def get_protocol(self) -> Type[EntanglementProtocol]:
         """
         Get the first protocol on the queue
         """
