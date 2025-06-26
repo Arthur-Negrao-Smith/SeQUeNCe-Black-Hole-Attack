@@ -23,3 +23,19 @@ class Node_Types(Enum):
     Types of Nodes
     """
     QUANTUM_REPEATER = 'quantum-repeater'
+
+class Request_Response(Enum):
+    """
+    Types of responses to request
+    """
+    NO_PATH = 'no-path'
+    ENTANGLED_SUCCESS = 'entangled-success'
+    ENTANGLED_FAIL = 'entangled-fail'
+
+class Protocol_Types(Enum):
+    """
+    Types of protocols 
+    """
+    ENTANGLEMENT = 'entanglement'
+    SWAPPING_A = 'swapping-a'
+    SWAPPING_B = 'swapping-b'
