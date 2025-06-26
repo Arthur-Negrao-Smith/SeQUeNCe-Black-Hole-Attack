@@ -4,21 +4,22 @@ class Directions(Enum):
     """
     Directons of the memory
     """
-    LEFT: str = 'left'
-    RIGHT: str = 'right'
+    LEFT = 'left'
+    RIGHT = 'right'
 
 class Topologies(Enum):
     """
     Topologies of the network
     """
-    GRID: str = 'grid'
-    LINE: str = 'line'
-    RING: str = 'ring'
-    ERDOS_RENYI: str = 'erdos-renyi'
-    BARABASI_ALBERT: str = 'basabasi-albert'
+    BARABASI_ALBERT = 'basabasi-albert'
+    ERDOS_RENYI = 'erdos-renyi'
+    GRID = 'grid'
+    LINE = 'line'
+    RING = 'ring'
+    STAR = 'star'
 
 class Node_Types(Enum):
     """
     Types of Nodes
     """
-    QUANTUM_REPEATER: str = 'quantum-repeater'
+    QUANTUM_REPEATER = 'quantum-repeater'
