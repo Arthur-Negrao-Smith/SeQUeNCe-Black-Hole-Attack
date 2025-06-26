@@ -9,7 +9,7 @@ from components.nodes import QuantumRepeater
 from .utils.constants import SWAP_DEGRADATION
 from .utils.enums import Directions
 
-from abc import ABC
+from abc import ABC, abstractmethod
 from typing import Type
 
 class BaseManager(ABC):
@@ -27,6 +27,10 @@ class BaseManager(ABC):
             memory.reset()
         else:
             self.ent_counter += 1
+
+    @abstractmethod
+    def get_memory(self, memory_position: Directions) -> Memory:
+        pass
 
 
 class RepeaterManager(BaseManager):
@@ -84,3 +88,9 @@ class RepeaterManager(BaseManager):
         protocol: EntanglementGenerationA = EntanglementGenerationA(self.owner, f"{self.owner.name}.Entanglement_GenerationA", 
                                                                     middle_node, other_node, memory)
         self.owner.protocols.append(protocol)
+
+    def get_memory(self, memory_position: Directions) -> Memory:
+        if memory_position == Directions.LEFT:
+            return self.owner.components[self.owner.left_memo_name]
+        else:
+            return self.owner.components[self.owner.right_memo_name]
