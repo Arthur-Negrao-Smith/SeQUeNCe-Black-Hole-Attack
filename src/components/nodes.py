@@ -24,7 +24,7 @@ class QuantumRepeater(Node):
         self.add_component(left_memo)
         self.add_component(right_memo)
 
-        from .managers import RepeaterManager
+        from .resource_managers import RepeaterManager
         self.resource_manager: RepeaterManager = RepeaterManager(self)
 
         self.swap_prob: float = swap_prob
