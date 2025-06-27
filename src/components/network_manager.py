@@ -2,10 +2,9 @@ from sequence.topology.topology import BSMNode
 from sequence.entanglement_management.entanglement_protocol import EntanglementProtocol
 from sequence.components.memory import Memory
 
-from components.utils.enums import Directions, Protocol_Types, Request_Response, Swapping_Response
-from examples.example_2 import entangle_memory
+from components.utils.enums import Directions, Request_Response, Swapping_Response
 from .nodes import QuantumRepeater
-from .utils.constants import ENTANGLEMENT_FIDELITY
+from .utils.constants import ENTANGLEMENT_FIDELITY, SWAPPING_INCREMENT_TIME, ENTANGLEMENT_INCREMENT_TIME
 
 import networkx as nx
 from typing import Optional, Type
@@ -120,37 +119,7 @@ class Network_Manager:
                 return path
             except nx.NodeNotFound:
                 log.debug(f"Don't have path of the node[{nodeA_id}] to node[{nodeB_id}]")
-                return []
-            
-    def _create_protocols(self, node_id: int, protocol_type: Protocol_Types, **kwargs) -> bool:
-        """
-        Create protocol in selected node
-
-        Args:
-            node_id (int): Id of the desired node to create protocol
-            protocol_type (Protocol_Types): Type of the desired protocol
-            **kwargs (str, Unknow): Args to create the protocol
-
-        Returns:
-            bool: Return False if doesn't exists this protocol type, else return True
-        """
-        node: QuantumRepeater = self.network.nodes[node_id]
-        if protocol_type == Protocol_Types.ENTANGLEMENT:
-            node.resource_manager.create_entanglement_protocol(memory_position=kwargs['memory_position'], 
-                                                                                      middle_node=kwargs['middle_node'],
-                                                                                      other_node=kwargs['other_node'])
-            log.debug(f"Protocol {protocol_type} created in the node[{node_id}]")
-        elif protocol_type == Protocol_Types.SWAPPING_A:
-            node.resource_manager.create_swapping_protocolA()
-            log.debug(f"Protocol {protocol_type} created in the node[{node_id}]")
-        elif protocol_type == Protocol_Types.SWAPPING_B:
-            node.resource_manager.create_swapping_protocolB(memory_position=kwargs['memory_position'])
-            log.debug(f"Protocol {protocol_type} created in the node[{node_id}]")
-        else:
-            log.warning(f"Protocol {protocol_type} wasn't created in the node[{node_id}], because don't exist this protocol type")
-            return False
-        
-        return True
+                return []          
 
     def _pair_EntanglementGeneration_protocols(self, nodeA_id: int, nodeB_id: int) -> None:
         """
@@ -170,7 +139,7 @@ class Network_Manager:
         nodeB_memory: Memory = nodeB.resource_manager.get_memory(Directions.LEFT)
 
         protocol_A.set_others(protocol_B.name, nodeB.name, [nodeB_memory]) # type: ignore
-        protocol_A.set_others(protocol_A.name, nodeA.name, [nodeA_memory]) # type: ignore
+        protocol_B.set_others(protocol_A.name, nodeA.name, [nodeA_memory]) # type: ignore
 
         log.debug(f"node[{nodeA_id}] and node[{nodeB_id}] were your entanglement generation protocols paired")
 
@@ -236,6 +205,8 @@ class Network_Manager:
 
         memoA.fidelity = memoB.fidelity = fidelity # type: ignore
 
+        self.network._increment_time(SWAPPING_INCREMENT_TIME)
+
         log.debug(f"The {nodeA_memory_position} memory of node[{nodeA_id}] was forced entangled with {nodeB_memory_position} memory of the node[{nodeB_id}]")
 
     def _entangle_two_nodes(self, nodeA_id: int, nodeB_id: int, force_entanglement: bool) -> bool:
@@ -268,8 +239,14 @@ class Network_Manager:
         nodeA.resource_manager.create_entanglement_protocol(memory_position=Directions.RIGHT, middle_node=bsm_node.name, other_node=nodeB.name)
         nodeB.resource_manager.create_entanglement_protocol(memory_position=Directions.LEFT, middle_node=bsm_node.name, other_node=nodeA.name)
         self._pair_EntanglementGeneration_protocols(nodeA_id=nodeA_id, nodeB_id=nodeB_id)
+
+        nodeA.run_protocol()
+        nodeB.run_protocol()
         
         self.network._run()
+        self.network._increment_time(ENTANGLEMENT_INCREMENT_TIME)
+
+        log.debug(f"{nodeA.name} and {nodeB.name} are entangled")
         
         nodeA.remove_used_protocol()
         nodeB.remove_used_protocol()
@@ -312,7 +289,12 @@ class Network_Manager:
 
         self._pair_Swapping_protocols(nodeA_id=nodeA_id, nodeB_id=nodeB_id, node_mid_id=node_mid_id)
 
+        nodeA.run_protocol()
+        nodeB.run_protocol()
+
         self.network._run()
+
+        self.network._increment_time(SWAPPING_INCREMENT_TIME)
 
         # clean used protocols
         nodeA.remove_used_protocol()
