@@ -4,7 +4,6 @@ from sequence.entanglement_management.generation import EntanglementGenerationA,
 from sequence.entanglement_management.entanglement_protocol import EntanglementProtocol
 from sequence.components.memory import Memory
 
-from components.network import Network
 from components.utils.enums import Directions, Protocol_Types, Request_Response
 from .nodes import QuantumRepeater
 

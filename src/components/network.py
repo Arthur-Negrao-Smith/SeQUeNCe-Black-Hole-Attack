@@ -3,7 +3,6 @@ from sequence.topology.topology import Node, BSMNode
 
 import networkx as nx
 
-from components.network_manager import Network_Manager
 from components.nodes import QuantumRepeater
 from components.utils.enums import Topologies
 
@@ -23,9 +22,7 @@ class Network:
         Args:
             topology (Topologies): Topology to build
             start_seed (Optional[int]): Seed to replicate the simulation. Default is None
-        """
-        from .topologies import TopologyGen
-        
+        """ 
         self.timeline: Timeline = Timeline()
        
         self.number_of_nodes: int
@@ -33,10 +30,12 @@ class Network:
         self.black_holes: dict[int, QuantumRepeater] = dict()
         self.bsm_nodes: dict[tuple[int, int], BSMNode] = dict()
         
+        from .topologies import TopologyGen
         self.topology: Topologies = topology
         self.graph: nx.Graph
         self.topology_generator = TopologyGen(self, start_seed=start_seed)
 
+        from components.network_manager import Network_Manager
         self.network_manager: Network_Manager = Network_Manager(self)
 
         log.debug("Initiated Network")
