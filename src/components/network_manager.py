@@ -10,6 +10,7 @@ from .nodes import QuantumRepeater
 
 import networkx as nx
 from typing import Optional, Type
+from random import randint
 import logging
 
 log: logging.Logger = logging.getLogger(__name__)
@@ -20,11 +21,42 @@ class Network_Manager:
     """
     from .network import Network
     def __init__(self, network: Network) -> None:
+        """
+        Constructor for Network Manager
+
+        Args:
+            network (Network): Network to manage
+        """
         self.network: Network = network
         self.data: dict
 
-    def request(self) -> None:
-        pass
+        log.debug(f"Network Manager initiated")
+
+    # TODO: Finalize the request function
+    def request(self, nodeA_id: int, nodeB_id: int, max_attempts: int = 2, force_entanglement: bool = False) -> Request_Response:
+        """
+        Create a request from nodeA to nodeB
+
+        Args:
+            nodeA_id (int): Source node
+            nodeB_id (int): Destination node
+            max_attempts (int): Max request attempts
+            force_entanglement (bool): If is True the entanglement don't need protocol
+        """
+        # if nodeA and nodeB is the same node
+        if nodeA_id == nodeB_id:
+            return Request_Response.NO_PATH
+
+        path: list[int] = self.find_path(nodeA_id, nodeB_id)
+        # if don't have a path
+        if path == []:
+            return Request_Response.NO_PATH
+        # if nodeA or nodeB isn't in network
+        if path == [-1]:
+            return Request_Response.NON_EXISTENT_NODE
+ 
+ 
+        return Request_Response.ENTANGLED_SUCCESS
         
 
     def find_path(self, nodeA_id: int, nodeB_id: int) -> list[int]:
@@ -167,6 +199,27 @@ class Network_Manager:
         memoA.fidelity = memoB.fidelity = fidelity # type: ignore
 
         log.debug(f"The {nodeA_memory_position} memory of node[{nodeA_id}] was entangled with {nodeB_memory_position} memory of the node[{nodeB_id}]")
+
+    def create_black_holes(self, number_of_black_holes: int, swap_prob: int) -> None:
+        """
+        Create black holes in the network
+
+        Args:
+            number_of_black_holes (int): Number of black holes in the network
+            swap_prob (int): BHA's entanglement swapping probability
+        """
+        counter: int = number_of_black_holes
+        while counter != 0:
+            
+            tmp_id: int = randint(0, len(self.network.nodes))
+            if tmp_id in self.network.black_holes.keys():
+                continue
+
+            self.network.nodes[tmp_id].resource_manager.update_swap_prob(swap_prob)
+            self.network.black_holes[tmp_id] = self.network.nodes[tmp_id]
+            counter -= 1
+
+        log.debug(f"The black holes: {self.network.black_holes.values()}")
 
     def get_data(self) -> dict:
         return self.data
