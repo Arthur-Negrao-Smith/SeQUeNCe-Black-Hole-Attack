@@ -2,6 +2,9 @@
 ENTANGLEMENT_SWAPPING_PROB: float = 0.9
 SWAP_DEGRADATION: float = 0.99
 
+# Entanglement Constants
+ENTANGLEMENT_FIDELITY: float = 0.9
+
 # Memory Constants
 MEMORY_ARRAY_SIZE: int = 10
 MEMORY_ARRAY_NAME: str = ".MemoryArray"
