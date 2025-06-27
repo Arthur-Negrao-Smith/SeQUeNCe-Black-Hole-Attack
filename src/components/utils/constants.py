@@ -1,9 +1,11 @@
 # Swap constants
 ENTANGLEMENT_SWAPPING_PROB: float = 0.9
 SWAP_DEGRADATION: float = 0.99
+SWAPPING_INCREMENT_TIME: int | float = 1e11
 
 # Entanglement Constants
 ENTANGLEMENT_FIDELITY: float = 0.9
+ENTANGLEMENT_INCREMENT_TIME: int | float = 1e11
 
 # Memory Constants
 MEMORY_ARRAY_SIZE: int = 10
