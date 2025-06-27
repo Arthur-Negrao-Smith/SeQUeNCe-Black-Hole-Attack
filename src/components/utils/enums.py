@@ -31,6 +31,7 @@ class Request_Response(Enum):
     NO_PATH = 'no-path'
     ENTANGLED_SUCCESS = 'entangled-success'
     ENTANGLED_FAIL = 'entangled-fail'
+    NON_EXISTENT_NODE = 'non-existent-node'
 
 class Protocol_Types(Enum):
     """
