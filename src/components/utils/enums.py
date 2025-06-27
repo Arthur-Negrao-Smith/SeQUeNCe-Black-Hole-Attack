@@ -23,6 +23,7 @@ class Node_Types(Enum):
     Types of Nodes
     """
     QUANTUM_REPEATER = 'quantum-repeater'
+    BSM_NODE = 'bsm-node'
 
 class Request_Response(Enum):
     """
@@ -32,6 +33,15 @@ class Request_Response(Enum):
     ENTANGLED_SUCCESS = 'entangled-success'
     ENTANGLED_FAIL = 'entangled-fail'
     NON_EXISTENT_NODE = 'non-existent-node'
+
+class Swapping_Response(Enum):
+    """
+    Types of responses to entanglement swapping protocol
+    """
+    NO_ENTANGLED = 'no-entangled'
+    SWAPPING_SUCCESS = 'swapping-success'
+    SWAPPING_FAIL = 'swapping-fail'
+
 
 class Protocol_Types(Enum):
     """
