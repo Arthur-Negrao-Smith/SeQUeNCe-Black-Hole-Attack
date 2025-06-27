@@ -7,6 +7,9 @@ from .nodes import QuantumRepeater
 
 import networkx as nx
 from typing import Optional
+import logging
+
+log: logging.Logger = logging.getLogger(__name__)
 
 # Topologies generator
 class TopologyGen:
@@ -24,6 +27,8 @@ class TopologyGen:
 
         self.seed: None | int = start_seed
 
+        log.debug("TopologyGen initiated")
+
     def _create_nodes(self, number_of_nodes: int) -> dict[int, QuantumRepeater]:
         """
         Create all grid nodes and return them in a dictionary
@@ -38,7 +43,7 @@ class TopologyGen:
 
         nodes: dict[int, QuantumRepeater] = dict()
         for c in range(0, number_of_nodes):
-            tmp_node: QuantumRepeater = QuantumRepeater(name=f"node{c}", timeline=self.network.timeline, swap_prob=ENTANGLEMENT_SWAPPING_PROB)
+            tmp_node: QuantumRepeater = QuantumRepeater(name=f"node[{c}]", timeline=self.network.timeline, swap_prob=ENTANGLEMENT_SWAPPING_PROB)
 
             if self.seed is not None:
                 tmp_node.set_seed(self.seed)
@@ -53,7 +58,7 @@ class TopologyGen:
     def _create_BSMNode(self, nodeA_id: int, nodeB_id: int, edge: tuple[int, int]) -> BSMNode:
 
         bsm_node: BSMNode = BSMNode(name=f'bsm_node({nodeA_id}, {nodeB_id})', timeline=self.network.timeline,
-                                        other_nodes=[f'node{nodeA_id}', f'node{nodeB_id}'])
+                                        other_nodes=[f'node[{nodeA_id}]', f'node[{nodeB_id}]'])
         if self.seed is not None:
             bsm_node.set_seed(self.seed)
             self.seed += 1
@@ -61,6 +66,8 @@ class TopologyGen:
         self.network.bsm_nodes[edge] = bsm_node # adding bsm node in a dict
         bsm: SingleAtomBSM = bsm_node.get_components_by_type("SingleAtomBSM")[0] # <- Get the bsm without node
         bsm.update_detectors_params('efficiency', BSM_EFFICIENCY) # <- Change the detector efficiency
+
+        log.debug(f"Created {bsm_node.name} to connect node[{nodeA_id}] to node[{nodeB_id}]")
 
         return bsm_node
 
@@ -104,6 +111,8 @@ class TopologyGen:
                             qc_attenuation=QCHANNEL_ATTENUATION, qc_distance=QCHANNEL_DISTANCE)           
 
         self._connect_classical_channels(cc_distance=CCHANNEL_DISTANCE, cc_delay=CCHANNEL_DELAY)
+        # init network's entities
+        self.network.timeline.init()
 
     def grid_topology(self, rows: int, columns: int) -> dict[int, QuantumRepeater]:
         
