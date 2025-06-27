@@ -1,3 +1,4 @@
+from math import log
 from sequence.topology.topology import Node
 from sequence.protocol import Protocol
 from sequence.components.memory import Memory
@@ -11,6 +12,9 @@ from .utils.enums import Directions
 
 from abc import ABC, abstractmethod
 from typing import Type
+import logging
+
+log: logging.Logger = logging.getLogger(__name__)
 
 class BaseManager(ABC):
     """
@@ -40,6 +44,7 @@ class RepeaterManager(BaseManager):
     from .nodes import QuantumRepeater
     def __init__(self, owner: QuantumRepeater) -> None:
         super().__init__(owner)
+        log.debug(f"Repeater Manager initiated in {self.owner.name}")
 
     def create_swapping_protocolA(self) -> None:
         """
@@ -90,7 +95,25 @@ class RepeaterManager(BaseManager):
         self.owner.protocols.append(protocol)
 
     def get_memory(self, memory_position: Directions) -> Memory:
+        """
+        Get the memory of the node
+
+        Args:
+            memory_position (Directions): Position of the memory to entanglement (left or right)
+
+        Retuns:
+            Memory: Memory of the node
+        """
         if memory_position == Directions.LEFT:
             return self.owner.components[self.owner.left_memo_name]
         else:
             return self.owner.components[self.owner.right_memo_name]
+
+    def update_swap_prob(self, new_swap_prob: float) -> None:
+        """
+        Update the node's entanglement swapping probability
+
+        Args:
+            new_swap_prob (float): New entanglement swapping probability
+        """
+        self.owner.swap_prob = new_swap_prob
