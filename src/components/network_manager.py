@@ -9,7 +9,7 @@ from components.utils.enums import Directions, Protocol_Types, Request_Response
 from .nodes import QuantumRepeater
 
 import networkx as nx
-from typing import Type
+from typing import Optional, Type
 import logging
 
 log: logging.Logger = logging.getLogger(__name__)
@@ -131,11 +131,42 @@ class Network_Manager:
 
         log.debug(f"node[{nodeA_id}], node[{node_mid_id}] and node[{nodeB_id}] were your entanglement swapping protocols paired")
 
-    def _force_entanglement(self, nodeA_id: int, nodeB_id: int, nodeA_memory_position: Directions, nodeB_memory_positions: Directions) -> None:
+    def _force_entanglement(self, nodeA_id: int, nodeB_id: int,
+                             nodeA_memory_position: Directions, 
+                             nodeB_memory_position: Directions,
+                             fidelity: float,
+                             entanglement_state: Optional[list[float | int]] = None) -> None:
         """
-        Force the memory of node to create a entanglement
+        Force the memories of nodes to create a entanglement
+
+        Args:
+            nodeA_id (int): Node to entanglement memory
+            nodeB_id (int): Node to entanglement memory
+            nodeA_memory_position (Directions): Direction of the nodeA memory
+            nodeB_memory_position (Directions): Direction of the nodeB memory
+            fidelity (float): Fidelity of the entanglement
+            entanglement_state (Optional[list[float | int]]): Optional argument to select the state of entanglement, 
+                if is None than state is phi plus
         """
-        pass
+        if entanglement_state is None:
+            SQRT_HALF: float = 0.5 ** 0.5
+            state: list[float | int] = [SQRT_HALF, 0, 0, SQRT_HALF] # phi plus
+
+        memoA: Memory = self.network.nodes[nodeA_id].resource_manager.get_memory(nodeA_memory_position)
+        memoB: Memory = self.network.nodes[nodeB_id].resource_manager.get_memory(nodeB_memory_position)
+
+        memoA.reset()
+        memoB.reset()
+        tl.quantum_manager.set([memo1.qstate_key, memo2.qstate_key], state) # type: ignore
+
+        memoA.entangled_memory['node_id'] = memoB.owner.name # type: ignore
+        memoA.entangled_memory['memo_id'] = memoB.name # type: ignore
+        memoB.entangled_memory['node_id'] = memoA.owner.name # type: ignore
+        memoB.entangled_memory['memo_id'] = memoA.name # type: ignore
+
+        memoA.fidelity = memoB.fidelity = fidelity # type: ignore
+
+        log.debug(f"The {nodeA_memory_position} memory of node[{nodeA_id}] was entangled with {nodeB_memory_position} memory of the node[{nodeB_id}]")
 
     def get_data(self) -> dict:
         return self.data

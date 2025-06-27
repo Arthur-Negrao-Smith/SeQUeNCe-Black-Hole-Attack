@@ -77,7 +77,7 @@ class RepeaterManager(BaseManager):
         Create a protocol to perform the entanglement at the side node.
 
         Args:
-            memory_positions (Directions): Position of the memory to entanglement (left or right)
+            memory_position (Directions): Position of the memory to entanglement (left or right)
             middle_node (str): Name of the BSMNode that will generate the entanglement.
             other_node (str): Name of the RepeaterNode that will be entangled.
         """
