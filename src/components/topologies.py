@@ -6,12 +6,19 @@ from .utils.enums import Topologies, Node_Types
 from .nodes import QuantumRepeater
 
 import networkx as nx
-from typing import Type, Union
+from typing import Optional
 
 # Topologies generator
 class TopologyGen:
     from .network import Network
-    def __init__(self, network: Network, start_seed: Union[None, int] = None):
+    def __init__(self, network: Network, start_seed: Optional[int] = None) -> None:
+        """
+        TopologyGen constructor
+
+        Args:
+            network (Network): Network to build the topology
+            start_seed (Optional[int]): Seed to replicate the simulation. Default is None
+        """
         
         self.network: Network = network
 
