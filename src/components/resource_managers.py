@@ -1,5 +1,3 @@
-from math import log
-from sequence.topology.topology import Node
 from sequence.protocol import Protocol
 from sequence.components.memory import Memory
 from sequence.entanglement_management.swapping import EntanglementSwappingA, EntanglementSwappingB
@@ -56,7 +54,7 @@ class RepeaterManager(BaseManager):
                                                         f'{self.owner.name}.Entanglement_SwappingA', 
                                                         left_memo, 
                                                         right_memo, 
-                                                        self.owner.swap_prob,
+                                                        self.owner.swap_prob, # type: ignore
                                                         SWAP_DEGRADATION)
         self.owner.protocols.append(protocol)
         
