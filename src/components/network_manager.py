@@ -50,13 +50,53 @@ class Network_Manager:
         # if don't have a path
         if path == []:
             return Request_Response.NO_PATH
+        
         # if nodeA or nodeB isn't in network
         if path == [-1]:
             return Request_Response.NON_EXISTENT_NODE
  
-        nodeA: QuantumRepeater = self.network.nodes[nodeA_id]
-        
-        return Request_Response.ENTANGLED_SUCCESS
+        # Discard first node, because he is the nodeA
+        path.pop(0)
+        for attempt in range(max_attempts):
+            for path_position, tmp_mid_node_id in enumerate(path):
+
+                # break if is last node
+                if path_position == len(path)-1:
+                    break
+
+                tmp_nodeB_id: int = path[path_position+1]
+
+                # check if entanglements exists
+                entanglement_success: bool= self._entangle_two_nodes(nodeA_id=nodeA_id, nodeB_id=tmp_mid_node_id, force_entanglement=force_entanglement)
+                entanglement_success = (entanglement_success and 
+                                        self._entangle_two_nodes(nodeA_id=tmp_mid_node_id, nodeB_id=tmp_nodeB_id, force_entanglement=force_entanglement))
+                # if failed because BSMNode wasn't found
+                if not entanglement_success:
+                    log.warning("Request failed. BSMNode wasn't found")
+                    return Request_Response.NON_EXISTENT_BSM_NODE
+                
+                # try entanglement swapping
+                swapping_response: Swapping_Response = self._swapping_two_nodes(nodeA_id=nodeA_id, nodeB_id=tmp_mid_node_id, node_mid_id=tmp_mid_node_id)
+
+                # if entanglement swapping was a success
+                if swapping_response == Swapping_Response.SWAPPING_SUCCESS:
+                    continue
+
+                # if entanglement swapping failed
+                if swapping_response == Swapping_Response.SWAPPING_FAIL:
+                    break
+
+                # if entanglement swapping failed beacause no memories entangled
+                if swapping_response == Swapping_Response.NO_ENTANGLED:
+                    log.warning("Request failed. The nodes aren't entangled")
+                    return Request_Response.NO_ENTANGLED
+
+            # if the request was a success    
+            if self._is_entangled(nodeA_id=nodeA_id, nodeB_id=nodeB_id, nodeA_memory_position=Directions.RIGHT, nodeB_memory_position=Directions.LEFT):
+                return Request_Response.ENTANGLED_SUCCESS
+            
+        # if the request failed
+        return Request_Response.ENTANGLED_FAIL
         
     def find_path(self, nodeA_id: int, nodeB_id: int) -> list[int]:
         """
@@ -274,6 +314,12 @@ class Network_Manager:
 
         self.network._run()
 
+        # clean used protocols
+        nodeA.remove_used_protocol()
+        nodeB.remove_used_protocol()
+        node_mid.remove_used_protocol()
+
+        # check the success
         success: bool = self._is_entangled(nodeA_id=nodeA_id, nodeB_id=nodeB_id, 
                                             nodeA_memory_position=Directions.RIGHT, 
                                             nodeB_memory_position=Directions.LEFT)
