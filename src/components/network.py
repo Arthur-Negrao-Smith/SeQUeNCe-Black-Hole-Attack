@@ -126,3 +126,12 @@ class Network:
         Run network's events
         """
         self.timeline.run()
+
+    def _increment_time(self, time_to_increment: float | int) -> None:
+        """
+        Increment network's time to run events
+
+        Args:
+            time_to_increment (float | int): Time to increment in network's time
+        """
+        self.timeline.time = self.timeline.now() + time_to_increment
