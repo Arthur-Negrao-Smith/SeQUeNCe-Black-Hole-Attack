@@ -1,9 +1,9 @@
 from sequence.topology.topology import BSMNode
-from sequence.entanglement_management.generation import EntanglementGenerationA, EntanglementGenerationB
 from sequence.entanglement_management.entanglement_protocol import EntanglementProtocol
 from sequence.components.memory import Memory
 
-from components.utils.enums import Directions, Protocol_Types, Request_Response
+from components.utils.enums import Directions, Protocol_Types, Request_Response, Swapping_Response
+from examples.example_2 import entangle_memory
 from .nodes import QuantumRepeater
 from .utils.constants import ENTANGLEMENT_FIDELITY
 
@@ -208,7 +208,7 @@ class Network_Manager:
             force_entanglement (bool): If is True the entanglement don't need protocol
 
         Returns:
-            bool: Return False if BSMNode doesn't exists, else return True
+            bool: Returns False if BSMNode doesn't exists, else returns True
         """
         # If doesn't wants use a protocol
         if force_entanglement:
@@ -220,6 +220,7 @@ class Network_Manager:
         nodeB: QuantumRepeater = self.network.nodes[nodeB_id]
         bsm_node: BSMNode | None = self.network.get_bsm_node(nodeA_id, nodeB_id)
 
+        # if bsm_node doesn't exist
         if bsm_node is None:
             log.warning(f"BSMNode between {nodeA.name} and {nodeB.name} doesn't exist")
             return False
@@ -227,8 +228,88 @@ class Network_Manager:
         nodeA.resource_manager.create_entanglement_protocol(memory_position=Directions.RIGHT, middle_node=bsm_node.name, other_node=nodeB.name)
         nodeB.resource_manager.create_entanglement_protocol(memory_position=Directions.LEFT, middle_node=bsm_node.name, other_node=nodeA.name)
         self._pair_EntanglementGeneration_protocols(nodeA_id=nodeA_id, nodeB_id=nodeB_id)
+        
         self.network._run()
         
+        nodeA.remove_used_protocol()
+        nodeB.remove_used_protocol()
+        
+        return True
+    
+    def _swapping_two_nodes(self, nodeA_id: int, nodeB_id: int, node_mid_id: int) -> Swapping_Response:
+        """
+        Execute a entanglement swapping protocol with nodeA, nodeB and node_mid
+
+        Args:
+            nodeA_id (int): Node with right memory entangled with left node_mid's memory entangled
+            nodeB_id (int): Node with left memory entangled with right node_mid's memory entangled
+            node_mid_id (int): Node to perform the entanglement swapping
+
+        Returns:
+            Swapping_Response: Returns Swapping_Response.SWAPPING_SUCCESS if protocols was a success. 
+                If protocol failed returns Swapping_Response.SWAPPING_FAIL. 
+                If Memories aren't previous entangled returns Swapping_Response.NO_ENTANGLED
+        """
+        nodeA: QuantumRepeater = self.network.nodes[nodeA_id]
+        nodeB: QuantumRepeater = self.network.nodes[nodeB_id]
+        node_mid: QuantumRepeater = self.network.nodes[node_mid_id]
+
+        entangled_nodeA_and_node_mid: bool = self._is_entangled(nodeA_id=nodeA_id, nodeB_id=node_mid_id, 
+                                                      nodeA_memory_position=Directions.RIGHT, 
+                                                      nodeB_memory_position=Directions.LEFT)
+        
+        entangled_nodeB_and_node_mid: bool = self._is_entangled(nodeA_id=node_mid_id, nodeB_id=nodeB_id, 
+                                                      nodeA_memory_position=Directions.RIGHT, 
+                                                      nodeB_memory_position=Directions.LEFT)
+        # if memories aren't entangled
+        if not (entangled_nodeA_and_node_mid or entangled_nodeB_and_node_mid):
+            log.warning(f"{nodeA.name} and {nodeB.name} aren't entangled")
+            return Swapping_Response.NO_ENTANGLED
+        
+        nodeA.resource_manager.create_swapping_protocolB(Directions.RIGHT)
+        node_mid.resource_manager.create_swapping_protocolA()
+        nodeB.resource_manager.create_swapping_protocolB(Directions.LEFT)
+
+        self._pair_Swapping_protocols(nodeA_id=nodeA_id, nodeB_id=nodeB_id, node_mid_id=node_mid_id)
+
+        self.network._run()
+
+        success: bool = self._is_entangled(nodeA_id=nodeA_id, nodeB_id=nodeB_id, 
+                                            nodeA_memory_position=Directions.RIGHT, 
+                                            nodeB_memory_position=Directions.LEFT)
+        # if the swapping protocoal was a success
+        if success:
+            log.debug(f"The entanglement swapping protocol between {nodeA.name} and {nodeB.name} was a success")
+            return Swapping_Response.SWAPPING_SUCCESS
+        
+        # if the swapping protocoal filed
+        log.debug(f"The entanglement swapping protocol between {nodeA.name} and {nodeB.name} failed")
+        return Swapping_Response.SWAPPING_FAIL
+    
+    def _is_entangled(self, nodeA_id: int, nodeB_id: int, nodeA_memory_position: Directions, nodeB_memory_position: Directions) -> bool:
+        """
+        Check the entanglement between nodeA and nodeB
+
+        Args:
+            nodeA_id (int): Node to check the entanglement
+            nodeB_id (int): Node to check the entanglement
+            nodeA_memory_position (Directions): Memory's position of the nodeA
+            nodeB_memory_position (Directions): Memory's position of the nodeB
+
+        Returns:
+            bool: If are entangled returns True, else returns False
+        """
+        nodeA: QuantumRepeater = self.network.nodes[nodeA_id]
+        nodeB: QuantumRepeater = self.network.nodes[nodeB_id]
+
+        nodeA_memory: Memory = nodeA.resource_manager.get_memory(nodeA_memory_position)
+        nodeB_memory: Memory = nodeB.resource_manager.get_memory(nodeB_memory_position)
+
+        # if memories aren't entangled
+        if (nodeA_memory.entangled_memory['memo_id'] != nodeB_memory.name or
+             nodeB_memory.entangled_memory['memo_id'] != nodeA_memory.name):
+            return False
+
         return True
 
     def create_black_holes(self, number_of_black_holes: int, swap_prob: int) -> None:
@@ -242,7 +323,7 @@ class Network_Manager:
         counter: int = number_of_black_holes
         while counter != 0:
             
-            tmp_id: int = randint(0, len(self.network.nodes))
+            tmp_id: int = randint(0, len(self.network.nodes)-1)
             # if black hole already exists
             if tmp_id in self.network.black_holes.keys():
                 continue
