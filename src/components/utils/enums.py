@@ -30,9 +30,11 @@ class Request_Response(Enum):
     Types of responses to request
     """
     NO_PATH = 'no-path'
+    NO_ENTANGLED = 'no-entangled'
     ENTANGLED_SUCCESS = 'entangled-success'
     ENTANGLED_FAIL = 'entangled-fail'
     NON_EXISTENT_NODE = 'non-existent-node'
+    NON_EXISTENT_BSM_NODE = 'non-existent-bsm-node'
 
 class Swapping_Response(Enum):
     """
