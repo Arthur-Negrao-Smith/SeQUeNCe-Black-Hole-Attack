@@ -50,19 +50,79 @@ class Network:
         nx.draw(self.graph, with_labels=labels)
 
     def edges(self) -> list[tuple[int, int]]:
+        """
+        Return the graph's edges
+
+        Returns:
+            list[tuple[int, int]]: List with all edges
+        """
         return self.graph.edges()
     
     def update_nodes(self, nodes: dict[int, QuantumRepeater]) -> None:
+        """
+        Update the network's nodes 
+
+        Args:
+            nodes (dict[int, QuantumRepeater]): New nodes to attach
+        """
         self.nodes = nodes
 
     def update_topology(self, topology_name: Topologies) -> None:
+        """
+        Update the network's topology_name 
+
+        Args:
+            topology_name (Topologies): New topology to updates
+        """
         self.topology = topology_name
 
     def update_graph(self, graph: nx.Graph) -> None:
+        """
+        Update the network's graph 
+
+        Args:
+            graph (nx.Graph): New graph to updates
+        """
         self.graph = graph
 
     def update_number_of_nodes(self, number_of_nodes: int) -> None:
+        """
+        Update the network's number of nodes
+
+        Args:
+            number_of_nodes (int): New number of nodes to updates
+        """
         self.number_of_nodes = number_of_nodes
 
     def update_bsm_nodes(self, bsm_nodes: dict[tuple[int, int], BSMNode]) -> None:
+        """
+        Update the network's bsm nodes
+
+        Args:
+            bsm_nodes (dict[tuple[int, int], BSMNode]): New BSM
+        """
         self.bsm_nodes = bsm_nodes
+
+    def get_bsm_node(self, nodeA_id: int, nodeB_id: int) -> BSMNode | None:
+        """
+        Get the bsm node attached in nodeA and nodeB
+
+        Args:
+            nodeA_id (int): Node attached in bsm
+            nodeB_id (int): Anothe node attached in bsm
+
+        Returns:
+            Union[BSMNode, None]: Returns None if bsm doesn't exists, else return BSMNode
+        """
+        if (nodeA_id, nodeB_id) in self.bsm_nodes.keys():
+            return self.bsm_nodes[(nodeA_id, nodeB_id)]
+        if (nodeB_id, nodeA_id) in self.bsm_nodes.keys():
+            return self.bsm_nodes[(nodeB_id, nodeA_id)]
+        
+        return None
+    
+    def _run(self) -> None:
+        """
+        Run network's events
+        """
+        self.timeline.run()
