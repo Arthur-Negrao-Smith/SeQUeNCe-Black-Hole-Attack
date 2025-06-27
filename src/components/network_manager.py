@@ -1,4 +1,3 @@
-from sequence.protocol import Protocol
 from sequence.topology.topology import BSMNode
 from sequence.entanglement_management.generation import EntanglementGenerationA, EntanglementGenerationB
 from sequence.entanglement_management.entanglement_protocol import EntanglementProtocol
@@ -6,6 +5,7 @@ from sequence.components.memory import Memory
 
 from components.utils.enums import Directions, Protocol_Types, Request_Response
 from .nodes import QuantumRepeater
+from .utils.constants import ENTANGLEMENT_FIDELITY
 
 import networkx as nx
 from typing import Optional, Type
@@ -26,7 +26,7 @@ class Network_Manager:
         Args:
             network (Network): Network to manage
         """
-        self.network: Network = network
+        self.network: Network = network # type: ignore
         self.data: dict
 
         log.debug(f"Network Manager initiated")
@@ -54,10 +54,10 @@ class Network_Manager:
         if path == [-1]:
             return Request_Response.NON_EXISTENT_NODE
  
- 
+        nodeA: QuantumRepeater = self.network.nodes[nodeA_id]
+        
         return Request_Response.ENTANGLED_SUCCESS
         
-
     def find_path(self, nodeA_id: int, nodeB_id: int) -> list[int]:
         """
         Find the best path of nodeA to nodeB
@@ -67,9 +67,9 @@ class Network_Manager:
             nodeB_id (int): Destination node to search path
 
         Returns:
-            list[int]: Will return [-1] if any node (nodeA or nodeB) don't exist. Return [] if don't have path, else [nodeA_id, ..., nodeB_id] 
+            list[int]: Will return [-1] if any node (nodeA or nodeB) doesn't exists. Return [] if don't have path, else [nodeA_id, ..., nodeB_id] 
         """
-        if nodeA_id not in self.network.nodes.keys() or nodeB_id in self.network.nodes.keys():
+        if nodeA_id not in self.network.nodes.keys() or nodeB_id not in self.network.nodes.keys():
             log.warning(f"The node[{nodeA_id}] or node[{nodeB_id}] don't exist")
             return [-1]
 
@@ -78,11 +78,10 @@ class Network_Manager:
                 path: list[int] = list(nx.shortest_path(self.network.graph, nodeA_id, nodeB_id))
                 log.debug(f"The path of the node[{nodeA_id}] to node[{nodeB_id}] is: {path}")
                 return path
-            except:
+            except nx.NodeNotFound:
                 log.debug(f"Don't have path of the node[{nodeA_id}] to node[{nodeB_id}]")
                 return []
-
-
+            
     def _create_protocols(self, node_id: int, protocol_type: Protocol_Types, **kwargs) -> bool:
         """
         Create protocol in selected node
@@ -93,7 +92,7 @@ class Network_Manager:
             **kwargs (str, Unknow): Args to create the protocol
 
         Returns:
-            bool: Return False if don't exist protocol type, else return True
+            bool: Return False if doesn't exists this protocol type, else return True
         """
         node: QuantumRepeater = self.network.nodes[node_id]
         if protocol_type == Protocol_Types.ENTANGLEMENT:
@@ -188,16 +187,49 @@ class Network_Manager:
 
         memoA.reset()
         memoB.reset()
-        tl.quantum_manager.set([memo1.qstate_key, memo2.qstate_key], state) # type: ignore
+        tl.quantum_manager.set([memoA.qstate_key, memoB.qstate_key], state) # type: ignore
 
         memoA.entangled_memory['node_id'] = memoB.owner.name # type: ignore
-        memoA.entangled_memory['memo_id'] = memoB.name # type: ignore
+        memoA.entangled_memory['memo_id'] = memoB.name       # type: ignore
         memoB.entangled_memory['node_id'] = memoA.owner.name # type: ignore
-        memoB.entangled_memory['memo_id'] = memoA.name # type: ignore
+        memoB.entangled_memory['memo_id'] = memoA.name       # type: ignore
 
         memoA.fidelity = memoB.fidelity = fidelity # type: ignore
 
-        log.debug(f"The {nodeA_memory_position} memory of node[{nodeA_id}] was entangled with {nodeB_memory_position} memory of the node[{nodeB_id}]")
+        log.debug(f"The {nodeA_memory_position} memory of node[{nodeA_id}] was forced entangled with {nodeB_memory_position} memory of the node[{nodeB_id}]")
+
+    def _entangle_two_nodes(self, nodeA_id: int, nodeB_id: int, force_entanglement: bool) -> bool:
+        """
+        Create a entanglement between two nodes
+
+        Args:
+            nodeA_id (int): Node to entanglement right memory
+            nodeB_id (int): Node to entanglement left memory
+            force_entanglement (bool): If is True the entanglement don't need protocol
+
+        Returns:
+            bool: Return False if BSMNode doesn't exists, else return True
+        """
+        # If doesn't wants use a protocol
+        if force_entanglement:
+            self._force_entanglement(nodeA_id=nodeA_id, nodeB_id=nodeB_id, nodeA_memory_position=Directions.RIGHT, 
+                                     nodeB_memory_position=Directions.LEFT, fidelity=ENTANGLEMENT_FIDELITY)
+            return True
+
+        nodeA: QuantumRepeater = self.network.nodes[nodeA_id]
+        nodeB: QuantumRepeater = self.network.nodes[nodeB_id]
+        bsm_node: BSMNode | None = self.network.get_bsm_node(nodeA_id, nodeB_id)
+
+        if bsm_node is None:
+            log.warning(f"BSMNode between {nodeA.name} and {nodeB.name} doesn't exist")
+            return False
+        
+        nodeA.resource_manager.create_entanglement_protocol(memory_position=Directions.RIGHT, middle_node=bsm_node.name, other_node=nodeB.name)
+        nodeB.resource_manager.create_entanglement_protocol(memory_position=Directions.LEFT, middle_node=bsm_node.name, other_node=nodeA.name)
+        self._pair_EntanglementGeneration_protocols(nodeA_id=nodeA_id, nodeB_id=nodeB_id)
+        self.network._run()
+        
+        return True
 
     def create_black_holes(self, number_of_black_holes: int, swap_prob: int) -> None:
         """
@@ -211,6 +243,7 @@ class Network_Manager:
         while counter != 0:
             
             tmp_id: int = randint(0, len(self.network.nodes))
+            # if black hole already exists
             if tmp_id in self.network.black_holes.keys():
                 continue
 
