@@ -224,7 +224,7 @@ class Network_Manager:
 
         log.debug(f"The {nodeA_memory_position} memory of node[{nodeA_id}] was forced entangled with {nodeB_memory_position} memory of the node[{nodeB_id}]")
 
-    def _entangle_two_nodes(self, nodeA_id: int, nodeB_id: int, force_entanglement: bool) -> bool:
+    def _entangle_two_nodes(self, nodeA_id: int, nodeB_id: int, force_entanglement: bool, max_attempts: int = -1) -> bool:
         """
         Create a entanglement between two nodes
 
@@ -232,9 +232,10 @@ class Network_Manager:
             nodeA_id (int): Node to entanglement right memory
             nodeB_id (int): Node to entanglement left memory
             force_entanglement (bool): If is True the entanglement don't need protocol
+            max_attempts (int): Attempts to try create a entanglement. If max_attempts < 0, then try until entangle. If force_entanglement is True ignore this parameter
 
         Returns:
-            bool: Returns False if BSMNode doesn't exists, else returns True
+            bool: Returns False if BSMNode doesn't exists or Entanglement failed, else returns True
         """
         # If doesn't wants use a protocol
         if force_entanglement:
@@ -252,7 +253,8 @@ class Network_Manager:
             return False
         
         entangled: bool = False
-        while not entangled:
+        attempts: int = max_attempts
+        while (not entangled) and (attempts != 0):
             nodeA.resource_manager.create_entanglement_protocol(memory_position=Directions.RIGHT, middle_node=bsm_node.name, other_node=nodeB.name)
             nodeB.resource_manager.create_entanglement_protocol(memory_position=Directions.LEFT, middle_node=bsm_node.name, other_node=nodeA.name)
             self._pair_EntanglementGeneration_protocols(nodeA_id=nodeA_id, nodeB_id=nodeB_id)
@@ -265,13 +267,18 @@ class Network_Manager:
             nodeA.remove_used_protocol()
             nodeB.remove_used_protocol()
 
-            entangled = self._is_entangled(nodeA_id=nodeA_id, nodeB_id=nodeB_id, nodeA_memory_position=Directions.RIGHT, nodeB_memory_position=Directions.LEFT )
+            entangled = self._is_entangled(nodeA_id=nodeA_id, nodeB_id=nodeB_id, nodeA_memory_position=Directions.RIGHT, nodeB_memory_position=Directions.LEFT)
+
+            attempts -= 1
 
         self.network._increment_time(ENTANGLEMENT_INCREMENT_TIME)
 
-        log.debug(f"{nodeA.name} and {nodeB.name} are entangled")
+        if entangled:
+            log.debug(f"{nodeA.name} and {nodeB.name} are entangled")
+            return True
         
-        return True
+        log.debug(f"{nodeA.name} and {nodeB.name} aren't entangled")
+        return False
     
     def _swapping_two_nodes(self, nodeA_id: int, nodeB_id: int, node_mid_id: int) -> Swapping_Response:
         """
