@@ -35,6 +35,7 @@ class Request_Response(Enum):
     ENTANGLED_FAIL = 'entangled-fail'
     NON_EXISTENT_NODE = 'non-existent-node'
     NON_EXISTENT_BSM_NODE = 'non-existent-bsm-node'
+    SAME_NODE = 'same-node'
 
 class Swapping_Response(Enum):
     """
