@@ -3,6 +3,7 @@ from sequence.topology.node import Node
 from sequence.components.memory import Memory
 from sequence.entanglement_management.entanglement_protocol import EntanglementProtocol
 from sequence.message import Message
+from sequence.components.photon import Photon
 
 from .utils.constants import MEMORY_FIDELITY, MEMORY_FREQUENCY, MEMORY_EFFICIENCY, MEMORY_COHERENCE_TIME, MEMORY_WAVELENGTH
 
@@ -13,6 +14,14 @@ class QuantumRepeater(Node):
     Quantum Router to increase the entanglement range on the Network
     """
     def __init__(self, name: str, timeline: Timeline, swap_prob: float) -> None:
+        """
+        QuantumRepeater constructor
+
+        Args:
+            name (str): Node's name
+            timeline (Timeline): Timeline to create events
+            swap_prob (float): Entanglement Swapping probability
+        """
         super().__init__(name, timeline)
 
         self.left_memo_name: str = f'{name}.left_memo'
@@ -20,6 +29,9 @@ class QuantumRepeater(Node):
 
         left_memo: Memory = Memory(self.left_memo_name, timeline, MEMORY_FIDELITY, MEMORY_FREQUENCY, MEMORY_EFFICIENCY, MEMORY_COHERENCE_TIME, MEMORY_WAVELENGTH)
         right_memo: Memory = Memory(self.right_memo_name, timeline, MEMORY_FIDELITY, MEMORY_FREQUENCY, MEMORY_EFFICIENCY, MEMORY_COHERENCE_TIME, MEMORY_WAVELENGTH)
+
+        left_memo.add_receiver(self)
+        right_memo.add_receiver(self)
         
         self.add_component(left_memo)
         self.add_component(right_memo)
@@ -31,6 +43,9 @@ class QuantumRepeater(Node):
 
     def receive_message(self, src: str, msg: Message) -> None:
         self.protocols[0].received_message(src, msg)
+
+    def get(self, photon: Photon, **kwargs) -> None: # type: ignore
+        self.send_qubit(kwargs['dst'], photon)
 
     def run_protocol(self) -> None:
         """
