@@ -84,10 +84,8 @@ class RepeaterManager(BaseManager):
             middle_node (str): Name of the BSMNode that will generate the entanglement.
             other_node (str): Name of the RepeaterNode that will be entangled.
         """
-        if memory_position == Directions.LEFT:
-            memory: Memory = self.owner.components[self.owner.left_memo_name]
-        else:
-            memory: Memory = self.owner.components[self.owner.right_memo_name]
+        memory: Memory = self.get_memory(memory_position)
+        
         protocol: EntanglementGenerationA = EntanglementGenerationA(self.owner, f"{self.owner.name}.Entanglement_GenerationA", 
                                                                     middle_node, other_node, memory)
         self.owner.protocols.append(protocol)
