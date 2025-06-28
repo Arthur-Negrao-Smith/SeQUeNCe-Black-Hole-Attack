@@ -251,20 +251,25 @@ class Network_Manager:
             log.warning(f"BSMNode between {nodeA.name} and {nodeB.name} doesn't exist")
             return False
         
-        nodeA.resource_manager.create_entanglement_protocol(memory_position=Directions.RIGHT, middle_node=bsm_node.name, other_node=nodeB.name)
-        nodeB.resource_manager.create_entanglement_protocol(memory_position=Directions.LEFT, middle_node=bsm_node.name, other_node=nodeA.name)
-        self._pair_EntanglementGeneration_protocols(nodeA_id=nodeA_id, nodeB_id=nodeB_id)
+        entangled: bool = False
+        while not entangled:
+            nodeA.resource_manager.create_entanglement_protocol(memory_position=Directions.RIGHT, middle_node=bsm_node.name, other_node=nodeB.name)
+            nodeB.resource_manager.create_entanglement_protocol(memory_position=Directions.LEFT, middle_node=bsm_node.name, other_node=nodeA.name)
+            self._pair_EntanglementGeneration_protocols(nodeA_id=nodeA_id, nodeB_id=nodeB_id)
 
-        nodeA.run_protocol()
-        nodeB.run_protocol()
+            nodeA.run_protocol()
+            nodeB.run_protocol()
         
-        self.network._run()
+            self.network._run()
+
+            nodeA.remove_used_protocol()
+            nodeB.remove_used_protocol()
+
+            entangled = self._is_entangled(nodeA_id=nodeA_id, nodeB_id=nodeB_id, nodeA_memory_position=Directions.RIGHT, nodeB_memory_position=Directions.LEFT )
+
         self.network._increment_time(ENTANGLEMENT_INCREMENT_TIME)
 
         log.debug(f"{nodeA.name} and {nodeB.name} are entangled")
-        
-        nodeA.remove_used_protocol()
-        nodeB.remove_used_protocol()
         
         return True
     
@@ -350,8 +355,8 @@ class Network_Manager:
         nodeB_memory: Memory = nodeB.resource_manager.get_memory(nodeB_memory_position)
 
         # if memories aren't entangled
-        if (nodeA_memory.entangled_memory['memo_id'] != nodeB_memory.name or
-             nodeB_memory.entangled_memory['memo_id'] != nodeA_memory.name):
+        if (nodeA_memory.entangled_memory['node_id'] != nodeB.name or
+             nodeB_memory.entangled_memory['node_id'] != nodeA.name):
             return False
 
         return True
