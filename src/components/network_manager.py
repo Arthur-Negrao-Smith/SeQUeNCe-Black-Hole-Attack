@@ -40,10 +40,20 @@ class Network_Manager:
             nodeB_id (int): Destination node
             max_attempts (int): Max request attempts
             force_entanglement (bool): If is True the entanglement don't need protocol
+        
+        Returns:
+            Request_Response: If nodeA_id is equal nodeB_id then returns Request_Response.SAME_NODE.
+                If don't has a path from nodeA to nodeB then returns Request_Response.NO_PATH.
+                If nodeA or nodeB no exist then returns Request_Response.NON_EXISTENT_NODE.
+                If fail request then returns Request_Response.SWAPPING_FAIL.
+                If success request then returns Request_Response.SWAPPING_SUCCESS
         """
+        log.debug(f"Try to request from node[{nodeA_id}] to node[{nodeB_id}]")
+
         # if nodeA and nodeB is the same node
         if nodeA_id == nodeB_id:
-            return Request_Response.NO_PATH
+            log.warning(f"The request failed. The node[{nodeA_id}] can't do a request to himself.")
+            return Request_Response.SAME_NODE
 
         path: list[int] = self.find_path(nodeA_id, nodeB_id)
         # if don't have a path
@@ -56,7 +66,13 @@ class Network_Manager:
  
         # Discard first node, because he is the nodeA
         path.pop(0)
+
         for attempt in range(max_attempts):
+
+            log.debug(f"Request attempt: {attempt+1}")
+
+            entanglement_success: bool = self._entangle_two_nodes(nodeA_id=nodeA_id, nodeB_id=path[0], force_entanglement=force_entanglement)
+
             for path_position, tmp_mid_node_id in enumerate(path):
 
                 # break if is last node
@@ -65,8 +81,7 @@ class Network_Manager:
 
                 tmp_nodeB_id: int = path[path_position+1]
 
-                # check if entanglements exists
-                entanglement_success: bool= self._entangle_two_nodes(nodeA_id=nodeA_id, nodeB_id=tmp_mid_node_id, force_entanglement=force_entanglement)
+                # to check if entanglements exists
                 entanglement_success = (entanglement_success and 
                                         self._entangle_two_nodes(nodeA_id=tmp_mid_node_id, nodeB_id=tmp_nodeB_id, force_entanglement=force_entanglement))
                 # if failed because BSMNode wasn't found
@@ -75,7 +90,7 @@ class Network_Manager:
                     return Request_Response.NON_EXISTENT_BSM_NODE
                 
                 # try entanglement swapping
-                swapping_response: Swapping_Response = self._swapping_two_nodes(nodeA_id=nodeA_id, nodeB_id=tmp_mid_node_id, node_mid_id=tmp_mid_node_id)
+                swapping_response: Swapping_Response = self._swapping_two_nodes(nodeA_id=nodeA_id, nodeB_id=tmp_nodeB_id, node_mid_id=tmp_mid_node_id)
 
                 # if entanglement swapping was a success
                 if swapping_response == Swapping_Response.SWAPPING_SUCCESS:
@@ -141,7 +156,7 @@ class Network_Manager:
         protocol_A.set_others(protocol_B.name, nodeB.name, [nodeB_memory]) # type: ignore
         protocol_B.set_others(protocol_A.name, nodeA.name, [nodeA_memory]) # type: ignore
 
-        log.debug(f"node[{nodeA_id}] and node[{nodeB_id}] were your entanglement generation protocols paired")
+        log.debug(f"The entanglement generation protocols of node[{nodeA_id}] and node[{nodeB_id}] have been successfully paired")
 
     def _pair_Swapping_protocols(self, nodeA_id: int, nodeB_id: int, node_mid_id: int) -> None:
         """
@@ -196,7 +211,7 @@ class Network_Manager:
 
         memoA.reset()
         memoB.reset()
-        tl.quantum_manager.set([memoA.qstate_key, memoB.qstate_key], state) # type: ignore
+        self.network.timeline.quantum_manager.set([memoA.qstate_key, memoB.qstate_key], state) # type: ignore
 
         memoA.entangled_memory['node_id'] = memoB.owner.name # type: ignore
         memoA.entangled_memory['memo_id'] = memoB.name       # type: ignore
@@ -290,6 +305,7 @@ class Network_Manager:
         self._pair_Swapping_protocols(nodeA_id=nodeA_id, nodeB_id=nodeB_id, node_mid_id=node_mid_id)
 
         nodeA.run_protocol()
+        node_mid.run_protocol()
         nodeB.run_protocol()
 
         self.network._run()
