@@ -23,7 +23,7 @@ class TopologyGen:
             start_seed (Optional[int]): Seed to replicate the simulation. Default is None
         """
         
-        self.network: Network = network
+        self.network: Network = network # type: ignore
 
         self.seed: None | int = start_seed
 
@@ -52,6 +52,7 @@ class TopologyGen:
         
         self.network.update_number_of_nodes(number_of_nodes)
         self.network.update_nodes(nodes)
+        self.network.update_normal_nodes(nodes)
 
         return nodes
 
