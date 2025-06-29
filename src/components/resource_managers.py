@@ -54,8 +54,22 @@ class RepeaterManager(BaseManager):
                                                         f'{self.owner.name}.Entanglement_SwappingA', 
                                                         left_memo, 
                                                         right_memo, 
-                                                        self.owner.swap_prob, # type: ignore
+                                                        self.owner._swap_prob, # type: ignore
                                                         SWAP_DEGRADATION)
+
+        node_left_name: str | None = left_memo.entangled_memory['node_id']
+        # if is entangled
+        if node_left_name is not None and node_left_name:
+            # if node have targets to atack and left node is a target
+            if (self.owner._black_hole_targets is not None) and (node_left_name in self.owner._black_hole_targets.keys()):
+                protocol = EntanglementSwappingA(self.owner, 
+                                            f'{self.owner.name}.Entanglement_SwappingA', 
+                                            left_memo, 
+                                            right_memo, 
+                                            self.owner._black_hole_targets[node_left_name], # type: ignore
+                                            SWAP_DEGRADATION)
+
+
         self.owner.protocols.append(protocol)
         
     def create_swapping_protocolB(self, memory_position: Directions) -> None:
@@ -63,7 +77,7 @@ class RepeaterManager(BaseManager):
         Create a protocol to perform the entanglement swapping at the side node.
 
         Args:
-            memory_position (Directions): Position of the memory to entanglement (left or right)
+            memory_position (Directions): Position of the memory to entanglement (Directions.LEFT or Directions.RIGHT)
         """
         if memory_position == Directions.LEFT:
             left_memo: Memory = self.owner.components[self.owner.left_memo_name]
@@ -80,9 +94,9 @@ class RepeaterManager(BaseManager):
         Create a protocol to perform the entanglement at the side node.
 
         Args:
-            memory_position (Directions): Position of the memory to entanglement (left or right)
-            middle_node (str): Name of the BSMNode that will generate the entanglement.
-            other_node (str): Name of the RepeaterNode that will be entangled.
+            memory_position (Directions): Position of the memory to entanglement (Directions.LEFT or Directions.RIGHT).
+            middle_node (str): BSMNode's name that will generate the entanglement.
+            other_node (str): RepeaterNode's nanme that will be entangled.
         """
         memory: Memory = self.get_memory(memory_position)
         
@@ -92,7 +106,7 @@ class RepeaterManager(BaseManager):
 
     def get_memory(self, memory_position: Directions) -> Memory:
         """
-        Get the memory of the node
+        Get the node's memory
 
         Args:
             memory_position (Directions): Position of the memory to entanglement (left or right)
@@ -105,11 +119,48 @@ class RepeaterManager(BaseManager):
         else:
             return self.owner.components[self.owner.right_memo_name]
 
-    def update_swap_prob(self, new_swap_prob: float) -> None:
+    def _update_swap_prob(self, new_swap_prob: float | int) -> None:
         """
         Update the node's entanglement swapping probability
 
         Args:
             new_swap_prob (float): New entanglement swapping probability
         """
-        self.owner.swap_prob = new_swap_prob
+        self.owner._swap_prob = new_swap_prob
+
+    def _turn_black_hole(self, new_swap_prob: float | int, targets: dict[str, float | int] | None) -> None:
+        """
+        Turn the node in a black hole to affect pwapping protocol A
+
+        Args:
+            new_swap_prob (float | int): New entanglement probability
+            targets (list[int]): Black hole's targets with node ID and probability for this node. If prob == -1, then new_swap_prob will be aplied
+        """
+        self.owner._is_black_hole = True
+
+        # don't have targets
+        if targets is None:
+            self._update_swap_prob(new_swap_prob)
+            return
+        
+        # if target's dict doens't exists
+        if self.owner._black_hole_targets is None:
+            self.owner._black_hole_targets = dict()
+
+        # loop to add targets and probabilities
+        for node_name, prob in targets.items():
+            if prob == -1:
+                self.owner._black_hole_targets[node_name] = new_swap_prob
+            else:
+                self.owner._black_hole_targets[node_name] = prob
+
+    def _turn_normal_node(self, new_swap_prob: int | float) -> None:
+        """
+        Turn the black hole in a normal node
+
+        Args:
+            new_swap_prob (int | float): New entanglement probability
+        """
+        self.owner._is_black_hole = False
+        self.owner._black_hole_targets = None
+        self._update_swap_prob(new_swap_prob)
