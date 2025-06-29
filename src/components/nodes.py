@@ -15,7 +15,7 @@ class QuantumRepeater(Node):
     """
     def __init__(self, name: str, timeline: Timeline, swap_prob: float) -> None:
         """
-        QuantumRepeater constructor
+        Constructor for QuantumRepeater
 
         Args:
             name (str): Node's name
@@ -24,6 +24,7 @@ class QuantumRepeater(Node):
         """
         super().__init__(name, timeline)
 
+        # create memories
         self.left_memo_name: str = f'{name}.left_memo'
         self.right_memo_name: str = f'{name}.right_memo'
 
@@ -36,10 +37,18 @@ class QuantumRepeater(Node):
         self.add_component(left_memo)
         self.add_component(right_memo)
 
+        # Manager to control resources
         from .resource_managers import RepeaterManager
         self.resource_manager: RepeaterManager = RepeaterManager(self)
 
-        self.swap_prob: float = swap_prob
+        # initial entanglement swapping probability
+        self._swap_prob: float | int = swap_prob
+
+        # initial state isn't a bh (black hole)
+        self._is_black_hole: bool = False
+
+        # black hole's targets: If target is None, then bha affect all requests, else just affect target
+        self._black_hole_targets: dict[str, float | int] | None = None
 
     def receive_message(self, src: str, msg: Message) -> None:
         self.protocols[0].received_message(src, msg)
