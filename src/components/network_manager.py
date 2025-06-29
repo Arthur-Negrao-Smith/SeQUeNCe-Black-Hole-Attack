@@ -2,7 +2,7 @@ from sequence.topology.topology import BSMNode
 from sequence.entanglement_management.entanglement_protocol import EntanglementProtocol
 from sequence.components.memory import Memory
 
-from components.utils.enums import Directions, Request_Response, Swapping_Response
+from components.utils.enums import Directions, Entanglement_Response, Request_Response, Swapping_Response
 from .nodes import QuantumRepeater
 from .utils.constants import ENTANGLEMENT_FIDELITY, SWAPPING_INCREMENT_TIME, ENTANGLEMENT_INCREMENT_TIME
 
@@ -15,7 +15,7 @@ log: logging.Logger = logging.getLogger(__name__)
 
 class Network_Manager:
     """
-    Manager to control the protocols and requests of the network 
+    Manager to control the network's protocols and requests
     """
     from .network import Network
     def __init__(self, network: Network) -> None:
@@ -30,27 +30,28 @@ class Network_Manager:
 
         log.debug(f"Network Manager initiated")
 
-    # TODO: Finalize the request function
-    def request(self, nodeA_id: int, nodeB_id: int, max_attempts: int = 2, force_entanglement: bool = False) -> Request_Response:
+    def request(self, nodeA_id: int, nodeB_id: int, max_request_attempts: int = 2, force_entanglement: bool = False, max_attempts_per_entanglement: int = -1) -> Request_Response:
         """
         Create a request from nodeA to nodeB
 
         Args:
             nodeA_id (int): Source node
             nodeB_id (int): Destination node
-            max_attempts (int): Max request attempts
+            max_request_attempts (int): Max request attempts
             force_entanglement (bool): If is True the entanglement don't need protocol
+            max_entanglement_attempts (int): Attempts to try create a entanglement. If max_attempts < 0, then try until entangle. If force_entanglement is True ignore this parameter
         
         Returns:
             Request_Response: If nodeA_id is equal nodeB_id then returns Request_Response.SAME_NODE.
                 If don't has a path from nodeA to nodeB then returns Request_Response.NO_PATH.
                 If nodeA or nodeB no exist then returns Request_Response.NON_EXISTENT_NODE.
+                If bsm doens't exists then returns Request_Response.NON_EXISTENT_BSM_NODE.
                 If fail request then returns Request_Response.SWAPPING_FAIL.
-                If success request then returns Request_Response.SWAPPING_SUCCESS
+                If success request then returns Request_Response.SWAPPING_SUCCESS.
         """
-        log.debug(f"Try to request from node[{nodeA_id}] to node[{nodeB_id}]")
+        log.debug(f"Starting request from node[{nodeA_id}] to node[{nodeB_id}]")
 
-        # if nodeA and nodeB is the same node
+        # if nodeA and nodeB are the same node
         if nodeA_id == nodeB_id:
             log.warning(f"The request failed. The node[{nodeA_id}] can't do a request to himself.")
             return Request_Response.SAME_NODE
@@ -67,26 +68,56 @@ class Network_Manager:
         # Discard first node, because he is the nodeA
         path.pop(0)
 
-        for attempt in range(max_attempts):
+        # start attempts counter
+        request_attempts: int = 0
 
-            log.debug(f"Request attempt: {attempt+1}")
+        # Try request
+        for attempt in range(max_request_attempts):
 
-            entanglement_success: bool = self._entangle_two_nodes(nodeA_id=nodeA_id, nodeB_id=path[0], force_entanglement=force_entanglement)
+            request_attempts += 1
 
+            log.debug(f"Request attempt: {request_attempts}")
+
+            # Try do an entanglement between nodeA and tmp_mid_node
+            entanglement_response: Entanglement_Response = self._entangle_two_nodes(nodeA_id=nodeA_id, nodeB_id=path[0],
+                                                                  force_entanglement=force_entanglement, max_attempts=max_attempts_per_entanglement)
+            
+            # if the entanglement is successful
+            if entanglement_response == Entanglement_Response.SUCCESS:
+                entanglement_success: bool = True 
+            # if bsm doesn't exists
+            elif entanglement_response == Entanglement_Response.NON_EXISTENT_BSM_NODE:
+                log.warning(f"Request failed. BSMNode wasn't found between: node[{nodeA_id}] and node[{path[0]}]")
+                entanglement_success: bool = False
+                return Request_Response.NON_EXISTENT_BSM_NODE
+            # if the entanglement fails
+            else: 
+                entanglement_success: bool = False
+                continue
+
+            # try a sequence of entanglements and entanglement swappings
             for path_position, tmp_mid_node_id in enumerate(path):
 
                 # break if is last node
                 if path_position == len(path)-1:
                     break
 
+                # define the temporary nodeB
                 tmp_nodeB_id: int = path[path_position+1]
 
+                # try do an entanglement between tmp_mid_node and tmp_nodeB
+                entanglement_response = self._entangle_two_nodes(nodeA_id=tmp_mid_node_id, nodeB_id=tmp_nodeB_id, force_entanglement=force_entanglement)
+                
                 # to check if entanglements exists
-                entanglement_success = (entanglement_success and 
-                                        self._entangle_two_nodes(nodeA_id=tmp_mid_node_id, nodeB_id=tmp_nodeB_id, force_entanglement=force_entanglement))
-                # if failed because BSMNode wasn't found
+                entanglement_success = (entanglement_success and (True if entanglement_response == Entanglement_Response.SUCCESS else False))
+
+                # if nodes aren't entangled
                 if not entanglement_success:
-                    log.warning("Request failed. BSMNode wasn't found")
+                    break
+
+                # if failed because BSMNode wasn't found
+                if entanglement_response == Entanglement_Response.NON_EXISTENT_BSM_NODE:
+                    log.warning(f"Request failed. BSMNode wasn't found between: node[{tmp_mid_node_id}] and node[{tmp_nodeB_id}]")
                     return Request_Response.NON_EXISTENT_BSM_NODE
                 
                 # try entanglement swapping
@@ -107,9 +138,11 @@ class Network_Manager:
 
             # if the request was a success    
             if self._is_entangled(nodeA_id=nodeA_id, nodeB_id=nodeB_id, nodeA_memory_position=Directions.RIGHT, nodeB_memory_position=Directions.LEFT):
+                log.debug(f"Request was a successful. The nodes node[{nodeA_id}] and node[{nodeB_id}] are entangled. {request_attempts} request attempts were made")
                 return Request_Response.ENTANGLED_SUCCESS
             
         # if the request failed
+        log.debug(f"The request from node[{nodeA_id}] to node [{nodeB_id}] failed. {request_attempts} request attempts were made")
         return Request_Response.ENTANGLED_FAIL
         
     def find_path(self, nodeA_id: int, nodeB_id: int) -> list[int]:
@@ -224,7 +257,7 @@ class Network_Manager:
 
         log.debug(f"The {nodeA_memory_position} memory of node[{nodeA_id}] was forced entangled with {nodeB_memory_position} memory of the node[{nodeB_id}]")
 
-    def _entangle_two_nodes(self, nodeA_id: int, nodeB_id: int, force_entanglement: bool, max_attempts: int = -1) -> bool:
+    def _entangle_two_nodes(self, nodeA_id: int, nodeB_id: int, force_entanglement: bool, max_attempts: int = -1) -> Entanglement_Response:
         """
         Create a entanglement between two nodes
 
@@ -235,22 +268,23 @@ class Network_Manager:
             max_attempts (int): Attempts to try create a entanglement. If max_attempts < 0, then try until entangle. If force_entanglement is True ignore this parameter
 
         Returns:
-            bool: Returns False if BSMNode doesn't exists or Entanglement failed, else returns True
+            Entanglement_Response:  If BSMNode doesn't exists then Returns Entanglement_Response.NON_EXISTENT_BSM_NODE.
+                if entanglement fail then returns Entanglement_Response.FAIL, else returns Entanglement_Response.SUCCESS
         """
-        # If doesn't wants use a protocol
+        # If doesn't wants to use a protocol
         if force_entanglement:
             self._force_entanglement(nodeA_id=nodeA_id, nodeB_id=nodeB_id, nodeA_memory_position=Directions.RIGHT, 
                                      nodeB_memory_position=Directions.LEFT, fidelity=ENTANGLEMENT_FIDELITY)
-            return True
+            return Entanglement_Response.SUCCESS
 
         nodeA: QuantumRepeater = self.network.nodes[nodeA_id]
         nodeB: QuantumRepeater = self.network.nodes[nodeB_id]
         bsm_node: BSMNode | None = self.network.get_bsm_node(nodeA_id, nodeB_id)
 
-        # if bsm_node doesn't exist
+        # if bsm_node doesn't exists
         if bsm_node is None:
             log.warning(f"BSMNode between {nodeA.name} and {nodeB.name} doesn't exist")
-            return False
+            return Entanglement_Response.NON_EXISTENT_BSM_NODE
         
         entangled: bool = False
         attempts: int = max_attempts
@@ -259,26 +293,33 @@ class Network_Manager:
             nodeB.resource_manager.create_entanglement_protocol(memory_position=Directions.LEFT, middle_node=bsm_node.name, other_node=nodeA.name)
             self._pair_EntanglementGeneration_protocols(nodeA_id=nodeA_id, nodeB_id=nodeB_id)
 
+            # run protocols
             nodeA.run_protocol()
             nodeB.run_protocol()
         
+            # run events
             self.network._run()
 
+            # clean up used protocols
             nodeA.remove_used_protocol()
             nodeB.remove_used_protocol()
 
+            # check the entanglement
             entangled = self._is_entangled(nodeA_id=nodeA_id, nodeB_id=nodeB_id, nodeA_memory_position=Directions.RIGHT, nodeB_memory_position=Directions.LEFT)
 
-            attempts -= 1
+            # if the attempts isn't a negative number
+            if attempts > 0:
+                attempts -= 1
 
+        # updates network's time
         self.network._increment_time(ENTANGLEMENT_INCREMENT_TIME)
 
         if entangled:
-            log.debug(f"{nodeA.name} and {nodeB.name} are entangled")
-            return True
+            log.debug(f"Entanglement success: {nodeA.name} and {nodeB.name} are entangled")
+            return Entanglement_Response.SUCCESS
         
-        log.debug(f"{nodeA.name} and {nodeB.name} aren't entangled")
-        return False
+        log.debug(f"Entanglement fails: {nodeA.name} and {nodeB.name} aren't entangled")
+        return Entanglement_Response.FAIL
     
     def _swapping_two_nodes(self, nodeA_id: int, nodeB_id: int, node_mid_id: int) -> Swapping_Response:
         """
@@ -307,7 +348,7 @@ class Network_Manager:
                                                       nodeB_memory_position=Directions.LEFT)
         # if memories aren't entangled
         if not (entangled_nodeA_and_node_mid or entangled_nodeB_and_node_mid):
-            log.warning(f"{nodeA.name} and {nodeB.name} aren't entangled")
+            log.warning(f" Swapping fails: {nodeA.name} isn't entangled with {node_mid.name} or {nodeB.name} isn't entangled with {node_mid.name}")
             return Swapping_Response.NO_ENTANGLED
         
         nodeA.resource_manager.create_swapping_protocolB(Directions.RIGHT)
