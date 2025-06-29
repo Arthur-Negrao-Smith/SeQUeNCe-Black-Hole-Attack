@@ -27,7 +27,7 @@ class Node_Types(Enum):
 
 class Request_Response(Enum):
     """
-    Types of responses to request
+    Request protocol's response types
     """
     NO_PATH = 'no-path'
     NO_ENTANGLED = 'no-entangled'
@@ -39,12 +39,19 @@ class Request_Response(Enum):
 
 class Swapping_Response(Enum):
     """
-    Types of responses to entanglement swapping protocol
+    Swapping protocol's response types
     """
     NO_ENTANGLED = 'no-entangled'
     SWAPPING_SUCCESS = 'swapping-success'
     SWAPPING_FAIL = 'swapping-fail'
 
+class Entanglement_Response(Enum):
+    """
+    Entanglement protocol's response types
+    """
+    SUCCESS = 'success'
+    FAIL = 'fail'
+    NON_EXISTENT_BSM_NODE = 'non-existent-bsm-node'
 
 class Protocol_Types(Enum):
     """
