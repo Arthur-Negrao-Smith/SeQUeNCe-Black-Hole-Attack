@@ -27,6 +27,7 @@ class Network:
        
         self.number_of_nodes: int
         self.nodes: dict[int, QuantumRepeater] = dict()
+        self.normal_nodes: dict[int, QuantumRepeater] = dict()
         self.black_holes: dict[int, QuantumRepeater] = dict()
         self.bsm_nodes: dict[tuple[int, int], BSMNode] = dict()
         
@@ -93,6 +94,15 @@ class Network:
             number_of_nodes (int): New number of nodes to updates
         """
         self.number_of_nodes = number_of_nodes
+
+    def update_normal_nodes(self, normal_nodes: dict[int, QuantumRepeater]) -> None:
+        """
+        Update the network's normal nodes
+
+        Args:
+            normal_nodes (dict[int, QuantumRepeater]): Normal nodes to update
+        """
+        self.normal_nodes = normal_nodes
 
     def update_bsm_nodes(self, bsm_nodes: dict[tuple[int, int], BSMNode]) -> None:
         """
