@@ -14,6 +14,40 @@ class Attack_Manager:
         self._attack_type: Attack_Types
         self.network: Network = network # type: ignore
 
+    def create_black_holes(self, number_of_black_holes: int, swap_prob: int | float, targets_per_black_hole: int) -> None:
+        """
+        Create black holes to attack the network
+
+        Args:
+            number_of_black_holes (int): Number of black holes in the network
+            swap_prob (int | float): BHA's entanglement swapping probability.
+            targets_per_black_hole (int): Target's number of each black hole. If targets_per_black_hole < 1 this is parameter ignored
+        """
+        # if entanglement swapping isn't valid
+        if swap_prob < 0 or swap_prob > 1:
+            log.warning(f"No black hole was created. The parameter swap_prob is invalid: {swap_prob}")
+            return
+        
+        # Add the attack type
+        self._update_attack_type(Attack_Types.BLACK_HOLE)
+
+        if targets_per_black_hole < 1:
+            self._create_black_holes_no_targets(number_of_black_holes=number_of_black_holes, swap_prob=swap_prob)
+        else:
+            self._create_black_holes_with_targets(number_of_black_holes=number_of_black_holes, swap_prob=swap_prob, targets_per_black_hole=targets_per_black_hole)
+
+        for bh in self.network.black_holes.values():
+            log.debug(f"{bh.name} is a black hole with targets: {bh._black_hole_targets}")
+
+    def _update_attack_type(self, attack_type: Attack_Types) -> None:
+        """
+        To updates the attack type's name
+
+        Args:
+            attack_type (Attack_Types): Attack type to updates
+        """
+        self._attack_type = attack_type
+
     def _create_black_holes_no_targets(self, number_of_black_holes: int, swap_prob: int | float) -> None:
         """
         Create black holes withtout targets in the network
@@ -114,20 +148,3 @@ class Attack_Manager:
             counter -= 1
 
         log.debug(f"{number_of_black_holes} were created with {targets_per_black_hole} targets. Black Holes: {self.network.black_holes.keys()}")
-
-    def create_black_holes(self, number_of_black_holes: int, swap_prob: int | float, targets_per_black_hole: int) -> None:
-        """
-        Create black holes to attack the network
-
-        Args:
-            number_of_black_holes (int): Number of black holes in the network
-            swap_prob (int | float): BHA's entanglement swapping probability
-            targets_per_black_hole (int): Target's number of each black hole. If targets_per_black_hole < 1 this is parameter ignored
-        """
-        if targets_per_black_hole < 1:
-            self._create_black_holes_no_targets(number_of_black_holes=number_of_black_holes, swap_prob=swap_prob)
-        else:
-            self._create_black_holes_with_targets(number_of_black_holes=number_of_black_holes, swap_prob=swap_prob, targets_per_black_hole=targets_per_black_hole)
-
-        for bh in self.network.black_holes.values():
-            log.debug(f"{bh.name} is a black hole with targets: {bh._black_hole_targets}")
