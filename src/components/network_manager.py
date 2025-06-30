@@ -307,12 +307,12 @@ class Network_Manager:
             # check the entanglement
             entangled = self._is_entangled(nodeA_id=nodeA_id, nodeB_id=nodeB_id, nodeA_memory_position=Directions.RIGHT, nodeB_memory_position=Directions.LEFT)
 
+            # updates network's time
+            self.network._increment_time(ENTANGLEMENT_INCREMENT_TIME)
+
             # if the attempts isn't a negative number
             if attempts > 0:
                 attempts -= 1
-
-        # updates network's time
-        self.network._increment_time(ENTANGLEMENT_INCREMENT_TIME)
 
         if entangled:
             log.debug(f"Entanglement success: {nodeA.name} and {nodeB.name} are entangled")
