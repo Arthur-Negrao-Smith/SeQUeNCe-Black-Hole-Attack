@@ -130,6 +130,19 @@ class Network:
             return self.bsm_nodes[(nodeB_id, nodeA_id)]
         
         return None
+
+    def get_black_holes(self) -> dict[str, dict[str, float | int] | None]:
+        """
+        Get black holes and targets
+
+        Returns:
+            dict[str, dict[str, float | int] | None]: Dict with black holes' name and your targets
+        """
+        tmp_bh_dict: dict[str, dict[str, float | int] | None] = dict()
+        for bh in self.black_holes.values():
+            tmp_bh_dict[bh.name] = bh._black_hole_targets
+
+        return tmp_bh_dict
     
     def _run(self) -> None:
         """
