@@ -15,29 +15,31 @@ class Network:
     """
     Network class to create the quantum network
     """
-    def __init__(self, topology: Topologies, start_seed: Optional[int] = None) -> None:
+    def __init__(self, start_seed: Optional[int] = None) -> None:
         """
         Network constructor
 
         Args:
-            topology (Topologies): Topology to build
             start_seed (Optional[int]): Seed to replicate the simulation. Default is None
         """ 
         self.timeline: Timeline = Timeline()
        
         self.number_of_nodes: int
+        
         self.nodes: dict[int, QuantumRepeater] = dict()
         self.normal_nodes: dict[int, QuantumRepeater] = dict()
         self.black_holes: dict[int, QuantumRepeater] = dict()
         self.bsm_nodes: dict[tuple[int, int], BSMNode] = dict()
         
         from .topologies import TopologyGen
-        self.topology: Topologies = topology
         self.graph: nx.Graph
         self.topology_generator = TopologyGen(self, start_seed=start_seed)
 
         from components.network_manager import Network_Manager
         self.network_manager: Network_Manager = Network_Manager(self)
+
+        from components.attack_manager import Attack_Manager
+        self.attack_manager: Attack_Manager = Attack_Manager(self)
 
         log.debug("Initiated Network")
 
