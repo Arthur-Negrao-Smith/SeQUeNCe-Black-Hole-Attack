@@ -265,7 +265,7 @@ class Network_Manager:
             nodeA_id (int): Node to entanglement right memory
             nodeB_id (int): Node to entanglement left memory
             force_entanglement (bool): If is True the entanglement don't need protocol
-            max_attempts (int): Attempts to try create a entanglement. If max_attempts < 0, then try until entangle. If force_entanglement is True ignore this parameter
+            max_attempts (int): Attempts to try create a entanglement. If max_attempts < 0, then try until entangle. If force_entanglement is True this parameter is ignored
 
         Returns:
             Entanglement_Response:  If BSMNode doesn't exists then Returns Entanglement_Response.NON_EXISTENT_BSM_NODE.
@@ -480,7 +480,7 @@ class Network_Manager:
             tmp_bh_id: int = choice(avaliable_nodes_IDs)
             
             # remove the node from normal nodes' list
-            avaliable_nodes_IDs.pop(tmp_bh_id)
+            avaliable_nodes_IDs.remove(tmp_bh_id)
 
             tmp_bh_node: QuantumRepeater = self.network.nodes[tmp_bh_id]
 
@@ -509,6 +509,23 @@ class Network_Manager:
             counter -= 1
 
         log.debug(f"{number_of_black_holes} were created with {targets_per_black_hole} targets. Black Holes: {self.network.black_holes.keys()}")
+
+    def create_black_holes(self, number_of_black_holes: int, swap_prob: int | float, targets_per_black_hole: int) -> None:
+        """
+        Create black holes to attack the network
+
+        Args:
+            number_of_black_holes (int): Number of black holes in the network
+            swap_prob (int | float): BHA's entanglement swapping probability
+            targets_per_black_hole (int): Target's number of each black hole. If targets_per_black_hole < 1 this is parameter ignored
+        """
+        if targets_per_black_hole < 1:
+            self._create_black_holes_no_targets(number_of_black_holes=number_of_black_holes, swap_prob=swap_prob)
+        else:
+            self._create_black_holes_with_targets(number_of_black_holes=number_of_black_holes, swap_prob=swap_prob, targets_per_black_hole=targets_per_black_hole)
+
+        for bh in self.network.black_holes.values():
+            log.debug(f"{bh.name} is a black hole with targets: {bh._black_hole_targets}")
 
     def get_data(self) -> dict:
         return self.data
