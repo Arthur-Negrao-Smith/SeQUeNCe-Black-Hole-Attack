@@ -6,6 +6,7 @@ from .utils.enums import Topologies, Node_Types
 from .nodes import QuantumRepeater
 
 import networkx as nx
+from copy import copy
 from typing import Optional
 import logging
 
@@ -52,7 +53,7 @@ class TopologyGen:
         
         self.network.update_number_of_nodes(number_of_nodes)
         self.network.update_nodes(nodes)
-        self.network.update_normal_nodes(nodes)
+        self.network.update_normal_nodes(copy(nodes))
 
         return nodes
 
