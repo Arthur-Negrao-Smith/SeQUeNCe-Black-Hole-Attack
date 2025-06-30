@@ -27,7 +27,7 @@ class Node_Types(Enum):
 
 class Attack_Types(Enum):
     """
-    Type of attacks
+    Type of attacks to the network
     """
     BLACK_HOLE = 'black-hole'
     HIJACKING = 'hijacking'
