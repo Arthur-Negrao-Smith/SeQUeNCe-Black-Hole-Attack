@@ -25,6 +25,13 @@ class Node_Types(Enum):
     QUANTUM_REPEATER = 'quantum-repeater'
     BSM_NODE = 'bsm-node'
 
+class Attack_Types(Enum):
+    """
+    Type of attacks
+    """
+    BLACK_HOLE = 'black-hole'
+    HIJACKING = 'hijacking'
+
 class Request_Response(Enum):
     """
     Request protocol's response types
