@@ -1,5 +1,4 @@
 import json
-from typing import Any
 import logging
 
 log: logging.Logger = logging.getLogger(__name__)
@@ -60,9 +59,9 @@ class Data_Manager:
             filename (str): Json's filename to write
         """
         self._create_file(filename)
-        
+
         with open(file=filename, mode='w', encoding='utf-8') as file:
-            json.dump(self._data, file, indent=2)
+            json.dump(self._data, file, indent=2, ensure_ascii=False)
         
     def _create_file(self, filename: str) -> None:
         """
