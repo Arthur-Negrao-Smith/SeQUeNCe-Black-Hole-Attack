@@ -9,14 +9,14 @@ class Data_Manager:
     Class to manage network's data
     """
     from .network import Network
-    def __init__(self, network: Network) -> None:
+    def __init__(self) -> None:
         """
         Constructor for Data_Manager
 
         Args:
             network (Network): Network to manage data
         """
-        self.network: Network = network # type: ignore
+        #self.network: Network = network # type: ignore
         self._data: dict = dict()
 
     def __str__(self) -> str:

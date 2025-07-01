@@ -47,6 +47,9 @@ class Network:
         from .attack_manager import Attack_Manager
         self.attack_manager: Attack_Manager = Attack_Manager(self)
 
+        from .data_manager import Data_Manager
+        self.data_manager: Data_Manager = Data_Manager()
+
         log.debug("Initiated Network")
 
     def draw(self, labels: bool = True) -> None:
