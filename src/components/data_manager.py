@@ -1,4 +1,5 @@
 import json
+from typing import Any
 import logging
 
 log: logging.Logger = logging.getLogger(__name__)
@@ -10,13 +11,53 @@ class Data_Manager:
     from .network import Network
     def __init__(self, network: Network) -> None:
         """
-        Constructor for data_manager
+        Constructor for Data_Manager
 
         Args:
             network (Network): Network to manage data
         """
         self.network: Network = network # type: ignore
         self._data: dict = dict()
+
+    def __str__(self) -> str:
+        """
+        String to see the data
+
+        Returns:
+            str: Data in string format
+        """
+        return f"{self._data}"
+
+    def __getitem__(self, key: Any) -> Any:
+        """
+        Get data's items
+
+        Args:
+            key (Any): Key to access data
+        
+        Returns:
+            Any: Data accessed
+        """
+        return self._data[key]
+    
+    def __setitem__(self, key: Any, data: Any) -> None:
+        """
+        Get data's items
+
+        Args:
+            key (Any): Key to access data
+            data (Anny): Any data to add
+        """
+        self._data[key] = data
+
+    def __len__(self) -> int:
+        """
+        Get data's number of items
+        
+        Returns:
+            int: Number of itens
+        """
+        return len(self._data)
 
     def update_data(self, data: dict) -> None:
         """
