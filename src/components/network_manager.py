@@ -142,7 +142,7 @@ class Network_Manager:
                 return Request_Response.ENTANGLED_SUCCESS
             
         # if the request failed
-        log.debug(f"The request from node[{nodeA_id}] to node [{nodeB_id}] failed. {request_attempts} request attempts were made")
+        log.debug(f"The request from node[{nodeA_id}] to node[{nodeB_id}] failed. {request_attempts} request attempts were made")
         return Request_Response.ENTANGLED_FAIL
         
     def find_path(self, nodeA_id: int, nodeB_id: int) -> list[int]:
