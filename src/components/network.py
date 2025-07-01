@@ -3,8 +3,9 @@ from sequence.topology.topology import Node, BSMNode
 
 import networkx as nx
 
-from components.nodes import QuantumRepeater
-from components.utils.enums import Topologies
+from .nodes import QuantumRepeater
+from .utils.enums import Topologies
+from .utils.logger import show_logs
 
 from typing import Optional
 import logging
@@ -15,13 +16,18 @@ class Network:
     """
     Network class to create the quantum network
     """
-    def __init__(self, start_seed: Optional[int] = None) -> None:
+    def __init__(self, start_seed: Optional[int] = None, display_logs: bool = False) -> None:
         """
         Network constructor
 
         Args:
             start_seed (Optional[int]): Seed to replicate the simulation. Default is None
+            display_logs (bool): Show all logs
         """ 
+
+        if display_logs:
+            show_logs()
+
         self.timeline: Timeline = Timeline()
        
         self.number_of_nodes: int
@@ -35,10 +41,10 @@ class Network:
         self.graph: nx.Graph
         self.topology_generator = TopologyGen(self, start_seed=start_seed)
 
-        from components.network_manager import Network_Manager
+        from .network_manager import Network_Manager
         self.network_manager: Network_Manager = Network_Manager(self)
 
-        from components.attack_manager import Attack_Manager
+        from .attack_manager import Attack_Manager
         self.attack_manager: Attack_Manager = Attack_Manager(self)
 
         log.debug("Initiated Network")
