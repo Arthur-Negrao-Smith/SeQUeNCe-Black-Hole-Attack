@@ -9,6 +9,7 @@ class AsyncSimulator:
         Constructor for AsyncSimulator
 
         Args:
+            simulation_function (function): Functino with first param 'runs'
             runs (int): Total simulations rounds
             cores (int): Total cores to divide process. Don't use all cores of your machine
         """
@@ -21,7 +22,7 @@ class AsyncSimulator:
         Run all simulations
 
         Args:
-            *args (Any): All ordened args to simulations without runs parameter
+            *args (Any): All ordened args to simulations without 'runs' parameter
 
         Returns:
             list: List with all data
