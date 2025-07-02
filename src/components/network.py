@@ -1,12 +1,11 @@
 from sequence.kernel.timeline import Timeline
 from sequence.topology.topology import Node, BSMNode
 
-import networkx as nx
-
 from .nodes import QuantumRepeater
 from .utils.enums import Topologies
 from .utils.logger import show_logs
 
+import networkx as nx
 from typing import Optional
 import logging
 
@@ -47,9 +46,9 @@ class Network:
         from .attack_manager import Attack_Manager
         self.attack_manager: Attack_Manager = Attack_Manager(self)
 
-        from .data_manager import Data_Manager
-        self.data_manager: Data_Manager = Data_Manager()
-
+        from .network_data import Network_Data
+        self.network_data: Network_Data = Network_Data()
+        
         log.debug("Initiated Network")
 
     def draw(self, labels: bool = True) -> None:
