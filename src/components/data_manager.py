@@ -8,15 +8,10 @@ class Data_Manager:
     """
     Class to manage network's data
     """
-    from .network import Network
     def __init__(self) -> None:
         """
         Constructor for Data_Manager
-
-        Args:
-            network (Network): Network to manage data
         """
-        #self.network: Network = network # type: ignore
         self._data: dict = dict()
         self._json: dict = dict()
 
@@ -27,29 +22,8 @@ class Data_Manager:
         Returns:
             str: Data in string format
         """
-        return f"{self._data}"
-
-    def __getitem__(self, key: Any) -> Any:
-        """
-        Get data's items
-
-        Args:
-            key (Any): Key to access data
-        
-        Returns:
-            Any: Data accessed
-        """
-        return self._data[key]
-    
-    def __setitem__(self, key: Any, data: Any) -> None:
-        """
-        Get data's items
-
-        Args:
-            key (Any): Key to access data
-            data (Anny): Any data to add
-        """
-        self._data[key] = data
+        return "{" + f"""'data':{self._data}, 
+        'json':{self._json}""" + "}"
 
     def __len__(self) -> int:
         """
@@ -58,11 +32,11 @@ class Data_Manager:
         Returns:
             int: Number of itens
         """
-        return len(self._data)
+        return len(self._json)
 
     def update_data(self, data: dict) -> None:
         """
-        Updates the data
+        Updates the data to use in json
 
         Args:
             data (dict): Dict to add in json
@@ -71,7 +45,7 @@ class Data_Manager:
 
     def get_data(self) -> dict:
         """
-        Get all data
+        Get all data used to use in json
 
         Returns:
             dict: Dict to add in json
@@ -85,7 +59,7 @@ class Data_Manager:
         Args:
             json (dict): Dict in json format to change json
         """
-        self._data = json
+        self._json = json
 
     def get_json(self) -> dict:
         """
@@ -125,6 +99,28 @@ class Data_Manager:
 
         with open(file=filename, mode='w', encoding='utf-8') as file:
             js.dump(self._data, file, indent=2, ensure_ascii=False)
+
+    def insert_data_in_json(self, element_key: Any, keys: list) -> None:
+        """
+        Insert data in jason with selected keys
+
+        Args:
+            element_key (Any): Any element's key to access in json 
+            keys (list): List with json's keys in order
+        """
+        tmp_element: dict = self._json[keys[0]]
+        keys.pop(0)
+
+        for key in keys:
+            tmp_element = tmp_element[key]
+
+        tmp_element[element_key] = self.get_data()
+
+    def print_data_manager(self) -> None:
+        """
+        To see the data and json
+        """
+        print(self)
         
     def _create_file(self, filename: str) -> None:
         """
