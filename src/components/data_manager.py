@@ -1,4 +1,4 @@
-import json
+import json as js
 from typing import Any
 import logging
 
@@ -18,6 +18,7 @@ class Data_Manager:
         """
         #self.network: Network = network # type: ignore
         self._data: dict = dict()
+        self._json: dict = dict()
 
     def __str__(self) -> str:
         """
@@ -64,7 +65,7 @@ class Data_Manager:
         Updates the data
 
         Args:
-            data (dict): Dict to convert to json
+            data (dict): Dict to add in json
         """
         self._data = data
 
@@ -73,26 +74,47 @@ class Data_Manager:
         Get all data
 
         Returns:
-            dict: Dict in json format
+            dict: Dict to add in json
         """
         return self._data
     
-    def load_data(self, filename: str) -> None:
+    def update_json(self, json: dict) -> None:
+        """
+        Updates the json
+
+        Args:
+            json (dict): Dict in json format to change json
+        """
+        self._data = json
+
+    def get_json(self) -> dict:
+        """
+        Get the jason
+
+        Returns:
+            dict: Dict in json format
+        """
+        return self._json
+    
+    def load_json(self, filename: str, create_file_if_not_exist: bool = False) -> None:
         """
         Load the json data
 
         Args:
             filename (str): Json's filename to read
+            create_file_if_not_exist (bool): Create a file if it doesn't exists
         """
-        if not self._valid_filename(filename):
+        if create_file_if_not_exist and not self._exist_filename(filename):
+            self._create_file(filename)
+        elif not self._exist_filename(filename):
             return
         
         with open(file=filename, mode='r', encoding='utf-8') as file:
-            self._data = json.load(file)
+            self._data = js.load(file)
             log.debug(f"The data in {filename} was loaded")
             return
         
-    def write_data(self, filename: str) -> None:
+    def write_json(self, filename: str) -> None:
         """
         Write the json data
 
@@ -102,7 +124,7 @@ class Data_Manager:
         self._create_file(filename)
 
         with open(file=filename, mode='w', encoding='utf-8') as file:
-            json.dump(self._data, file, indent=2, ensure_ascii=False)
+            js.dump(self._data, file, indent=2, ensure_ascii=False)
         
     def _create_file(self, filename: str) -> None:
         """
@@ -115,9 +137,9 @@ class Data_Manager:
             log.debug(f"The file '{filename}' was created")
             file.close()
 
-    def _valid_filename(self, filename: str) -> bool:
+    def _exist_filename(self, filename: str) -> bool:
         """
-        Check the filename's validity
+        Check the filename's existence
 
         Returns:
             bool: True if filename is valid, else returns False
