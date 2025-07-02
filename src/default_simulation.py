@@ -18,7 +18,7 @@ def simulation(runs: int, resquests_per_run: int, attempts_per_request: int) -> 
 
     # Run without black holes
     for run in range(runs):
-        print(f"Rodando a rede padrão run: {run}")
+        print(f"Network without black hole run: {run}")
         network: Network = Network()
         network.topology_generator.grid_topology(ROWS, COLUMNS)
         nodes: list[int] = list(network.nodes.keys())
@@ -39,13 +39,13 @@ def simulation(runs: int, resquests_per_run: int, attempts_per_request: int) -> 
         for bh_number in BLACK_HOLES_NUMBER: 
             for intensity in INTENSITIES:
                 for run in range(runs):
-                    print(f"Rodando a rede atacada. run: {run}, target: {target}, bh_number: {bh_number}, intensity: {intensity}")
+                    print(f"Network with black holes. run: {run}, target: {target}, bh_number: {bh_number}, intensity: {intensity}")
                     network: Network = Network()
                     network.topology_generator.grid_topology(ROWS, COLUMNS)
                     network.attack_manager.create_black_holes(number_of_black_holes=bh_number, swap_prob=(0.8 - intensity), targets_per_black_hole=target)
                     nodes: list[int] = list(network.nodes.keys())
 
-                    for request in range(requests):
+                    for request in range(resquests_per_run):
                         tmp_nodes: list[int] = copy(nodes)
 
                         nodeA_id: int = choice(tmp_nodes)
