@@ -1,21 +1,24 @@
 from concurrent.futures import ProcessPoolExecutor
 
+from collections.abc import Callable
+from typing import Any
+
 class AsyncSimulator:
     """
     To create async simulations
     """
-    def __init__(self, simulation_function: 'function', runs: int, cores: int) -> None:
+    def __init__(self, simulation_function: Callable[..., Any], runs: int, cores: int) -> None:
         """
         Constructor for AsyncSimulator
 
         Args:
-            simulation_function (function): Functino with first param 'runs'
+            simulation_function (Callable): Function with first param 'runs'
             runs (int): Total simulations rounds
             cores (int): Total cores to divide process. Don't use all cores of your machine
         """
         self.runs: int = runs
         self.cores: int = cores
-        self.simulation_function = simulation_function
+        self.simulation_function: Callable[..., Any] = simulation_function
 
     def run(self, *args) -> list:
         """
