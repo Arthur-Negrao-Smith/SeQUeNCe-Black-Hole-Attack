@@ -1,3 +1,5 @@
+from .network_data import Network_Data
+
 import json as js
 from typing import Any
 import logging
@@ -12,7 +14,7 @@ class Data_Manager:
         """
         Constructor for Data_Manager
         """
-        self._data: dict = dict()
+        self._data: Network_Data = Network_Data()
         self._json: dict = dict()
 
     def __str__(self) -> str:
@@ -22,33 +24,32 @@ class Data_Manager:
         Returns:
             str: Data in string format
         """
-        return "{" + f"""'data':{self._data}, 
-        'json':{self._json}""" + "}"
+        return f"{self._json}"
 
     def __len__(self) -> int:
         """
         Get data's number of items
-        
+
         Returns:
             int: Number of itens
         """
         return len(self._json)
 
-    def update_data(self, data: dict) -> None:
+    def update_data(self, data: Network_Data) -> None:
         """
         Updates the data to use in json
 
         Args:
-            data (dict): Dict to add in json
+            data (Network_Data): Data to add in json
         """
         self._data = data
 
-    def get_data(self) -> dict:
+    def get_data(self) -> Network_Data:
         """
         Get all data used to use in json
 
         Returns:
-            dict: Dict to add in json
+            Network_Data: Dict to add in json
         """
         return self._data
     
@@ -108,13 +109,23 @@ class Data_Manager:
             element_key (Any): Any element's key to access in json 
             keys (list): List with json's keys in order
         """
-        tmp_element: dict = self._json[keys[0]]
+        # if key doens't exist, then create key
+        try:
+            tmp_element: dict = self._json[keys[0]]
+        except:
+            self._json[keys[0]] = dict()
+            tmp_element: dict = self._json[keys[0]]
         keys.pop(0)
 
         for key in keys:
-            tmp_element = tmp_element[key]
+            # if key doens't exist, then create key
+            try:
+                tmp_element = tmp_element[key]
+            except:
+                tmp_element[key] = dict()
+                tmp_element = tmp_element[key]
 
-        tmp_element[element_key] = self.get_data()
+        tmp_element[element_key] = self.get_data().get_all_data()
 
     def print_data_manager(self) -> None:
         """
