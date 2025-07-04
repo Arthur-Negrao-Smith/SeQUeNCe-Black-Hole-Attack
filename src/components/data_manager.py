@@ -52,7 +52,7 @@ class Data_Manager:
             Network_Data: Dict to add in json
         """
         return self._data
-    
+
     def update_json(self, json: dict) -> None:
         """
         Updates the json
@@ -70,7 +70,7 @@ class Data_Manager:
             dict: Dict in json format
         """
         return self._json
-    
+
     def load_json(self, filename: str, create_file_if_not_exist: bool = False) -> None:
         """
         Load the json data
@@ -83,12 +83,12 @@ class Data_Manager:
             self._create_file(filename)
         elif not self._exist_filename(filename):
             return
-        
+
         with open(file=filename, mode='r', encoding='utf-8') as file:
             self._data = js.load(file)
             log.debug(f"The data in {filename} was loaded")
             return
-        
+
     def write_json(self, filename: str) -> None:
         """
         Write the json data
@@ -99,7 +99,7 @@ class Data_Manager:
         self._create_file(filename)
 
         with open(file=filename, mode='w', encoding='utf-8') as file:
-            js.dump(self._data, file, indent=2, ensure_ascii=False)
+            js.dump(self._json, file, indent=2, ensure_ascii=False)
 
     def insert_data_in_json(self, element_key: Any, keys: list) -> None:
         """
@@ -127,12 +127,27 @@ class Data_Manager:
 
         tmp_element[element_key] = self.get_data().get_all_data()
 
+    def sum_jsons(self, json1: dict, json2: dict) -> dict:
+        result: dict = json1.copy()
+
+        for key, value in json2.items():
+            if key in result:
+                if isinstance(result[key], set) and isinstance(value, set):
+                    result[key] = result[key].union(value)
+                elif isinstance(result[key], dict) and isinstance(value, dict):
+                    result[key] = self.sum_jsons(result[key], value)
+                else:
+                    result[key] = value  # overwrite the data with equal key
+            else:
+                result[key] = value
+        return result
+
     def print_data_manager(self) -> None:
         """
         To see the data and json
         """
         print(self)
-        
+
     def _create_file(self, filename: str) -> None:
         """
         Create or clear a file
@@ -140,7 +155,7 @@ class Data_Manager:
         Args:
             filename (str): Json's filename to create
         """
-        with open(file=filename, mode='w+') as file:
+        with open(file=filename, mode='w') as file:
             log.debug(f"The file '{filename}' was created")
             file.close()
 
@@ -154,12 +169,13 @@ class Data_Manager:
         try:
             with open(file=filename, mode='r', encoding='utf-8') as file:
                 log.debug(f"The file '{filename}' exists")
+                file.close()
             return True
-            
+
         except FileNotFoundError:
             log.warning(f"The data wasn't loaded. The filename {filename} doesn't finded")
             return False
-        
+
         except:
             log.warning(f"The data wasn't loaded. An unknown error occurred")
             return False
