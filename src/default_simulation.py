@@ -1,9 +1,12 @@
 from components.data_manager import Data_Manager
 from components.network import Network
 from components.simulations import AsyncSimulator
+from components.utils.constants import ENTANGLEMENT_SWAPPING_PROB
 
 from random import choice
 from copy import copy
+from datetime import datetime
+import os
 
 PATH: str = 'src/data/default_simulation'
 
@@ -21,11 +24,10 @@ def simulation(runs: int, process_id: int, resquests_per_run: int, attempts_per_
     filename: str = f"{PATH}/default_simulation_{process_id}.json"
 
     all_data: Data_Manager = Data_Manager()
-    # all_data.load_json(filename=filename, create_file_if_not_exist=False)
 
     # Run without black holes
+    print(f"Network without black hole is running")
     for run in range(runs):
-        print(f"Network without black hole run: {run}")
         network: Network = Network()
         network.topology_generator.grid_topology(ROWS, COLUMNS)
         nodes: list[int] = list(network.nodes.keys())
@@ -42,18 +44,18 @@ def simulation(runs: int, process_id: int, resquests_per_run: int, attempts_per_
                                             max_attempts_per_entanglement=attempts_per_request, max_request_attempts=2)
 
         all_data.update_data(network.network_data)
-        all_data.insert_data_in_json(element_key=run, keys=['no-black-hole'])
+        all_data.insert_data_in_json(element_key=(runs*process_id + run), keys=['no-black-hole'])
         all_data.write_json(filename=filename)
 
     # run simulations with black holes
     for target in TARGETS:
         for bh_number in BLACK_HOLES_NUMBER: 
             for intensity in INTENSITIES:
+                print(f"Network with black holes. bh_targets: {target}, bh_number: {bh_number}, intensity: {intensity}")
                 for run in range(runs):
-                    print(f"Network with black holes. run: {run}, target: {target}, bh_number: {bh_number}, intensity: {intensity}")
                     network: Network = Network()
                     network.topology_generator.grid_topology(ROWS, COLUMNS)
-                    network.attack_manager.create_black_holes(number_of_black_holes=bh_number, swap_prob=(0.8 - intensity), targets_per_black_hole=target)
+                    network.attack_manager.create_black_holes(number_of_black_holes=bh_number, swap_prob=(ENTANGLEMENT_SWAPPING_PROB - intensity), targets_per_black_hole=target)
                     nodes: list[int] = list(network.nodes.keys())
 
                     for request in range(resquests_per_run):
@@ -68,12 +70,23 @@ def simulation(runs: int, process_id: int, resquests_per_run: int, attempts_per_
                                                         max_attempts_per_entanglement=attempts_per_request, max_request_attempts=2)
 
                     all_data.update_data(network.network_data)
-                    all_data.insert_data_in_json(element_key=run, keys=[target, bh_number, intensity])
+                    all_data.insert_data_in_json(element_key=(runs*process_id + run), keys=[target, bh_number, intensity])
                     all_data.write_json(filename=filename)
-
 
     return all_data
 
 
-sim = AsyncSimulator(simulation_function=simulation, runs=10, cores=3, need_id=True)
+# select cores number
+cores: int | None = os.cpu_count()
+if cores is None:
+    cores = 4 # max cores in your machine
+
+# calculate time
+start: datetime = datetime.now()
+
+# remove 1 core to avoid operation system's errors
+sim = AsyncSimulator(simulation_function=simulation, runs=10, cores=cores-1, need_id=True)
 sim.run(100, 8)
+
+# show simulation time
+print(f"\nAll simulations are finished. Simulation time: {datetime.now()-start}")
