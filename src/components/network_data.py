@@ -22,13 +22,16 @@ ATTACKS_DICT: dict[Attack_Types, str] = {
 REQUESTS: str = "requests"
 CONSUMED_EPRS: str = "consumed_eprs"
 TOTAL_ROUTE_FIDELITY: str = "total_route_fidelity"
-TOTAL_SUCCESS: str = "total_success"
-TOTAL_FAILS: str = "total_fails"
+TOTAL_REQUEST_SUCCESS: str = "total_request_success"
+TOTAL_REQUEST_FAILS: str = "total_request_fails"
 TOTAL_NO_PATHS: str = "total_no_paths"
 TOTAL_ROUTE_LENGTH: str = "total_route_length"
 TOTAL_REQUEST_ATTEMPTS: str = "total_request_attempts" 
 NUMBER_OF_NODES: str = "number_of_nodes"
 TOTAL_ENTANGLEMENT_ATTEMPTS: str = "total_entanglement_attempts"
+TOTAL_SWAPPING_ATTEMPTS: str = "total_swapping_attempts"
+TOTAL_SWAPPING_SUCCESS: int = 0
+TOTAL_SWAPPING_FAILS: int = 0
 TOPOLOGY: str = "topology"
 NUMBER_OF_BLACK_HOLES: str = "black_holes"
 TARGETS_PER_BLACK_HOLE: str = "targets_per_black_hole"
@@ -47,12 +50,15 @@ class Network_Data:
             REQUESTS:0, 
             CONSUMED_EPRS:0, 
             TOTAL_ROUTE_FIDELITY:0, 
-            TOTAL_SUCCESS:0, 
-            TOTAL_FAILS:0, 
+            TOTAL_REQUEST_SUCCESS:0, 
+            TOTAL_REQUEST_FAILS:0, 
             TOTAL_NO_PATHS:0, 
             TOTAL_ROUTE_LENGTH:0, 
             TOTAL_REQUEST_ATTEMPTS:0, 
             TOTAL_ENTANGLEMENT_ATTEMPTS:0, 
+            TOTAL_SWAPPING_ATTEMPTS:0,
+            TOTAL_SWAPPING_SUCCESS:0,
+            TOTAL_SWAPPING_FAILS:0,
             NUMBER_OF_NODES:0, 
             TOPOLOGY:"Not defined", 
             SIMULATION_TIME:0,
