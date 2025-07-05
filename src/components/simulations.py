@@ -16,9 +16,15 @@ class AsyncSimulator:
             runs (int): Total simulations rounds
             cores (int): Total cores to divide process. Don't use all cores of your machine
             need_id (bool): Flag to differentiate each process. To use this option the function should have a 'process_id' with second parameter
+
+        Raises:
+            Exception: If cores or runs are less than 1, then except is called
         """
+        if runs < 1 or cores < 1:
+            Exception(f"Invalid number to parameter runs or cores: runs->{runs}, cores->{cores}")
+
         self.runs: int = runs
-        self.cores: int = cores
+        self.cores: int = cores if cores <= runs else runs # can't use more cores than runs
         self.simulation_function: Callable[..., Any] = simulation_function
         self.need_id: bool = need_id
 
