@@ -1,6 +1,6 @@
 from .utils.enums import Attack_Types
 from .nodes import QuantumRepeater
-import network_data as nd
+import components.network_data as nd
 
 from random import choice
 import logging
@@ -38,8 +38,8 @@ class Attack_Manager:
             self._create_black_holes_with_targets(number_of_black_holes=number_of_black_holes, swap_prob=swap_prob, targets_per_black_hole=targets_per_black_hole)
 
         # updates network's data
-        self.network.data_manager.change_number(key=nd.NUMBER_OF_BLACK_HOLES, new_number=number_of_black_holes)
-        self.network.data_manager.change_number(key=nd.TARGETS_PER_BLACK_HOLE, new_number=targets_per_black_hole)
+        self.network.network_data.change_number(key=nd.NUMBER_OF_BLACK_HOLES, new_number=number_of_black_holes)
+        self.network.network_data.change_number(key=nd.TARGETS_PER_BLACK_HOLE, new_number=targets_per_black_hole)
 
         for bh in self.network.black_holes.values():
             log.debug(f"{bh.name} is a black hole with targets: {bh._black_hole_targets}")

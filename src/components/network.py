@@ -4,7 +4,7 @@ from sequence.topology.topology import BSMNode
 from .nodes import QuantumRepeater
 from .utils.enums import Topologies
 from .utils.logger import show_logs
-import network_data as nd
+import components.network_data as nd
 
 import networkx as nx
 from typing import Optional

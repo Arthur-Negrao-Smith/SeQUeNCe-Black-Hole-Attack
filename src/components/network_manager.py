@@ -5,7 +5,7 @@ from sequence.components.memory import Memory
 from .utils.enums import Directions, Entanglement_Response, Request_Response, Swapping_Response
 from .nodes import QuantumRepeater
 from .utils.constants import ENTANGLEMENT_FIDELITY, SWAPPING_INCREMENT_TIME, ENTANGLEMENT_INCREMENT_TIME
-import network_data as nd
+import components.network_data as nd
 
 import networkx as nx
 from typing import Optional, Type
@@ -153,7 +153,7 @@ class Network_Manager:
                 self.network.network_data.increment(key=nd.TOTAL_REQUEST_SUCCESS)
                 self.network.network_data.increment(
                     key=nd.TOTAL_ROUTE_FIDELITY, 
-                    increment_number=self.network.nodes[nodeA_id].resource_manager.get_memoy(
+                    increment_number=self.network.nodes[nodeA_id].resource_manager.get_memory(
                         Directions.RIGHT).fidelity)
                 return Request_Response.ENTANGLED_SUCCESS
 
