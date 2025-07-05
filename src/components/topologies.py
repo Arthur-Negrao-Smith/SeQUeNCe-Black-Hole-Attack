@@ -1,8 +1,8 @@
-from sequence.topology.topology import Node, BSMNode, SingleAtomBSM
+from sequence.topology.topology import BSMNode, SingleAtomBSM
 from sequence.components.optical_channel import ClassicalChannel, QuantumChannel
 
 from .utils.constants import BSM_EFFICIENCY, QCHANNEL_ATTENUATION, QCHANNEL_DISTANCE, CCHANNEL_DISTANCE, CCHANNEL_DELAY, ENTANGLEMENT_SWAPPING_PROB
-from .utils.enums import Topologies, Node_Types
+from .utils.enums import Topologies
 from .nodes import QuantumRepeater
 
 import networkx as nx
@@ -23,7 +23,7 @@ class TopologyGen:
             network (Network): Network to build the topology
             start_seed (Optional[int]): Seed to replicate the simulation. Default is None
         """
-        
+
         self.network: Network = network # type: ignore
 
         self.seed: None | int = start_seed
@@ -50,7 +50,7 @@ class TopologyGen:
                 tmp_node.set_seed(self.seed)
                 self.seed += 1
             nodes[c] = tmp_node
-        
+
         self.network.update_number_of_nodes(number_of_nodes)
         self.network.update_nodes(nodes)
         self.network.update_normal_nodes(copy(nodes))
@@ -64,7 +64,7 @@ class TopologyGen:
         if self.seed is not None:
             bsm_node.set_seed(self.seed)
             self.seed += 1
-        
+
         self.network.bsm_nodes[edge] = bsm_node # adding bsm node in a dict
         bsm: SingleAtomBSM = bsm_node.get_components_by_type("SingleAtomBSM")[0] # <- Get the bsm without node
         bsm.update_detectors_params('efficiency', BSM_EFFICIENCY) # <- Change the detector efficiency
@@ -108,7 +108,7 @@ class TopologyGen:
 
             bsm_node: BSMNode = self._create_BSMNode(nodeA_id=nodeA_id, nodeB_id=nodeB_id,
                                             edge=edge)
-            
+
             self._connect_quantum_channels(nodeA_id=nodeA_id, nodeB_id=nodeB_id, bsm_node=bsm_node,
                             qc_attenuation=QCHANNEL_ATTENUATION, qc_distance=QCHANNEL_DISTANCE)           
 
@@ -117,20 +117,20 @@ class TopologyGen:
         self.network.timeline.init()
 
     def grid_topology(self, rows: int, columns: int) -> dict[int, QuantumRepeater]:
-        
+
         self._create_nodes(rows*columns)
 
         graph: nx.Graph =  nx.grid_2d_graph(rows, columns)
         graph = nx.convert_node_labels_to_integers(graph)
 
         self._update_network_topology(graph=graph, topology_name=Topologies.GRID)
-        
+
         self._connect_network_channels()
 
         return self.network.nodes
 
     def line_topology(self, number_of_nodes: int) -> dict[int, QuantumRepeater]:
-        
+
         self._create_nodes(number_of_nodes)
 
         graph: nx.Graph = nx.path_graph(number_of_nodes)
@@ -141,7 +141,7 @@ class TopologyGen:
         self._connect_network_channels()
 
         return self.network.nodes
-    
+
     def erdos_renyi_topology(self, number_of_nodes: int, prob_edge_creation: float) -> dict[int, QuantumRepeater]:
 
         self._create_nodes(number_of_nodes)
@@ -154,7 +154,7 @@ class TopologyGen:
         self._connect_network_channels()
 
         return self.network.nodes
-    
+
     def barabasi_albert_topology(self, number_of_nodes: int, edges_to_attach: int) -> dict[int, QuantumRepeater]:
 
         self._create_nodes(number_of_nodes)
@@ -167,7 +167,7 @@ class TopologyGen:
         self._connect_network_channels()
 
         return self.network.nodes
-    
+
     def star_topology(self, number_of_nodes: int) -> dict[int, QuantumRepeater]:
 
         self._create_nodes(number_of_nodes)
@@ -180,7 +180,7 @@ class TopologyGen:
         self._connect_network_channels()
 
         return self.network.nodes
-    
+
     def ring_topology(self, number_of_nodes: int) -> dict[int, QuantumRepeater]:
 
         self._create_nodes(number_of_nodes)
@@ -193,4 +193,3 @@ class TopologyGen:
         self._connect_network_channels()
 
         return self.network.nodes
-    
