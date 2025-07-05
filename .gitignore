@@ -175,3 +175,7 @@ cython_debug/
 
 # Virtual Envarioment
 .venv/
+
+# Jsons and CSVs
+*.json
+*.csv
