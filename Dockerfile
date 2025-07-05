@@ -9,5 +9,5 @@ COPY . ./
 
 USER app
 
-CMD ["python", "test.py"]
+CMD ["python", "default_simulations.py"]
 
