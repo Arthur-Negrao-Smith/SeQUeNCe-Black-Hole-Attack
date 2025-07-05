@@ -1,9 +1,10 @@
 from sequence.kernel.timeline import Timeline
-from sequence.topology.topology import Node, BSMNode
+from sequence.topology.topology import BSMNode
 
 from .nodes import QuantumRepeater
 from .utils.enums import Topologies
 from .utils.logger import show_logs
+import network_data as nd
 
 import networkx as nx
 from typing import Optional
@@ -28,14 +29,14 @@ class Network:
             show_logs()
 
         self.timeline: Timeline = Timeline()
-       
+
         self.number_of_nodes: int
-        
+
         self.nodes: dict[int, QuantumRepeater] = dict()
         self.normal_nodes: dict[int, QuantumRepeater] = dict()
         self.black_holes: dict[int, QuantumRepeater] = dict()
         self.bsm_nodes: dict[tuple[int, int], BSMNode] = dict()
-        
+
         from .topologies import TopologyGen
         self.graph: nx.Graph
         self.topology_generator = TopologyGen(self, start_seed=start_seed)
@@ -48,7 +49,7 @@ class Network:
 
         from .network_data import Network_Data
         self.network_data: Network_Data = Network_Data()
-        
+
         log.debug("Initiated Network")
 
     def draw(self, labels: bool = True) -> None:
@@ -68,7 +69,7 @@ class Network:
             list[tuple[int, int]]: List with all edges
         """
         return self.graph.edges()
-    
+
     def update_nodes(self, nodes: dict[int, QuantumRepeater]) -> None:
         """
         Update the network's nodes 
@@ -87,6 +88,9 @@ class Network:
         """
         self.topology = topology_name
 
+        # update network's data
+        self.network_data.change_string(key=nd.TOPOLOGY, new_string=nd.TOPOLOGIES_DICT[topology_name])
+
     def update_graph(self, graph: nx.Graph) -> None:
         """
         Update the network's graph 
@@ -104,6 +108,9 @@ class Network:
             number_of_nodes (int): New number of nodes to updates
         """
         self.number_of_nodes = number_of_nodes
+
+        # updates network's data
+        self.network_data.change_number(key=nd.NUMBER_OF_NODES, new_number=number_of_nodes)
 
     def update_normal_nodes(self, normal_nodes: dict[int, QuantumRepeater]) -> None:
         """
@@ -138,9 +145,9 @@ class Network:
             return self.bsm_nodes[(nodeA_id, nodeB_id)]
         if (nodeB_id, nodeA_id) in self.bsm_nodes.keys():
             return self.bsm_nodes[(nodeB_id, nodeA_id)]
-        
+
         return None
-    
+
     def _run(self) -> None:
         """
         Run network's events
@@ -155,3 +162,6 @@ class Network:
             time_to_increment (float | int): Time to increment in network's time
         """
         self.timeline.time = self.timeline.now() + time_to_increment
+
+        # updates network's data
+        self.network_data.increment(key=nd.SIMULATION_TIME, increment_number=time_to_increment)

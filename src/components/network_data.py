@@ -1,7 +1,24 @@
-# Data constants
+from .utils.enums import Attack_Types, Topologies
+
 from typing import Any
 
+# for translate enum to string
+TOPOLOGIES_DICT: dict[Topologies, str] = {
+    Topologies.BARABASI_ALBERT:'Barabási-Albert',
+    Topologies.ERDOS_RENYI:'Erdős–Rényi',
+    Topologies.GRID:'Grid',
+    Topologies.LINE:'Line',
+    Topologies.RING:'Ring',
+    Topologies.STAR:'Star'
+}
 
+# for translate enum to string
+ATTACKS_DICT: dict[Attack_Types, str] = {
+    Attack_Types.BLACK_HOLE:'Black-hole',
+    Attack_Types.HIJACKING:"Hijacking"
+}
+
+# Dict keys
 REQUESTS: str = "requests"
 CONSUMED_EPRS: str = "consumed_eprs"
 TOTAL_ROUTE_FIDELITY: str = "total_route_fidelity"
@@ -13,12 +30,19 @@ TOTAL_REQUEST_ATTEMPTS: str = "total_request_attempts"
 NUMBER_OF_NODES: str = "number_of_nodes"
 TOTAL_ENTANGLEMENT_ATTEMPTS: str = "total_entanglement_attempts"
 TOPOLOGY: str = "topology"
-BLACK_HOLES: str = "black_holes"
-
-
+NUMBER_OF_BLACK_HOLES: str = "black_holes"
+TARGETS_PER_BLACK_HOLE: str = "targets_per_black_hole"
+SIMULATION_TIME: str = 'simulation_time'
+ATTACK_NAME: str = 'attack_name'
 
 class Network_Data:
+    """
+    Data to storage in Network
+    """
     def __init__(self) -> None:
+        """
+        Constructor for Network_Data
+        """
         self._data: dict = {
             REQUESTS:0, 
             CONSUMED_EPRS:0, 
@@ -28,23 +52,36 @@ class Network_Data:
             TOTAL_NO_PATHS:0, 
             TOTAL_ROUTE_LENGTH:0, 
             TOTAL_REQUEST_ATTEMPTS:0, 
-            NUMBER_OF_NODES:0, 
             TOTAL_ENTANGLEMENT_ATTEMPTS:0, 
-            TOPOLOGY:"not defined", 
-            BLACK_HOLES:[]
+            NUMBER_OF_NODES:0, 
+            TOPOLOGY:"Not defined", 
+            SIMULATION_TIME:0,
+            NUMBER_OF_BLACK_HOLES:0,
+            TARGETS_PER_BLACK_HOLE:0,
+            ATTACK_NAME:"No attack",
         }
 
-    def increment(self, key: str, increment_number: int) -> None:
+    def increment(self, key: str, increment_number: int | float = 1) -> None:
         """
         Increment any data's number
 
         Args:
             key (str): Key to access data
-            increment_number (int): Number to add
+            increment_number (int | float): Number to add
         """
         self._data[key] += increment_number
 
-    def change_string(self, key: str, string: str) -> None:
+    def change_number(self, key: str, new_number: int | float) -> None:
+        """
+        Increment any data's number
+
+        Args:
+            key (str): Key to access data
+            new_number (int | float): Number to updates data
+        """
+        self._data[key] = new_number
+
+    def change_string(self, key: str, new_string: str) -> None:
         """
         Change any data's string
 
@@ -52,7 +89,7 @@ class Network_Data:
             key (str): Key to access data
             string (str): String to updates data
         """
-        self._data[key] = string
+        self._data[key] = new_string
 
     def change_list(self, key: str, new_list: list) -> None:
         """
@@ -84,4 +121,3 @@ class Network_Data:
             dict: Dict with all data
         """
         return self._data
-    

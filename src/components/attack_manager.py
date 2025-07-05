@@ -1,5 +1,6 @@
 from .utils.enums import Attack_Types
 from .nodes import QuantumRepeater
+import network_data as nd
 
 from random import choice
 import logging
@@ -27,7 +28,7 @@ class Attack_Manager:
         if swap_prob < 0 or swap_prob > 1:
             log.warning(f"No black hole was created. The parameter swap_prob is invalid: {swap_prob}")
             return
-        
+
         # Add the attack type
         self._update_attack_type(Attack_Types.BLACK_HOLE)
 
@@ -35,6 +36,10 @@ class Attack_Manager:
             self._create_black_holes_no_targets(number_of_black_holes=number_of_black_holes, swap_prob=swap_prob)
         else:
             self._create_black_holes_with_targets(number_of_black_holes=number_of_black_holes, swap_prob=swap_prob, targets_per_black_hole=targets_per_black_hole)
+
+        # updates network's data
+        self.network.data_manager.change_number(key=nd.NUMBER_OF_BLACK_HOLES, new_number=number_of_black_holes)
+        self.network.data_manager.change_number(key=nd.TARGETS_PER_BLACK_HOLE, new_number=targets_per_black_hole)
 
         for bh in self.network.black_holes.values():
             log.debug(f"{bh.name} is a black hole with targets: {bh._black_hole_targets}")
@@ -61,6 +66,9 @@ class Attack_Manager:
         """
         self._attack_type = attack_type
 
+        # updates network's data
+        self.network.network_data.change_string(key=nd.ATTACK_NAME, new_string=nd.ATTACKS_DICT[attack_type])
+
     def _create_black_holes_no_targets(self, number_of_black_holes: int, swap_prob: int | float) -> None:
         """
         Create black holes withtout targets in the network
@@ -72,15 +80,15 @@ class Attack_Manager:
         if number_of_black_holes < 1:
             log.warning(f"No black hole was created. The parameter number_of_black_holes is invalid: {number_of_black_holes}")
             return
-        
+
         if number_of_black_holes >= len(self.network.normal_nodes):
             log.warning(f"No black hole was created. The parameter number_of_black_holes is invalid: {number_of_black_holes} > number of normal nodes")
             return
-        
+
         counter: int = number_of_black_holes
         avaliable_nodes_IDs: list[int] = list(self.network.normal_nodes.keys())
         while counter != 0:
-            
+
             # select a random node
             tmp_id: int = choice(avaliable_nodes_IDs)
             avaliable_nodes_IDs.remove(tmp_id)
@@ -88,7 +96,7 @@ class Attack_Manager:
             # change the entanglement swapping probability
             tmp_node: QuantumRepeater = self.network.nodes[tmp_id]
             tmp_node.resource_manager._turn_black_hole(new_swap_prob=swap_prob, targets=None)
-            
+
             # add to black holes
             self.network.black_holes[tmp_id] = self.network.nodes[tmp_id]
 
@@ -113,24 +121,24 @@ class Attack_Manager:
         elif number_of_black_holes == self.network.number_of_nodes:
             log.warning(f"No black hole was created. The parameter number_of_black_holes is invalid: {number_of_black_holes} >= number of normal nodes")
             return
-        
+
         if targets_per_black_hole <= 0:
             log.warning(f"No black hole was created. The parameter targets_per_black_hole is invalid: {targets_per_black_hole}")
             return
         elif len(self.network.normal_nodes) <= targets_per_black_hole:
             log.warning(f"No black hole was created. The parameter targets_per_black_hole is invalid: {targets_per_black_hole} >= number of normal nodes")
             return
-        
+
         counter: int = number_of_black_holes
 
         while counter > 0:
-            
+
             # convert normal nodes to a list
             avaliable_nodes_IDs: list = list(self.network.normal_nodes.keys())
-            
+
             # select a random node to be a black hole
             tmp_bh_id: int = choice(avaliable_nodes_IDs)
-            
+
             # remove the node from normal nodes' list
             avaliable_nodes_IDs.remove(tmp_bh_id)
 
