@@ -44,7 +44,7 @@ def simulation(runs: int, process_id: int, resquests_per_run: int, attempts_per_
                                             max_attempts_per_entanglement=attempts_per_request, max_request_attempts=2)
 
         all_data.update_data(network.network_data)
-        all_data.insert_data_in_json(element_key=(runs*process_id + run), keys=['no-black-hole'])
+        all_data.insert_data_in_json(element_key=(f'run: {runs*process_id + run}'), keys=['no-black-hole'])
         all_data.write_json(filename=filename)
 
     # run simulations with black holes
@@ -70,7 +70,7 @@ def simulation(runs: int, process_id: int, resquests_per_run: int, attempts_per_
                                                         max_attempts_per_entanglement=attempts_per_request, max_request_attempts=2)
 
                     all_data.update_data(network.network_data)
-                    all_data.insert_data_in_json(element_key=(runs*process_id + run), keys=[target, bh_number, intensity])
+                    all_data.insert_data_in_json(element_key=f'run: {(runs*process_id + run)}', keys=['with-black-hole',f'targets: {target}', f'number of bh: {bh_number}', f'intensity: {intensity}'])
                     all_data.write_json(filename=filename)
 
     return all_data
