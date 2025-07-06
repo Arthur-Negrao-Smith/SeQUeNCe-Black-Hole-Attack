@@ -11,3 +11,7 @@ venv/
 # Ignore etc files
 LICENSE
 README
+
+# Ignore data
+.json
+.csv

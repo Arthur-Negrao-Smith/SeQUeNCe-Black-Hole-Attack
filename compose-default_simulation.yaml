@@ -1,0 +1,6 @@
+services:
+  default_simulation:
+    build:
+      context: .
+    image: simulations
+    command: python src/default_simulation.py
