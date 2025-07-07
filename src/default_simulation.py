@@ -51,7 +51,7 @@ def simulation(runs: int, process_id: int, resquests_per_run: int, attempts_per_
     for target in TARGETS:
         for bh_number in BLACK_HOLES_NUMBER: 
             for intensity in INTENSITIES:
-                print(f"Network with black holes. bh_targets: {target}, bh_number: {bh_number}, intensity: {intensity}")
+                print(f"Network with black holes. bh_targets: {target}, bh_number: {bh_number}, intensity: {intensity:.1f}")
                 for run in range(runs):
                     network: Network = Network()
                     network.topology_generator.grid_topology(ROWS, COLUMNS)
@@ -70,7 +70,7 @@ def simulation(runs: int, process_id: int, resquests_per_run: int, attempts_per_
                                                         max_attempts_per_entanglement=attempts_per_request, max_request_attempts=2)
 
                     all_data.update_data(network.network_data)
-                    all_data.insert_data_in_json(element_key=f'run: {(runs*process_id + run)}', keys=['with-black-hole',f'targets: {target}', f'number of bh: {bh_number}', f'intensity: {intensity}'])
+                    all_data.insert_data_in_json(element_key=f'run: {(runs*process_id + run)}', keys=['with-black-hole',f'targets: {target}', f'number of bh: {bh_number}', f'intensity: {intensity:.1f}'])
                     all_data.write_json(filename=filename)
 
     return all_data
