@@ -19,7 +19,25 @@ TARGETS: list[int] = [0, 1]
 BLACK_HOLES_NUMBER: list[int] = [1, 3, 5]
 INTENSITIES: list[float] = [0.1*i for i in range(1, 8)]
 
+# Simulations Params
+RUNS: int = 1000
+REQUESTS_PER_RUN: int = 100
+ATTEMPTS_PER_REQUEST: int = 2
+
+
 def simulation(runs: int, process_id: int, resquests_per_run: int, attempts_per_request: int) -> Data_Manager:
+    """
+    Simulation to simulation a black hole attack to a entanglement network with grid topology
+
+    Args:
+        runs (int): Total runs to execute in simulation
+        process_id (int): Id to identify process to use AsyncSimulator
+        requests_per_run (int): Total requests calls per run
+        attempts_per_request (int): Total attempts to try per request
+
+    Returns:
+        Data_Manager: Return all data in json format within the Data_Manager
+    """
 
     filename: str = f"{PATH}/default_simulation_{process_id}.json"
 
@@ -85,8 +103,8 @@ if cores is None:
 start: datetime = datetime.now()
 
 # remove 1 core to avoid operation system's errors
-sim = AsyncSimulator(simulation_function=simulation, runs=10, cores=cores-1, need_id=True)
-sim.run(100, 8)
+sim = AsyncSimulator(simulation_function=simulation, runs=RUNS, cores=cores-1, need_id=True)
+sim.run(REQUESTS_PER_RUN, ATTEMPTS_PER_REQUEST)
 
 # show simulation time
 print(f"\nAll simulations are finished. Simulation time: {datetime.now()-start}")
