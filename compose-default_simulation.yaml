@@ -3,4 +3,7 @@ services:
     build:
       context: .
     image: simulations
+    container_name: dafault_simulation
     command: python src/default_simulation.py
+    volumes:
+      - ./src/data/default_simulation/:/app/src/data/default_simulation

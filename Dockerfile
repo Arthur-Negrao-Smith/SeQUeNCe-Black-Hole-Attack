@@ -1,7 +1,7 @@
 # Use debian linux to use python
 FROM python:3.12.10-slim
 
-WORKDIR /usr/src/app
+WORKDIR /app
 
 # Install libs python
 COPY requirements.txt ./
