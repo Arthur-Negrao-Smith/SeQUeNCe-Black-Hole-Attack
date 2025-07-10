@@ -17,14 +17,39 @@ ROWS: int = 3
 COLUMNS: int = 4
 
 # Attack constants
-TARGETS: list[int] = [0, 1]
-TOPOLOGIES: list[str] = [TOPOLOGIES_DICT[TP.GRID], TOPOLOGIES_DICT[TP.BARABASI_ALBERT], TOPOLOGIES_DICT[TP.ERDOS_RENYI]]
-NUMBER_OF_NODES: list[int] = []
+PASS_OF_NODE: int = 12
+TARGETS: tuple[int, int] = (0, 1)
+TOPOLOGIES: tuple[TP, TP, TP] = (TP.GRID, TP.BARABASI_ALBERT, TP.ERDOS_RENYI)
+NUMBER_OF_NODES: tuple[int, ...] = tuple([i for i in range(12, 108, PASS_OF_NODE)])
+TOPOLOGY_PARAMS: tuple[float, float, float] = (0.1, 0.3, 0.5)
+GRADE_NODES: dict[int, tuple[int, int]] = {
+    12:(3, 4),
+    24:(4, 6),
+    36:(6, 6),
+    48:(6, 8),
+    60:(6, 10),
+    72:(8, 9),
+    84:(7, 12),
+    96:(8, 12)
+}
 
 # Simulations Params
 RUNS: int = 1000
 REQUESTS_PER_RUN: int = 100
 ATTEMPTS_PER_REQUEST: int = 2
+
+
+def select_topology(network: Network, topology: TP, *args) -> None:
+    match topology:
+        case TP.GRID:
+            network.topology_generator.grid_topology(*GRADE_NODES[args[0]])
+        case TP.BARABASI_ALBERT:
+            network.topology_generator.barabasi_albert_topology(args[0], int(args[1]*10))
+        case TP.ERDOS_RENYI:
+            network.topology_generator.erdos_renyi_topology(args[0], args[1])
+        case _:
+            print("Erro: Topology doens't valid")
+            return
 
 
 def simulation(runs: int, process_id: int, resquests_per_run: int, attempts_per_request: int) -> Data_Manager:
@@ -41,7 +66,7 @@ def simulation(runs: int, process_id: int, resquests_per_run: int, attempts_per_
         Data_Manager: Return all data in json format within the Data_Manager
     """
 
-    filename: str = f"{PATH}/default_simulation_{process_id}.json"
+    filename: str = f"{PATH}/topology_simulation_{process_id}.json"
 
     all_data: Data_Manager = Data_Manager()
 
@@ -70,7 +95,7 @@ def simulation(runs: int, process_id: int, resquests_per_run: int, attempts_per_
     # run simulations with black holes
     for target in TARGETS:
         for topology in TOPOLOGIES: 
-            for intensity in INTENSITIES:
+            for num_of_nodes in NUMBER_OF_NODES:
                 print(f"Network with black holes. bh_targets: {target}, bh_number: {bh_number}, intensity: {intensity:.1f}")
                 for run in range(runs):
                     network: Network = Network()
