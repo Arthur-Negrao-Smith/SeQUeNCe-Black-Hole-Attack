@@ -1,7 +1,6 @@
 from components.data_manager import Data_Manager
 from components.network import Network
 from components.simulations import AsyncSimulator
-from components.utils.constants import ENTANGLEMENT_SWAPPING_PROB
 from components.utils.enums import Topologies as TP
 from components.network_data import TOPOLOGIES_DICT
 
@@ -17,12 +16,13 @@ ROWS: int = 3
 COLUMNS: int = 4
 
 # Attack constants
+SWAP_PROB: float = 0.4
 PASS_OF_NODE: int = 12
 TARGETS: tuple[int, int] = (0, 1)
 TOPOLOGIES: tuple[TP, TP, TP] = (TP.GRID, TP.BARABASI_ALBERT, TP.ERDOS_RENYI)
 NUMBER_OF_NODES: tuple[int, ...] = tuple([i for i in range(12, 108, PASS_OF_NODE)])
 TOPOLOGY_PARAMS: tuple[float, float, float] = (0.1, 0.3, 0.5)
-GRADE_NODES: dict[int, tuple[int, int]] = {
+GRIDE_NODES: dict[int, tuple[int, int]] = {
     12:(3, 4),
     24:(4, 6),
     36:(6, 6),
@@ -34,22 +34,9 @@ GRADE_NODES: dict[int, tuple[int, int]] = {
 }
 
 # Simulations Params
-RUNS: int = 1000
+RUNS: int = 100
 REQUESTS_PER_RUN: int = 100
 ATTEMPTS_PER_REQUEST: int = 2
-
-
-def select_topology(network: Network, topology: TP, *args) -> None:
-    match topology:
-        case TP.GRID:
-            network.topology_generator.grid_topology(*GRADE_NODES[args[0]])
-        case TP.BARABASI_ALBERT:
-            network.topology_generator.barabasi_albert_topology(args[0], int(args[1]*10))
-        case TP.ERDOS_RENYI:
-            network.topology_generator.erdos_renyi_topology(args[0], args[1])
-        case _:
-            print("Erro: Topology doens't valid")
-            return
 
 
 def simulation(runs: int, process_id: int, resquests_per_run: int, attempts_per_request: int) -> Data_Manager:
@@ -72,38 +59,32 @@ def simulation(runs: int, process_id: int, resquests_per_run: int, attempts_per_
 
     # Run without black holes
     print(f"Network without black hole is running")
-    for run in range(runs):
-        network: Network = Network()
-        network.topology_generator.grid_topology(ROWS, COLUMNS)
-        nodes: list[int] = list(network.nodes.keys())
+    for topology in TOPOLOGIES:
+        for parameter in TOPOLOGY_PARAMS:
 
-        for requests in range(resquests_per_run):
-            tmp_nodes: list[int] = copy(nodes)
+            # if it is grid topology and not the first run just ignore
+            if topology == TP.GRID and parameter != TOPOLOGY_PARAMS[0]:
+                continue
 
-            nodeA_id: int = choice(tmp_nodes)
-            tmp_nodes.remove(nodeA_id)
+            for number_of_nodes in NUMBER_OF_NODES:
+                tmp_parameter: list | tuple[int, int]
 
-            nodeB_id: int = choice(tmp_nodes)
+                # to select param for each topology
+                match topology:
+                    case TP.BARABASI_ALBERT:
+                        tmp_parameter = [int(parameter*10)]
+                    case TP.ERDOS_RENYI:
+                        tmp_parameter = [parameter]
+                    case _:
+                        tmp_parameter = GRIDE_NODES[number_of_nodes] 
 
-            network.network_manager.request(nodeA_id=nodeA_id, nodeB_id=nodeB_id, 
-                                            max_attempts_per_entanglement=attempts_per_request, max_request_attempts=2)
-
-        all_data.update_data(network.network_data)
-        all_data.insert_data_in_json(element_key=(f'run: {runs*process_id + run}'), keys=['no-black-hole'])
-        all_data.write_json(filename=filename)
-
-    # run simulations with black holes
-    for target in TARGETS:
-        for topology in TOPOLOGIES: 
-            for num_of_nodes in NUMBER_OF_NODES:
-                print(f"Network with black holes. bh_targets: {target}, bh_number: {bh_number}, intensity: {intensity:.1f}")
                 for run in range(runs):
                     network: Network = Network()
-                    network.topology_generator.grid_topology(ROWS, COLUMNS)
-                    network.attack_manager.create_black_holes(number_of_black_holes=bh_number, swap_prob=(ENTANGLEMENT_SWAPPING_PROB - intensity), targets_per_black_hole=target)
+
+                    network.topology_generator.select_topology(topology, *tmp_parameter)
                     nodes: list[int] = list(network.nodes.keys())
 
-                    for request in range(resquests_per_run):
+                    for requests in range(resquests_per_run):
                         tmp_nodes: list[int] = copy(nodes)
 
                         nodeA_id: int = choice(tmp_nodes)
@@ -112,11 +93,68 @@ def simulation(runs: int, process_id: int, resquests_per_run: int, attempts_per_
                         nodeB_id: int = choice(tmp_nodes)
 
                         network.network_manager.request(nodeA_id=nodeA_id, nodeB_id=nodeB_id, 
-                                                        max_attempts_per_entanglement=attempts_per_request, max_request_attempts=2)
+                                                    max_attempts_per_entanglement=attempts_per_request, max_request_attempts=2)
 
                     all_data.update_data(network.network_data)
-                    all_data.insert_data_in_json(element_key=f'run: {(runs*process_id + run)}', keys=['with-black-hole',f'targets: {target}', f'number of bh: {bh_number}', f'intensity: {intensity:.1f}'])
+
+                    if topology == TP.GRID:
+                        all_data.insert_data_in_json(element_key=(f'run: {runs*process_id + run}'), keys=['no-black-hole', TOPOLOGIES_DICT[topology], f"number-of-nodes: {number_of_nodes}"])
+                    else:
+                        all_data.insert_data_in_json(element_key=(f'run: {runs*process_id + run}'), keys=['no-black-hole', TOPOLOGIES_DICT[topology], f"param: {int(parameter*10)}", f"number-of-nodes: {number_of_nodes}"])
+
                     all_data.write_json(filename=filename)
+
+    # run simulations with black holes
+    print("Network with black holes is running.")
+    for target in TARGETS:
+        for topology in TOPOLOGIES: 
+            for parameter in TOPOLOGY_PARAMS:
+
+                # if it is grid topology and not the first run just ignore
+                if topology == TP.GRID and parameter != TOPOLOGY_PARAMS[0]:
+                    continue
+
+                for number_of_nodes in NUMBER_OF_NODES:
+                    print(f"BHA >> targets: {target}, topology: {TOPOLOGIES_DICT[topology]}, param: {int(parameter * 10)}, number-of-nodes: {number_of_nodes}")
+
+                    bh_number: int = int(number_of_nodes * 20/100) # 20% of black holes
+
+                    tmp_parameter: list | tuple[int, int]
+
+                    # to select param for each topology
+                    match topology:
+                        case TP.BARABASI_ALBERT:
+                            tmp_parameter = [int(parameter*10)]
+                        case TP.ERDOS_RENYI:
+                            tmp_parameter = [parameter]
+                        case _:
+                            tmp_parameter = GRIDE_NODES[number_of_nodes] 
+
+                    for run in range(runs):
+                        network: Network = Network()
+                        network.topology_generator.select_topology(topology, *tmp_parameter)
+                        network.attack_manager.create_black_holes(number_of_black_holes=bh_number, swap_prob=SWAP_PROB, targets_per_black_hole=target)
+                        nodes: list[int] = list(network.nodes.keys())
+
+                        for request in range(resquests_per_run):
+                            tmp_nodes: list[int] = copy(nodes)
+
+                            nodeA_id: int = choice(tmp_nodes)
+                            tmp_nodes.remove(nodeA_id)
+
+                            nodeB_id: int = choice(tmp_nodes)
+
+                            network.network_manager.request(nodeA_id=nodeA_id, nodeB_id=nodeB_id, 
+                                                            max_attempts_per_entanglement=attempts_per_request, max_request_attempts=2)
+
+                        all_data.update_data(network.network_data)
+
+                        if topology == TP.GRID:
+                            all_data.insert_data_in_json(element_key=f'run: {(runs*process_id + run)}', keys=['with-black-hole', f'targets: {target}', f'{TOPOLOGIES_DICT[topology]}', f'number-of-nodes: {number_of_nodes}'])
+                        else:
+                            all_data.insert_data_in_json(element_key=f'run: {(runs*process_id + run)}', keys=['with-black-hole', f'targets: {target}', f'{TOPOLOGIES_DICT[topology]}', f'param: {int(parameter * 10)}', f'number-of-nodes: {number_of_nodes}'])
+
+                        all_data.write_json(filename=filename)
 
     return all_data
 
