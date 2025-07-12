@@ -39,6 +39,7 @@ class Network:
 
         from .topologies import TopologyGen
         self.graph: nx.Graph
+        self.topology: Topologies
         self.topology_generator = TopologyGen(self, start_seed=start_seed)
 
         from .network_manager import Network_Manager
@@ -79,17 +80,17 @@ class Network:
         """
         self.nodes = nodes
 
-    def update_topology(self, topology_name: Topologies) -> None:
+    def update_topology(self, topology: Topologies) -> None:
         """
         Update the network's topology_name 
 
         Args:
-            topology_name (Topologies): New topology to updates
+            topology (Topologies): New topology to updates
         """
-        self.topology = topology_name
+        self.topology = topology
 
         # update network's data
-        self.network_data.change_string(key=nd.TOPOLOGY, new_string=nd.TOPOLOGIES_DICT[topology_name])
+        self.network_data.change_string(key=nd.TOPOLOGY, new_string=nd.TOPOLOGIES_DICT[topology])
 
     def update_graph(self, graph: nx.Graph) -> None:
         """

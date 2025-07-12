@@ -58,6 +58,17 @@ class TopologyGen:
         return nodes
 
     def _create_BSMNode(self, nodeA_id: int, nodeB_id: int, edge: tuple[int, int]) -> BSMNode:
+        """
+        Create BSMNode between two nodes
+
+        Args:
+            nodeA_id (int): First node ID
+            nodeB_id (int): Second node ID
+            edge tuple(int, int): Edge between nodeA and nodeB
+
+        Returns:
+            BSMNode: BSMNode connected with nodeA and nodeB
+        """
 
         bsm_node: BSMNode = BSMNode(name=f'bsm_node({nodeA_id}, {nodeB_id})', timeline=self.network.timeline,
                                         other_nodes=[f'node[{nodeA_id}]', f'node[{nodeB_id}]'])
@@ -75,17 +86,35 @@ class TopologyGen:
 
     def _connect_quantum_channels(self, nodeA_id: int, nodeB_id: int, bsm_node: BSMNode, 
                                   qc_attenuation: int, qc_distance: int) -> None:
-            # Quantum channel initiation
-            qc1 = QuantumChannel(name=f'qc({self.network.nodes[nodeA_id].name}, {bsm_node.name})',
-                                  timeline=self.network.timeline,
-                                attenuation=qc_attenuation, distance=qc_distance)
-            qc2 = QuantumChannel(name=f'qc({bsm_node.name}, {self.network.nodes[nodeB_id].name})', timeline=self.network.timeline,
-                                attenuation=qc_attenuation, distance=qc_distance)
+        """
+        Connect quantum channels between nodeA, nodeB and bsm
 
-            qc1.set_ends(self.network.nodes[nodeA_id], bsm_node.name)
-            qc2.set_ends(self.network.nodes[nodeB_id], bsm_node.name)
+        Args:
+            nodeA_id (int): NodeA ID
+            nodeB_id (int): NodeB ID
+            bsm_node (BSMNode): BSMNode between nodeA and nodeB
+            qc_attenuation (int): Quantum channel attenuation
+            qc_distance (int): Quantum channel distance
+        """
+
+        # Quantum channel initiation
+        qc1 = QuantumChannel(name=f'qc({self.network.nodes[nodeA_id].name}, {bsm_node.name})',
+                                timeline=self.network.timeline,
+                            attenuation=qc_attenuation, distance=qc_distance)
+        qc2 = QuantumChannel(name=f'qc({bsm_node.name}, {self.network.nodes[nodeB_id].name})', timeline=self.network.timeline,
+                            attenuation=qc_attenuation, distance=qc_distance)
+
+        qc1.set_ends(self.network.nodes[nodeA_id], bsm_node.name)
+        qc2.set_ends(self.network.nodes[nodeB_id], bsm_node.name)
 
     def _connect_classical_channels(self, cc_distance: int, cc_delay: int) -> None:
+        """
+        Connect all classical channels
+
+        Args:
+            cc_distance (int): Classical channel distance
+            cc_delay (int): Classical channel delay
+        """
         nodes: list[QuantumRepeater | BSMNode] = list(self.network.nodes.values())
         nodes += list(self.network.bsm_nodes.values())
 
@@ -97,11 +126,21 @@ class TopologyGen:
                 cc.set_ends(nodeA, nodeB.name)
 
     def _update_network_topology(self, graph: nx.Graph, topology_name: Topologies) -> None:
+        """
+        Updates networks's attributes
+
+        Args:
+            graph (nx.Graph): Graph with all edges
+            topology_name (Topologies):
+        """
         self.network.update_graph(graph)
         self.network.update_topology(topology_name)
         self.network.update_bsm_nodes(dict())
 
     def _connect_network_channels(self) -> None:
+        """
+        Connect all channels: Classical and Quantum channels
+        """
         for edge in self.network.edges():
             nodeA_id: int = edge[0]
             nodeB_id: int = edge[1]
