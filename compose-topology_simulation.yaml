@@ -1,5 +1,5 @@
 services:
-  default_simulation:
+  topology_simulation:
     build:
       context: .
     image: simulations
