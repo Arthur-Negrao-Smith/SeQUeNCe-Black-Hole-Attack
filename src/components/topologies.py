@@ -7,7 +7,7 @@ from .nodes import QuantumRepeater
 
 import networkx as nx
 from copy import copy
-from typing import Optional
+from typing import Optional, Any
 import logging
 
 log: logging.Logger = logging.getLogger(__name__)
@@ -116,6 +116,25 @@ class TopologyGen:
         # init network's entities
         self.network.timeline.init()
 
+    def _analyze_parameters(self, params_types: list[Any], args) -> None:
+        """
+        Analyze the parameters of args
+
+        Args:
+            params_type (list[Any]): List with all parameters types.
+            *args: Collection with args to use in functions.
+
+        Raises:
+            Exception: If number of parameters in args is invalid.
+            Exception: If type of parameter is diferent between args and params_types.
+        """
+        if len(args) != len(params_types):
+            raise Exception(f"The number of parameters in args is incompatible. args: {args}")
+
+        for position, param in enumerate(args):
+            if not isinstance(param, params_types[position]):
+                raise Exception(f"The type of the prameter is incompatible with needed type by the function. param: {param} in args position: {position}")
+
     def grid_topology(self, rows: int, columns: int) -> dict[int, QuantumRepeater]:
 
         self._create_nodes(rows*columns)
@@ -193,3 +212,48 @@ class TopologyGen:
         self._connect_network_channels()
 
         return self.network.nodes
+    
+    def select_topology(self, topology: Topologies, *args) -> dict[int, QuantumRepeater]:
+        """
+        Simplified way of choosing a topology
+
+        Args:
+            topology (Topologies): Topology selected.
+            *args: Collection with all parameter to use in topology's function.
+
+        Returns:
+            dict[int, QuantumRepeater]: Dict with all created nodes.
+
+        Raises:
+            Exception: If topology isn't avaliable in function.
+            Exception: If it is different from the number of parameters required by the selected topology's function.
+            Exception: If parameters' type are different of types of parameters required by the selected topology's function.
+        """
+
+        match topology:
+            case Topologies.GRID:
+                self._analyze_parameters(args=args, params_types=[int, int])
+                return self.grid_topology(*args)
+            
+            case Topologies.LINE:
+                self._analyze_parameters(args=args, params_types=[int])
+                return self.line_topology(*args)
+            
+            case Topologies.STAR:
+                self._analyze_parameters(args=args, params_types=[int])
+                return self.star_topology(*args)
+
+            case Topologies.ERDOS_RENYI:
+                self._analyze_parameters(args=args, params_types=[int, float])
+                return self.erdos_renyi_topology(*args)
+
+            case Topologies.BARABASI_ALBERT:
+                self._analyze_parameters(args=args, params_types=[int, int])
+                return self.barabasi_albert_topology(*args)
+
+            case Topologies.RING:
+                self._analyze_parameters(args=args, params_types=[int])
+                return self.ring_topology(*args)
+
+            case _:
+                raise Exception(f"Topology selected isn't avaliable.")
