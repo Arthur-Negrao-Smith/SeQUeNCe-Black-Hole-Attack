@@ -1,0 +1,10 @@
+services:
+  default_simulation:
+    build:
+      context: .
+    image: simulations
+    container_name: topology_simulation
+    tty: true
+    command: python src/topology_simulation.py
+    volumes:
+      - ./src/data/topology_simulation/:/app/src/data/topology_simulation
