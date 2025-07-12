@@ -184,7 +184,7 @@ class Network_Manager:
                 path: list[int] = list(nx.shortest_path(self.network.graph, nodeA_id, nodeB_id))
                 log.debug(f"The path of the node[{nodeA_id}] to node[{nodeB_id}] is: {path}")
                 return path
-            except nx.NodeNotFound:
+            except:
                 log.debug(f"Don't have path of the node[{nodeA_id}] to node[{nodeB_id}]")
                 return []          
 
