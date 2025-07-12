@@ -72,9 +72,9 @@ def simulation(runs: int, process_id: int, resquests_per_run: int, attempts_per_
                 # to select param for each topology
                 match topology:
                     case TP.BARABASI_ALBERT:
-                        tmp_parameter = [int(parameter*10)]
+                        tmp_parameter = [number_of_nodes, int(parameter*10)]
                     case TP.ERDOS_RENYI:
-                        tmp_parameter = [parameter]
+                        tmp_parameter = [number_of_nodes, parameter]
                     case _:
                         tmp_parameter = GRIDE_NODES[number_of_nodes] 
 
@@ -124,9 +124,9 @@ def simulation(runs: int, process_id: int, resquests_per_run: int, attempts_per_
                     # to select param for each topology
                     match topology:
                         case TP.BARABASI_ALBERT:
-                            tmp_parameter = [int(parameter*10)]
+                            tmp_parameter = [number_of_nodes, int(parameter*10)]
                         case TP.ERDOS_RENYI:
-                            tmp_parameter = [parameter]
+                            tmp_parameter = [number_of_nodes, parameter]
                         case _:
                             tmp_parameter = GRIDE_NODES[number_of_nodes] 
 
