@@ -55,8 +55,10 @@ def sim_normal_network(topology: TP, attempts_per_request: int, requests_per_run
 
         network.network_manager.request(nodeA_id=nodeA_id, nodeB_id=nodeB_id, 
                                     max_attempts_per_entanglement=attempts_per_request, max_request_attempts=2)
-        
-    return network.network_data
+       
+    data: Network_Data = network.network_data
+    network.destroy() # cleanup all network
+    return data
 
 def sim_attacked_network(topology: TP, attempts_per_request: int, requests_per_run: int, tmp_parameter: list | tuple[int, int], bh_number: int, target: int) -> Network_Data:
     network: Network = Network()
@@ -74,8 +76,10 @@ def sim_attacked_network(topology: TP, attempts_per_request: int, requests_per_r
 
         network.network_manager.request(nodeA_id=nodeA_id, nodeB_id=nodeB_id, 
                                         max_attempts_per_entanglement=attempts_per_request, max_request_attempts=2)
-    
-    return network.network_data
+
+    data: Network_Data = network.network_data
+    network.destroy() # cleanup all network
+    return data
 
 def simulation(runs: int, process_id: int, requests_per_run: int, attempts_per_request: int) -> Data_Manager:
     """
@@ -103,6 +107,8 @@ def simulation(runs: int, process_id: int, requests_per_run: int, attempts_per_r
             # if it is grid topology and not the first run just ignore
             if topology == TP.GRID and parameter != TOPOLOGY_PARAMS[0]:
                 continue
+
+            print(f"No BHA >> topology: {TOPOLOGIES_DICT[topology]}, param: {int(parameter * 10)}")
 
             for number_of_nodes in NUMBER_OF_NODES:
                 tmp_parameter: list | tuple[int, int]
