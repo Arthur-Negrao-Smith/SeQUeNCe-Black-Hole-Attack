@@ -25,7 +25,7 @@ REQUESTS_PER_RUN: int = 100
 ATTEMPTS_PER_REQUEST: int = 2
 
 
-def simulation(runs: int, process_id: int, resquests_per_run: int, attempts_per_request: int) -> Data_Manager:
+def simulation(runs: int, process_id: int, requests_per_run: int, attempts_per_request: int) -> Data_Manager:
     """
     Simulation to simulation a black hole attack to a entanglement network with grid topology
 
@@ -50,7 +50,7 @@ def simulation(runs: int, process_id: int, resquests_per_run: int, attempts_per_
         network.topology_generator.grid_topology(ROWS, COLUMNS)
         nodes: list[int] = list(network.nodes.keys())
 
-        for requests in range(resquests_per_run):
+        for requests in range(requests_per_run):
             tmp_nodes: list[int] = copy(nodes)
 
             nodeA_id: int = choice(tmp_nodes)
@@ -76,7 +76,7 @@ def simulation(runs: int, process_id: int, resquests_per_run: int, attempts_per_
                     network.attack_manager.create_black_holes(number_of_black_holes=bh_number, swap_prob=(ENTANGLEMENT_SWAPPING_PROB - intensity), targets_per_black_hole=target)
                     nodes: list[int] = list(network.nodes.keys())
 
-                    for request in range(resquests_per_run):
+                    for request in range(requests_per_run):
                         tmp_nodes: list[int] = copy(nodes)
 
                         nodeA_id: int = choice(tmp_nodes)
