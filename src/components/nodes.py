@@ -50,6 +50,15 @@ class QuantumRepeater(Node):
         # black hole's targets: If target is None, then bha affect all requests, else just affect target
         self._black_hole_targets: dict[str, float | int] | None = None
 
+    def destroy(self) -> None:
+        """
+        Cleanup all references and data
+        """
+        self.cchannels.clear()
+        self.qchannels.clear()
+        self.protocols.clear()
+        self.components.clear()
+
     def receive_message(self, src: str, msg: Message) -> None:
         self.protocols[0].received_message(src, msg)
 

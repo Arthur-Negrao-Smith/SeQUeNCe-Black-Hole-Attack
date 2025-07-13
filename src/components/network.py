@@ -73,6 +73,9 @@ class Network:
             self._network_data.clear()
             self._network_data = None
 
+        for node in self.nodes.values():
+            node.destroy()
+
         self.nodes.clear()
         self.normal_nodes.clear()
         self.black_holes.clear()
