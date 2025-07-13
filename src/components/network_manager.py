@@ -26,9 +26,14 @@ class Network_Manager:
             network (Network): Network to manage
         """
         self.network: Network = network # type: ignore
-        self.data: dict
 
         log.debug(f"Network Manager initiated")
+
+    def destroy(self) -> None:
+        """
+        Cleanup all references
+        """
+        self.network = None
 
     def request(self, nodeA_id: int, nodeB_id: int, max_request_attempts: int = 2, force_entanglement: bool = False, max_attempts_per_entanglement: int = -1) -> Request_Response:
         """

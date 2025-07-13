@@ -15,6 +15,12 @@ class Attack_Manager:
         self._attack_type: Attack_Types
         self.network: Network = network # type: ignore
 
+    def destroy(self) -> None:
+        """
+        Cleanup all references
+        """
+        self.network = None
+
     def create_black_holes(self, number_of_black_holes: int, swap_prob: int | float, targets_per_black_hole: int) -> None:
         """
         Create black holes to attack the network

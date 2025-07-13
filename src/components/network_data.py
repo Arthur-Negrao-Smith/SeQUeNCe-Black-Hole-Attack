@@ -67,6 +67,12 @@ class Network_Data:
             ATTACK_NAME:"No attack",
         }
 
+    def clear(self) -> None:
+        """
+        Clean all data
+        """
+        self._data.clear()
+
     def increment(self, key: str, increment_number: int | float = 1) -> None:
         """
         Increment any data's number

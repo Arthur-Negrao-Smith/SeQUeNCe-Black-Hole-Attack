@@ -56,6 +56,12 @@ class TopologyGen:
         self.network.update_normal_nodes(copy(nodes))
 
         return nodes
+    
+    def destroy(self) -> None:
+        """
+        Cleanup all references
+        """
+        self.network = None
 
     def _create_BSMNode(self, nodeA_id: int, nodeB_id: int, edge: tuple[int, int]) -> BSMNode:
         """
