@@ -30,6 +30,12 @@ class TopologyGen:
 
         log.debug("TopologyGen initiated")
 
+    def destroy(self) -> None:
+        """
+        Cleanup all references
+        """
+        self.network = None
+    
     def _create_nodes(self, number_of_nodes: int) -> dict[int, QuantumRepeater]:
         """
         Create all grid nodes and return them in a dictionary
@@ -57,12 +63,6 @@ class TopologyGen:
 
         return nodes
     
-    def destroy(self) -> None:
-        """
-        Cleanup all references
-        """
-        self.network = None
-
     def _create_BSMNode(self, nodeA_id: int, nodeB_id: int, edge: tuple[int, int]) -> BSMNode:
         """
         Create BSMNode between two nodes
@@ -126,6 +126,9 @@ class TopologyGen:
 
         for nodeA in nodes:
             for nodeB in nodes:
+                # Optimization to don't produce unnecessary connections
+                if nodeA == nodeB or (isinstance(nodeA, BSMNode) and isinstance(nodeB, BSMNode)):
+                    continue
                 # Classical channel initiation
                 cc = ClassicalChannel(name=f"cc({nodeA.name}, {nodeB.name})", timeline=self.network.timeline, 
                             distance=cc_distance, delay=cc_delay)
