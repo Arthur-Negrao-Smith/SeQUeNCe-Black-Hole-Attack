@@ -56,9 +56,8 @@ def sim_normal_network(topology: TP, attempts_per_request: int, requests_per_run
         network.network_manager.request(nodeA_id=nodeA_id, nodeB_id=nodeB_id, 
                                     max_attempts_per_entanglement=attempts_per_request, max_request_attempts=2)
        
-    data: Network_Data = network.network_data
-    network.destroy() # cleanup all network
-    return data
+    network.destroy(preserve_network_data=True) # cleanup all network
+    return network.network_data
 
 def sim_attacked_network(topology: TP, attempts_per_request: int, requests_per_run: int, tmp_parameter: list | tuple[int, int], bh_number: int, target: int) -> Network_Data:
     network: Network = Network()
@@ -77,9 +76,8 @@ def sim_attacked_network(topology: TP, attempts_per_request: int, requests_per_r
         network.network_manager.request(nodeA_id=nodeA_id, nodeB_id=nodeB_id, 
                                         max_attempts_per_entanglement=attempts_per_request, max_request_attempts=2)
 
-    data: Network_Data = network.network_data
-    network.destroy() # cleanup all network
-    return data
+    network.destroy(preserve_network_data=True) # cleanup all network
+    return network.network_data
 
 def simulation(runs: int, process_id: int, requests_per_run: int, attempts_per_request: int) -> Data_Manager:
     """
