@@ -40,18 +40,43 @@ class Network:
         from .topologies import TopologyGen
         self.graph: nx.Graph
         self.topology: Topologies
-        self.topology_generator = TopologyGen(self, start_seed=start_seed)
+        self._topology_generator: Optional[TopologyGen] = TopologyGen(self, start_seed=start_seed)
 
         from .network_manager import Network_Manager
-        self.network_manager: Network_Manager = Network_Manager(self)
+        self._network_manager: Optional[Network_Manager] = Network_Manager(self)
 
         from .attack_manager import Attack_Manager
-        self.attack_manager: Attack_Manager = Attack_Manager(self)
+        self._attack_manager: Optional[Attack_Manager] = Attack_Manager(self)
 
         from .network_data import Network_Data
-        self.network_data: Network_Data = Network_Data()
+        self._network_data: Optional[Network_Data] = Network_Data()
 
         log.debug("Initiated Network")
+    
+    def destroy(self) -> None:
+        """
+        Cleanup all references
+        """
+        if self._topology_generator is not None:
+            self._topology_generator.destroy()
+            self._topology_generator = None
+
+        if self._network_manager is not None:
+            self._network_manager.destroy()
+            self._network_manager = None
+
+        if self._attack_manager is not None:
+            self._attack_manager.destroy()
+            self._attack_manager = None
+
+        if self._network_data is not None:
+            self._network_data.clear()
+            self._network_data = None
+
+        self.nodes.clear()
+        self.normal_nodes.clear()
+        self.black_holes.clear()
+        self.bsm_nodes.clear()
 
     def draw(self, labels: bool = True) -> None:
         """
@@ -61,6 +86,30 @@ class Network:
             labels (bool): Bool to show labels
         """
         nx.draw(self.graph, with_labels=labels)
+
+    @property
+    def topology_generator(self):
+        if self._topology_generator is None:
+            raise RuntimeError("Topology generator has been destroyed")
+        return self._topology_generator
+    
+    @property
+    def network_manager(self):
+        if self._network_manager is None:
+            raise RuntimeError("Network manager has been destroyed")
+        return self._network_manager
+    
+    @property
+    def attack_manager(self):
+        if self._attack_manager is None:
+            raise RuntimeError("Attack manager has been destroyed")
+        return self._attack_manager
+    
+    @property
+    def network_data(self):
+        if self._network_data is None:
+            raise RuntimeError("Network data has been destroyed")
+        return self._network_data
 
     def edges(self) -> list[tuple[int, int]]:
         """
