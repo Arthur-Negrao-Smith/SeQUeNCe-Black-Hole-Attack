@@ -53,9 +53,12 @@ class Network:
 
         log.debug("Initiated Network")
     
-    def destroy(self) -> None:
+    def destroy(self, preserve_network_data: bool = False) -> None:
         """
         Cleanup all references
+
+        Args:
+            preserve_network_data (bool): If it's False then cleanup all network's data, else it preserves all network's data
         """
         if self._topology_generator is not None:
             self._topology_generator.destroy()
@@ -69,13 +72,22 @@ class Network:
             self._attack_manager.destroy()
             self._attack_manager = None
 
-        if self._network_data is not None:
+        if self._network_data is not None and not preserve_network_data:
             self._network_data.clear()
             self._network_data = None
 
+        # destroy all quantum repeaters
         for node in self.nodes.values():
             node.destroy()
 
+        # cleanup all bsm nodes
+        for bsm in self.bsm_nodes.values():
+            bsm.components.clear()
+            bsm.cchannels.clear()
+            bsm.qchannels.clear()
+            bsm.protocols.clear()
+
+        # cleanup all nodes
         self.nodes.clear()
         self.normal_nodes.clear()
         self.black_holes.clear()
