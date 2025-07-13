@@ -113,6 +113,36 @@ class TopologyGen:
         qc1.set_ends(self.network.nodes[nodeA_id], bsm_node.name)
         qc2.set_ends(self.network.nodes[nodeB_id], bsm_node.name)
 
+    def _connect_bsm_classical_channels(self, cc_distance: int, cc_delay: int) -> None:
+        """
+        Connect all BSM with classical channels. This function will reduce unnecessary connections
+
+        Args:
+            cc_distance (int): Classical channel distance
+            cc_delay (int): Classical channel delay
+        """
+        for edge, bsm in self.network.bsm_nodes.items():
+            nodeA: QuantumRepeater = self.network.nodes[edge[0]]
+            nodeB: QuantumRepeater = self.network.nodes[edge[1]]
+
+            # connecting nodes with bsm
+            cc = ClassicalChannel(name=f"cc({nodeA.name}, {bsm.name})", timeline=self.network.timeline, 
+                            distance=cc_distance, delay=cc_delay)
+            cc.set_ends(nodeA, bsm.name)
+
+            cc = ClassicalChannel(name=f"cc({nodeB.name}, {bsm.name})", timeline=self.network.timeline, 
+                            distance=cc_distance, delay=cc_delay)
+            cc.set_ends(nodeB, bsm.name)
+
+            # connecting bsm with nodes
+            cc = ClassicalChannel(name=f"cc({bsm.name}, {nodeB.name})", timeline=self.network.timeline, 
+                            distance=cc_distance, delay=cc_delay)
+            cc.set_ends(bsm, nodeB.name)
+
+            cc = ClassicalChannel(name=f"cc({bsm.name}, {nodeA.name})", timeline=self.network.timeline, 
+                            distance=cc_distance, delay=cc_delay)
+            cc.set_ends(bsm, nodeA.name)
+
     def _connect_classical_channels(self, cc_distance: int, cc_delay: int) -> None:
         """
         Connect all classical channels
@@ -121,13 +151,14 @@ class TopologyGen:
             cc_distance (int): Classical channel distance
             cc_delay (int): Classical channel delay
         """
-        nodes: list[QuantumRepeater | BSMNode] = list(self.network.nodes.values())
-        nodes += list(self.network.bsm_nodes.values())
 
+        self._connect_bsm_classical_channels(cc_distance=cc_distance, cc_delay=cc_delay)
+
+        nodes: list[QuantumRepeater] = self.network.nodes.values()
         for nodeA in nodes:
             for nodeB in nodes:
                 # Optimization to don't produce unnecessary connections
-                if nodeA == nodeB or (isinstance(nodeA, BSMNode) and isinstance(nodeB, BSMNode)):
+                if nodeA == nodeB:
                     continue
                 # Classical channel initiation
                 cc = ClassicalChannel(name=f"cc({nodeA.name}, {nodeB.name})", timeline=self.network.timeline, 
