@@ -2,7 +2,7 @@ from components.data_manager import Data_Manager
 from components.network import Network
 from components.simulations import AsyncSimulator
 from components.utils.enums import Topologies as TP
-from components.network_data import TOPOLOGIES_DICT
+from components.network_data import TOPOLOGIES_DICT, Network_Data
 
 from random import choice
 from copy import copy
@@ -39,7 +39,45 @@ REQUESTS_PER_RUN: int = 100
 ATTEMPTS_PER_REQUEST: int = 2
 
 
-def simulation(runs: int, process_id: int, resquests_per_run: int, attempts_per_request: int) -> Data_Manager:
+def sim_normal_network(topology: TP, attempts_per_request: int, requests_per_run: int, tmp_parameter: list | tuple[int, int]) -> Network_Data:
+    network: Network = Network()
+
+    network.topology_generator.select_topology(topology, *tmp_parameter)
+    nodes: list[int] = list(network.nodes.keys())
+
+    for requests in range(requests_per_run):
+        tmp_nodes: list[int] = copy(nodes)
+
+        nodeA_id: int = choice(tmp_nodes)
+        tmp_nodes.remove(nodeA_id)
+
+        nodeB_id: int = choice(tmp_nodes)
+
+        network.network_manager.request(nodeA_id=nodeA_id, nodeB_id=nodeB_id, 
+                                    max_attempts_per_entanglement=attempts_per_request, max_request_attempts=2)
+        
+    return network.network_data
+
+def sim_attacked_network(topology: TP, attempts_per_request: int, requests_per_run: int, tmp_parameter: list | tuple[int, int], bh_number: int, target: int) -> Network_Data:
+    network: Network = Network()
+    network.topology_generator.select_topology(topology, *tmp_parameter)
+    network.attack_manager.create_black_holes(number_of_black_holes=bh_number, swap_prob=SWAP_PROB, targets_per_black_hole=target)
+    nodes: list[int] = list(network.nodes.keys())
+
+    for request in range(requests_per_run):
+        tmp_nodes: list[int] = copy(nodes)
+
+        nodeA_id: int = choice(tmp_nodes)
+        tmp_nodes.remove(nodeA_id)
+
+        nodeB_id: int = choice(tmp_nodes)
+
+        network.network_manager.request(nodeA_id=nodeA_id, nodeB_id=nodeB_id, 
+                                        max_attempts_per_entanglement=attempts_per_request, max_request_attempts=2)
+    
+    return network.network_data
+
+def simulation(runs: int, process_id: int, requests_per_run: int, attempts_per_request: int) -> Data_Manager:
     """
     Simulation to simulation a black hole attack to a entanglement network with grid topology
 
@@ -79,23 +117,12 @@ def simulation(runs: int, process_id: int, resquests_per_run: int, attempts_per_
                         tmp_parameter = GRIDE_NODES[number_of_nodes] 
 
                 for run in range(runs):
-                    network: Network = Network()
+                    tmp_data: Network_Data = sim_normal_network(topology=topology, 
+                                                                attempts_per_request=attempts_per_request, 
+                                                                requests_per_run=requests_per_run,
+                                                                tmp_parameter=tmp_parameter)
 
-                    network.topology_generator.select_topology(topology, *tmp_parameter)
-                    nodes: list[int] = list(network.nodes.keys())
-
-                    for requests in range(resquests_per_run):
-                        tmp_nodes: list[int] = copy(nodes)
-
-                        nodeA_id: int = choice(tmp_nodes)
-                        tmp_nodes.remove(nodeA_id)
-
-                        nodeB_id: int = choice(tmp_nodes)
-
-                        network.network_manager.request(nodeA_id=nodeA_id, nodeB_id=nodeB_id, 
-                                                    max_attempts_per_entanglement=attempts_per_request, max_request_attempts=2)
-
-                    all_data.update_data(network.network_data)
+                    all_data.update_data(tmp_data)
 
                     if topology == TP.GRID:
                         all_data.insert_data_in_json(element_key=(f'run: {runs*process_id + run}'), keys=['no-black-hole', TOPOLOGIES_DICT[topology], f"number-of-nodes: {number_of_nodes}"])
@@ -131,23 +158,14 @@ def simulation(runs: int, process_id: int, resquests_per_run: int, attempts_per_
                             tmp_parameter = GRIDE_NODES[number_of_nodes] 
 
                     for run in range(runs):
-                        network: Network = Network()
-                        network.topology_generator.select_topology(topology, *tmp_parameter)
-                        network.attack_manager.create_black_holes(number_of_black_holes=bh_number, swap_prob=SWAP_PROB, targets_per_black_hole=target)
-                        nodes: list[int] = list(network.nodes.keys())
+                        tmp_data: Network_Data = sim_attacked_network(topology=topology, 
+                                                                      attempts_per_request=attempts_per_request, 
+                                                                      requests_per_run=requests_per_run,
+                                                                      tmp_parameter=tmp_parameter,
+                                                                      bh_number=bh_number,
+                                                                      target=target)
 
-                        for request in range(resquests_per_run):
-                            tmp_nodes: list[int] = copy(nodes)
-
-                            nodeA_id: int = choice(tmp_nodes)
-                            tmp_nodes.remove(nodeA_id)
-
-                            nodeB_id: int = choice(tmp_nodes)
-
-                            network.network_manager.request(nodeA_id=nodeA_id, nodeB_id=nodeB_id, 
-                                                            max_attempts_per_entanglement=attempts_per_request, max_request_attempts=2)
-
-                        all_data.update_data(network.network_data)
+                        all_data.update_data(tmp_data)
 
                         if topology == TP.GRID:
                             all_data.insert_data_in_json(element_key=f'run: {(runs*process_id + run)}', keys=['with-black-hole', f'targets: {target}', f'{TOPOLOGIES_DICT[topology]}', f'number-of-nodes: {number_of_nodes}'])
