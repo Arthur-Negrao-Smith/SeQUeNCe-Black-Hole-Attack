@@ -6,19 +6,19 @@ This repository focuses on quantum network attacks, especially to entanglement n
 
 To use this project initially, it is necessary to satisfy the [dependencies](#dependencies). After completing the dependencies step, clone this repository with following command:
 
-```
+```bash
 git clone https://github.com/Arthur-Negrao-Smith/SeQUeNCe-Black-Hole-Attack.git
 ```
 
 Change to the cloned repository:
 
-```
+```bash
 cd SeQUeNCe-Black-Hole-Attack
 ```
 
 Now, use Docker Compose to run any simulation with the following command:
 
-```
+```bash
 docker compose -f compose-any_simulation_file.yaml up   # change the "any_simulation_file" to the any simulation file with a .yaml extension.
 ```
 
@@ -30,7 +30,7 @@ If a _pip_ error occurs, just run the last command again until docker creates th
 
 - **CPU:** QEMU Virtual version 2.5+ (8)
 - **GPU:** 00:02.0 Vendor 1234 Device 11
-- **RAM:** 16 GB 
+- **RAM:** 16 GB
 - **STORAGE:** 50 GB
 - **OS:** Ubuntu 22.04.5 LTS x86_64
 - **KERNEL:** 5.15.0-143-generic
