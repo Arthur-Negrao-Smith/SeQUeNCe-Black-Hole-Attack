@@ -35,7 +35,7 @@ class TopologyGen:
         Cleanup all references
         """
         self.network = None
-    
+
     def _create_nodes(self, number_of_nodes: int) -> dict[int, QuantumRepeater]:
         """
         Create all grid nodes and return them in a dictionary
@@ -54,7 +54,7 @@ class TopologyGen:
 
             if self.seed is not None:
                 tmp_node.set_seed(self.seed)
-                self.seed += 1
+                self._increment_seed()
             nodes[c] = tmp_node
 
         self.network.update_number_of_nodes(number_of_nodes)
@@ -62,7 +62,7 @@ class TopologyGen:
         self.network.update_normal_nodes(copy(nodes))
 
         return nodes
-    
+
     def _create_BSMNode(self, nodeA_id: int, nodeB_id: int, edge: tuple[int, int]) -> BSMNode:
         """
         Create BSMNode between two nodes
@@ -80,7 +80,7 @@ class TopologyGen:
                                         other_nodes=[f'node[{nodeA_id}]', f'node[{nodeB_id}]'])
         if self.seed is not None:
             bsm_node.set_seed(self.seed)
-            self.seed += 1
+            self._increment_seed()
 
         self.network.bsm_nodes[edge] = bsm_node # adding bsm node in a dict
         bsm: SingleAtomBSM = bsm_node.get_components_by_type("SingleAtomBSM")[0] # <- Get the bsm without node
@@ -189,7 +189,7 @@ class TopologyGen:
                                             edge=edge)
 
             self._connect_quantum_channels(nodeA_id=nodeA_id, nodeB_id=nodeB_id, bsm_node=bsm_node,
-                            qc_attenuation=QCHANNEL_ATTENUATION, qc_distance=QCHANNEL_DISTANCE)           
+                            qc_attenuation=QCHANNEL_ATTENUATION, qc_distance=QCHANNEL_DISTANCE)
 
         self._connect_classical_channels(cc_distance=CCHANNEL_DISTANCE, cc_delay=CCHANNEL_DELAY)
         # init network's entities
@@ -213,6 +213,16 @@ class TopologyGen:
         for position, param in enumerate(args):
             if not isinstance(param, params_types[position]):
                 raise Exception(f"The type of the prameter is incompatible with needed type by the function. param: {param} in args position: {position}")
+
+    def _increment_seed(self, increment_number: int = 1) -> None:
+        """
+        Increment seed number if seed is a int
+
+        Args:
+            increment_number (int): Number to increment the seed
+        """
+        if self.seed is not None:
+            self.seed += increment_number
 
     def grid_topology(self, rows: int, columns: int) -> dict[int, QuantumRepeater]:
 
@@ -244,8 +254,10 @@ class TopologyGen:
 
         self._create_nodes(number_of_nodes)
 
-        graph: nx.Graph = nx.erdos_renyi_graph(number_of_nodes, prob_edge_creation)
+        graph: nx.Graph = nx.erdos_renyi_graph(number_of_nodes, prob_edge_creation, seed=self.seed)
         graph = nx.convert_node_labels_to_integers(graph)
+
+        self._increment_seed()
 
         self._update_network_topology(graph=graph, topology_name=Topologies.ERDOS_RENYI)
 
@@ -257,8 +269,10 @@ class TopologyGen:
 
         self._create_nodes(number_of_nodes)
 
-        graph: nx.Graph = nx.barabasi_albert_graph(number_of_nodes, edges_to_attach)
+        graph: nx.Graph = nx.barabasi_albert_graph(number_of_nodes, edges_to_attach, seed=self.seed)
         graph = nx.convert_node_labels_to_integers(graph)
+
+        self._increment_seed()
 
         self._update_network_topology(graph=graph, topology_name=Topologies.BARABASI_ALBERT)
 
@@ -291,7 +305,7 @@ class TopologyGen:
         self._connect_network_channels()
 
         return self.network.nodes
-    
+
     def select_topology(self, topology: Topologies, *args) -> dict[int, QuantumRepeater]:
         """
         Simplified way of choosing a topology
@@ -313,11 +327,11 @@ class TopologyGen:
             case Topologies.GRID:
                 self._analyze_parameters(args=args, params_types=[int, int])
                 return self.grid_topology(*args)
-            
+
             case Topologies.LINE:
                 self._analyze_parameters(args=args, params_types=[int])
                 return self.line_topology(*args)
-            
+
             case Topologies.STAR:
                 self._analyze_parameters(args=args, params_types=[int])
                 return self.star_topology(*args)
