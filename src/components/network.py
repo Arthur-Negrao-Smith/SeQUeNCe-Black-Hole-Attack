@@ -133,7 +133,7 @@ class Network:
         Returns:
             list[tuple[int, int]]: List with all edges
         """
-        return self.graph.edges()
+        return self.graph.edges() # type: ignore
 
     def update_nodes(self, nodes: dict[int, QuantumRepeater]) -> None:
         """
