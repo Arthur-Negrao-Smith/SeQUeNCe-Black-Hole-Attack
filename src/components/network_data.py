@@ -47,24 +47,24 @@ class Network_Data:
         Constructor for Network_Data
         """
         self._data: dict = {
-            REQUESTS:0, 
-            CONSUMED_EPRS:0, 
-            TOTAL_ROUTE_FIDELITY:0, 
-            TOTAL_REQUEST_SUCCESS:0, 
-            TOTAL_REQUEST_FAILS:0, 
-            TOTAL_NO_PATHS:0, 
-            TOTAL_ROUTE_LENGTH:0, 
-            TOTAL_REQUEST_ATTEMPTS:0, 
-            TOTAL_ENTANGLEMENT_ATTEMPTS:0, 
-            TOTAL_SWAPPING_ATTEMPTS:0,
-            TOTAL_SWAPPING_SUCCESS:0,
-            TOTAL_SWAPPING_FAILS:0,
-            NUMBER_OF_NODES:0, 
-            TOPOLOGY:"Not defined", 
-            SIMULATION_TIME:0,
-            NUMBER_OF_BLACK_HOLES:0,
-            TARGETS_PER_BLACK_HOLE:0,
-            ATTACK_NAME:"No attack",
+            REQUESTS:[0], 
+            CONSUMED_EPRS:[0], 
+            TOTAL_ROUTE_FIDELITY:[0], 
+            TOTAL_REQUEST_SUCCESS:[0], 
+            TOTAL_REQUEST_FAILS:[0], 
+            TOTAL_NO_PATHS:[0], 
+            TOTAL_ROUTE_LENGTH:[0], 
+            TOTAL_REQUEST_ATTEMPTS:[0], 
+            TOTAL_ENTANGLEMENT_ATTEMPTS:[0], 
+            TOTAL_SWAPPING_ATTEMPTS:[0],
+            TOTAL_SWAPPING_SUCCESS:[0],
+            TOTAL_SWAPPING_FAILS:[0],
+            NUMBER_OF_NODES:[0], 
+            TOPOLOGY:["Not defined"], 
+            SIMULATION_TIME:[0],
+            NUMBER_OF_BLACK_HOLES:[0],
+            TARGETS_PER_BLACK_HOLE:[0],
+            ATTACK_NAME:["No attack"],
         }
 
     def clear(self) -> None:
@@ -81,7 +81,7 @@ class Network_Data:
             key (str): Key to access data
             increment_number (int | float): Number to add
         """
-        self._data[key] += increment_number
+        self._data[key][0] += increment_number
 
     def change_number(self, key: str, new_number: int | float) -> None:
         """
@@ -91,7 +91,7 @@ class Network_Data:
             key (str): Key to access data
             new_number (int | float): Number to updates data
         """
-        self._data[key] = new_number
+        self._data[key][0] = new_number
 
     def change_string(self, key: str, new_string: str) -> None:
         """
@@ -101,7 +101,7 @@ class Network_Data:
             key (str): Key to access data
             string (str): String to updates data
         """
-        self._data[key] = new_string
+        self._data[key][0] = new_string
 
     def change_list(self, key: str, new_list: list) -> None:
         """
@@ -123,7 +123,7 @@ class Network_Data:
         Returns:
             Any: Any data item
         """
-        return self._data[item_name]
+        return self._data[item_name][0]
 
     def get_all_data(self) -> dict:
         """
