@@ -1,0 +1,21 @@
+# pytest config
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -v -s --cov=src"
+testpaths = [
+  "tests"
+]
+console_output_style = "progress"
+pythonpath = "src"
+
+# pytest-cov config
+[tool.coverage.run]
+omit = [
+    "src/*_simulation.py",
+    "*/data/*",
+    "*/examples/*"
+]
+
+# pytest-cov config
+[tool.coverage.report]
+show_missing = "true"
