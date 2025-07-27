@@ -12,6 +12,10 @@ venv/
 LICENSE
 README
 
+# Ignore pytest files
+.coverage
+.pytest_cache/
+
 # Ignore data
 .json
 .csv
