@@ -58,6 +58,8 @@ class QuantumRepeater(Node):
         self.qchannels.clear()
         self.protocols.clear()
         self.components.clear()
+        self._black_hole_targets = None
+        self.resource_manager.destroy()
 
     def receive_message(self, src: str, msg: Message) -> None:
         self.protocols[0].received_message(src, msg)

@@ -19,9 +19,15 @@ class BaseManager(ABC):
     Base Manager to create to entanglement swapping managers
     """
     def __init__(self, owner: QuantumRepeater) -> None:
-        self.owner: QuantumRepeater = owner
+        self._owner: QuantumRepeater | None = owner
         self.raw_counter: int = 0
         self.ent_counter: int = 0
+
+    @property
+    def owner(self) -> QuantumRepeater:
+        if self._owner is None:
+            raise RuntimeError("The owner has been destroyed")
+        return self._owner
 
     def update(self, protocol: Type[Protocol], memory: Memory, state: str) -> None:
         if state == 'RAW':
@@ -29,6 +35,12 @@ class BaseManager(ABC):
             memory.reset()
         else:
             self.ent_counter += 1
+
+    def destroy(self) -> None:
+        """
+        Destroy node reference
+        """
+        self._owner = None
 
     @abstractmethod
     def get_memory(self, memory_position: Directions) -> Memory:
