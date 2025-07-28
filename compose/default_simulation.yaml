@@ -1,7 +1,7 @@
 services:
   default_simulation:
     build:
-      context: .
+      context: ..
     image: simulations
     container_name: dafault_simulation
     tty: true

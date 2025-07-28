@@ -1,0 +1,8 @@
+services:
+  test_simulations:
+    build:
+      context: ..
+    image: simulations
+    container_name: test_simulations
+    tty: true
+    command: pytest

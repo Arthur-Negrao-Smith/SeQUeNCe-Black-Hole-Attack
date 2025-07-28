@@ -1,7 +1,7 @@
 services:
   topology_simulation:
     build:
-      context: .
+      context: ..
     image: simulations
     container_name: topology_simulation
     tty: true
