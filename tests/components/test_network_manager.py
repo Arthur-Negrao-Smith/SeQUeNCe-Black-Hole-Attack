@@ -18,6 +18,16 @@ def network() -> Network:
     return tmp_network
 
 @pt.fixture
+def network_much_longer() -> Network:
+    seed: int = 0
+    number_of_nodes: int = 31
+
+    tmp_network: Network = Network(start_seed=seed)
+    tmp_network.topology_generator.line_topology(number_of_nodes)
+
+    return tmp_network
+
+@pt.fixture
 def network_no_path() -> Network:
 
     network = Network()
@@ -34,6 +44,11 @@ def network_no_path() -> Network:
 
 
 class Test_Network_Manager:
+
+    def test_destroy_reference(self, network: Network) -> None:
+
+        network.network_manager.destroy()
+        assert network.network_manager.network is None
 
     def test_find_path_if_path_exists(self, network: Network) -> None:
 
@@ -80,3 +95,13 @@ class Test_Network_Manager:
 
         assert network_no_path.network_manager.request(0, 1) == Request_Response.NO_PATH
         assert network_no_path.network_manager.request(1, 0) == Request_Response.NO_PATH
+
+    def test_request_success(self, network: Network) -> None:
+
+        assert network.network_manager.request(0, 2, force_entanglement=False) == Request_Response.ENTANGLED_SUCCESS
+        assert network.network_manager.request(0, 2, force_entanglement=True) == Request_Response.ENTANGLED_SUCCESS
+
+    def test_request_fail(self, network_much_longer: Network) -> None:
+
+        assert network_much_longer.network_manager.request(0, 30, force_entanglement=False) == Request_Response.ENTANGLED_FAIL
+        assert network_much_longer.network_manager.request(0, 30, force_entanglement=True) == Request_Response.ENTANGLED_FAIL
