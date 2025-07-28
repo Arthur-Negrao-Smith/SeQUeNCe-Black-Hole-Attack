@@ -16,12 +16,12 @@ class Network:
     """
     Network class to create the quantum network
     """
-    def __init__(self, start_seed: Optional[int] = None, display_logs: bool = False) -> None:
+    def __init__(self, start_seed: int | float | None = None, display_logs: bool = False) -> None:
         """
         Network constructor
 
         Args:
-            start_seed (Optional[int]): Seed to replicate the simulation. Default is None
+            start_seed (int | float | None): Seed to replicate the simulation. Default is None
             display_logs (bool): Show all logs
         """ 
 
@@ -46,7 +46,7 @@ class Network:
         self._network_manager: Optional[Network_Manager] = Network_Manager(self)
 
         from .attack_manager import Attack_Manager
-        self._attack_manager: Optional[Attack_Manager] = Attack_Manager(self)
+        self._attack_manager: Optional[Attack_Manager] = Attack_Manager(self, start_seed=start_seed)
 
         from .network_data import Network_Data
         self._network_data: Optional[Network_Data] = Network_Data()

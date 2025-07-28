@@ -2,7 +2,7 @@ from .utils.enums import Attack_Types
 from .nodes import QuantumRepeater
 import components.network_data as nd
 
-from random import choice
+from random import Random
 import logging
 log: logging.Logger = logging.getLogger(__name__)
 
@@ -11,9 +11,17 @@ class Attack_Manager:
     Class to manage attacks to network
     """
     from .network import Network
-    def __init__(self, network: Network):
+    def __init__(self, network: Network, start_seed: int | float | None):
+        """
+        Constructor for Attack Manager
+
+        Args:
+            network (Network): Network to manipulate
+            start_seed (int | float | None): Seed to reproduct results
+        """
         self._attack_type: Attack_Types
         self.network: Network = network # type: ignore
+        self.random_gen: Random = Random(start_seed)
 
     def destroy(self) -> None:
         """
@@ -96,7 +104,7 @@ class Attack_Manager:
         while counter != 0:
 
             # select a random node
-            tmp_id: int = choice(avaliable_nodes_IDs)
+            tmp_id: int = self.random_gen.choice(avaliable_nodes_IDs)
             avaliable_nodes_IDs.remove(tmp_id)
 
             # change the entanglement swapping probability
@@ -143,7 +151,7 @@ class Attack_Manager:
             avaliable_nodes_IDs: list = list(self.network.normal_nodes.keys())
 
             # select a random node to be a black hole
-            tmp_bh_id: int = choice(avaliable_nodes_IDs)
+            tmp_bh_id: int = self.random_gen.choice(avaliable_nodes_IDs)
 
             # remove the node from normal nodes' list
             avaliable_nodes_IDs.remove(tmp_bh_id)
@@ -154,7 +162,7 @@ class Attack_Manager:
             tmp_targets: dict[str, int | float] = dict()
             targets_counter: int = targets_per_black_hole
             while targets_counter > 0:
-                tmp_normal_node_id: int = choice(avaliable_nodes_IDs)
+                tmp_normal_node_id: int = self.random_gen.choice(avaliable_nodes_IDs)
 
                 # update temporary targets
                 tmp_normal_node: QuantumRepeater = self.network.nodes[tmp_normal_node_id]

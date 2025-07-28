@@ -7,7 +7,7 @@ from .nodes import QuantumRepeater
 
 import networkx as nx
 from copy import copy
-from typing import Optional, Any
+from typing import Any
 import logging
 
 log: logging.Logger = logging.getLogger(__name__)
@@ -15,7 +15,7 @@ log: logging.Logger = logging.getLogger(__name__)
 # Topologies generator
 class TopologyGen:
     from .network import Network
-    def __init__(self, network: Network, start_seed: Optional[int] = None) -> None:
+    def __init__(self, network: Network, start_seed: int | float | None = None) -> None:
         """
         TopologyGen constructor
 
@@ -26,7 +26,7 @@ class TopologyGen:
 
         self.network: Network = network # type: ignore
 
-        self.seed: None | int = start_seed
+        self.seed: None | int | float = start_seed
 
         log.debug("TopologyGen initiated")
 
@@ -53,7 +53,7 @@ class TopologyGen:
             tmp_node: QuantumRepeater = QuantumRepeater(name=f"node[{c}]", timeline=self.network.timeline, swap_prob=ENTANGLEMENT_SWAPPING_PROB)
 
             if self.seed is not None:
-                tmp_node.set_seed(self.seed)
+                tmp_node.set_seed(self.seed) # type: ignore
                 self._increment_seed()
             nodes[c] = tmp_node
 
@@ -79,7 +79,7 @@ class TopologyGen:
         bsm_node: BSMNode = BSMNode(name=f'bsm_node({nodeA_id}, {nodeB_id})', timeline=self.network.timeline,
                                         other_nodes=[f'node[{nodeA_id}]', f'node[{nodeB_id}]'])
         if self.seed is not None:
-            bsm_node.set_seed(self.seed)
+            bsm_node.set_seed(self.seed) # type: ignore
             self._increment_seed()
 
         self.network.bsm_nodes[edge] = bsm_node # adding bsm node in a dict
