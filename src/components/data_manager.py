@@ -190,7 +190,7 @@ class Data_Manager:
         except:
             self._json[keys[0]] = dict()
             tmp_element: dict = self._json[keys[0]]
-        keys.pop(0)
+        keys = keys[1:] # don't copy the first element
 
         for key in keys:
             # if key doens't exist, then create key
