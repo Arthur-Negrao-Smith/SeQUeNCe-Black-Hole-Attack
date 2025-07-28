@@ -19,12 +19,31 @@ cd SeQUeNCe-Black-Hole-Attack
 Now, use Docker Compose to run any simulation with the following command:
 
 ```bash
-docker compose -f compose-any_simulation_file.yaml up   # change the "any_simulation_file" to the any simulation file with a .yaml extension.
+docker compose -f compose/any_simulation_file.yaml up   # change the "any_simulation_file" to the any simulation file with a .yaml extension.
+
+# example: docker compose -f compose/default_simulation.yaml up
 ```
 
 If a _pip_ error occurs, just run the last command again until docker creates the image.
 
 **Alert:** These simulations can be quite expensive and may take a long time to complete.
+
+## Directories
+
+```bash
+.
+├── compose/                        # files to use docker compose
+├── src/                            # files to use simulations
+│   ├── components/                 # directory with files to create simulations
+│   │   └── utils/                  # utilities
+│   ├── data/                       # directories to storage data
+│   │   ├── default_simulation/     # directory to storage data from data_simulation.py
+│   │   └── topology_simulation/    # directory to storage data from topology_simulation.py
+│   └── examples/                   # directory to test features from sequence
+├── tests/                          # directory to realize the tests with pytest
+│   └── components/                 # directory to realize tests of src/components
+
+```
 
 ## Hardware
 
