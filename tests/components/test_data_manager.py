@@ -144,3 +144,19 @@ class Test_Data_Manager:
     def test_sum_jsons(self, data_manager: Data_Manager, json_1: dict, json_2: dict, json_sumed: dict) -> None:
 
         assert data_manager.sum_jsons(json_1, json_2) == json_sumed
+
+
+    def test_insert_data_in_json(self, data_manager: Data_Manager, network_data: Network_Data) -> None:
+        
+        test_keys: list[str] = ["a", "b"]
+        final_key: str = "c"
+
+        data_manager.update_data(network_data)
+        data_manager.insert_data_in_json(element_key=final_key, keys=test_keys)
+        test_keys.append(final_key)
+
+        tmp_json: dict = data_manager.get_json()
+        for key in test_keys:
+            tmp_json = tmp_json[key]
+
+        assert tmp_json == data_manager._convert_data_without_lists(network_data)
