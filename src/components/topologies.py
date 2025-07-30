@@ -4,7 +4,7 @@ from sequence.components.optical_channel import ClassicalChannel, QuantumChannel
 from .utils.constants import BSM_EFFICIENCY, QCHANNEL_ATTENUATION, QCHANNEL_DISTANCE, CCHANNEL_DISTANCE, CCHANNEL_DELAY, ENTANGLEMENT_SWAPPING_PROB
 from .utils.enums import Topologies
 from .nodes import QuantumRepeater
-import network_data as nd
+import components.network_data as nd
 
 import networkx as nx
 from copy import copy
