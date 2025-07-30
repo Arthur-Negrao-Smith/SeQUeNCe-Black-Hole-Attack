@@ -203,19 +203,6 @@ class Data_Manager:
         data_with_out_array: dict = self._convert_data_without_lists(self.get_data())
         tmp_element[element_key] = data_with_out_array
 
-    def sum_jsons(self, json1: dict, json2: dict) -> dict:
-        result: dict = json1.copy()
-
-        for key, value in json2.items():
-            if key in result:
-                if isinstance(result[key], dict) and isinstance(value, dict):
-                    result[key] = self.sum_jsons(result[key], value)
-                else:
-                    result[key] = value  # overwrite the data with equal key
-            else:
-                result[key] = value
-        return result
-
     def _convert_data_without_lists(self, data: Network_Data) -> dict:
         """
         Convert network data to remove lists
@@ -256,3 +243,16 @@ class Data_Manager:
         except:
             log.warning(f"The data wasn't loaded. An unknown error occurred")
             return False
+
+def sum_jsons(json1: dict, json2: dict) -> dict:
+    result: dict = json1.copy()
+
+    for key, value in json2.items():
+        if key in result:
+            if isinstance(result[key], dict) and isinstance(value, dict):
+                result[key] = sum_jsons(result[key], value)
+            else:
+                result[key] = value  # overwrite the data with equal key
+        else:
+            result[key] = value
+    return result
