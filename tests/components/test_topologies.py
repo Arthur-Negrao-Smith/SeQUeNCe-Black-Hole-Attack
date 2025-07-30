@@ -10,6 +10,8 @@ def network() -> Network:
 
 class Test_TopologyGen:
     number_of_nodes: int = 9
+    number_of_rows: int = 3
+    number_of_columns: int = 3
     prob_edge_creation: float = 0.5
     edges_to_attach: int = 3
     seed_test: int = 0
@@ -90,3 +92,24 @@ class Test_TopologyGen:
         network_2.topology_generator.barabasi_albert_topology(number_of_nodes=self.number_of_nodes, edges_to_attach=self.edges_to_attach)
 
         assert network_1.edges() == network_2.edges()
+
+
+    def test_select_topology(self) -> None:
+
+        args: dict[Topologies, tuple] = {
+            Topologies.BARABASI_ALBERT: (self.number_of_nodes, self.edges_to_attach),
+            Topologies.ERDOS_RENYI: (self.number_of_nodes, self.prob_edge_creation),
+            Topologies.GRID: (self.number_of_rows, self.number_of_columns),
+            Topologies.LINE: (self.number_of_nodes,),
+            Topologies.RING: (self.number_of_nodes,),
+            Topologies.STAR: (self.number_of_nodes,),
+        }
+
+        for topology in Topologies:
+            network: Network = Network()
+            network.topology_generator.select_topology(topology, *args[topology])
+
+            assert network.topology == topology
+
+            network.destroy()
+

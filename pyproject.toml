@@ -21,7 +21,8 @@ cache_dir = ".pytest_cache"
 omit = [
     "src/*_simulation.py",
     "*/data/*",
-    "*/examples/*"
+    "*/examples/*",
+    "*/utils/*"
 ]
 
 # pytest-cov config
