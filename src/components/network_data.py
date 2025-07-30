@@ -21,13 +21,13 @@ ATTACKS_DICT: dict[Attack_Types, str] = {
 # Dict keys
 REQUESTS: str = "requests"
 CONSUMED_EPRS: str = "consumed_eprs"
+NUMBER_OF_NODES: str = "number_of_nodes"
 TOTAL_ROUTE_FIDELITY: str = "total_route_fidelity"
 TOTAL_REQUEST_SUCCESS: str = "total_request_success"
 TOTAL_REQUEST_FAILS: str = "total_request_fails"
 TOTAL_NO_PATHS: str = "total_no_paths"
 TOTAL_ROUTE_LENGTH: str = "total_route_length"
 TOTAL_REQUEST_ATTEMPTS: str = "total_request_attempts" 
-NUMBER_OF_NODES: str = "number_of_nodes"
 TOTAL_ENTANGLEMENT_ATTEMPTS: str = "total_entanglement_attempts"
 TOTAL_SWAPPING_ATTEMPTS: str = "total_swapping_attempts"
 TOTAL_SWAPPING_SUCCESS: str = "total_swapping_success"
@@ -35,8 +35,9 @@ TOTAL_SWAPPING_FAILS: str = "total_swapping_fails"
 TOPOLOGY: str = "topology"
 NUMBER_OF_BLACK_HOLES: str = "black_holes"
 TARGETS_PER_BLACK_HOLE: str = "targets_per_black_hole"
-SIMULATION_TIME: str = 'simulation_time'
-ATTACK_NAME: str = 'attack_name'
+SIMULATION_TIME: str = "simulation_time"
+ATTACK_NAME: str = "attack_name"
+PARAMETER: str = "parameter"
 
 class Network_Data:
     """
@@ -65,6 +66,7 @@ class Network_Data:
             NUMBER_OF_BLACK_HOLES:[0],
             TARGETS_PER_BLACK_HOLE:[0],
             ATTACK_NAME:["No attack"],
+            PARAMETER:["No parameter"]
         }
 
     def clear(self) -> None:
