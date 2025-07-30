@@ -1,15 +1,17 @@
-from components.data_manager import Data_Manager
+from components.data_manager import Data_Manager, sum_jsons
 from components.network import Network
 from components.simulations import AsyncSimulator
 from components.utils.enums import Topologies as TP
 from components.network_data import TOPOLOGIES_DICT, Network_Data
+import components.network_data as nd
 
 from random import choice
 from copy import copy
 from datetime import datetime
 import os
+import glob
 
-PATH: str = 'src/data/topology_simulation'
+PATH: str = 'src/data/topology_simulation/topology_simulation'
 
 # Topology constants
 ROWS: int = 3
@@ -55,7 +57,7 @@ def sim_normal_network(topology: TP, attempts_per_request: int, requests_per_run
 
         network.network_manager.request(nodeA_id=nodeA_id, nodeB_id=nodeB_id, 
                                     max_attempts_per_entanglement=attempts_per_request, max_request_attempts=2)
-       
+
     network.destroy(preserve_network_data=True) # cleanup all network
     return network.network_data
 
@@ -93,7 +95,8 @@ def simulation(runs: int, process_id: int, requests_per_run: int, attempts_per_r
         Data_Manager: Return all data in json format within the Data_Manager
     """
 
-    filename: str = f"{PATH}/topology_simulation_{process_id}.json"
+    json_filename: str = f"{PATH}_{process_id}.json"
+    csv_filename: str = f"{PATH}.csv"
 
     all_data: Data_Manager = Data_Manager()
 
@@ -118,13 +121,19 @@ def simulation(runs: int, process_id: int, requests_per_run: int, attempts_per_r
                     case TP.ERDOS_RENYI:
                         tmp_parameter = [number_of_nodes, parameter]
                     case _:
-                        tmp_parameter = GRIDE_NODES[number_of_nodes] 
+                        tmp_parameter = GRIDE_NODES[number_of_nodes]
 
                 for run in range(runs):
                     tmp_data: Network_Data = sim_normal_network(topology=topology, 
                                                                 attempts_per_request=attempts_per_request, 
                                                                 requests_per_run=requests_per_run,
                                                                 tmp_parameter=tmp_parameter)
+
+                    match topology:
+                        case TP.BARABASI_ALBERT:
+                            tmp_data.change_string(nd.PARAMETER, new_string=f"m={int(parameter*10)}")
+                        case TP.ERDOS_RENYI:
+                            tmp_data.change_string(nd.PARAMETER, new_string=f"p={parameter}")
 
                     all_data.update_data(tmp_data)
 
@@ -133,7 +142,8 @@ def simulation(runs: int, process_id: int, requests_per_run: int, attempts_per_r
                     else:
                         all_data.insert_data_in_json(element_key=(f'run: {runs*process_id + run}'), keys=['no-black-hole', TOPOLOGIES_DICT[topology], f"param: {int(parameter*10)}", f"number-of-nodes: {number_of_nodes}"])
 
-                    all_data.write_json(filename=filename)
+                    all_data.write_json(filename=json_filename)
+                    all_data.append_data_in_csv_file(filename=csv_filename, append_in_csv_dict=True)
 
     # run simulations with black holes
     print("Network with black holes is running.")
@@ -176,7 +186,8 @@ def simulation(runs: int, process_id: int, requests_per_run: int, attempts_per_r
                         else:
                             all_data.insert_data_in_json(element_key=f'run: {(runs*process_id + run)}', keys=['with-black-hole', f'targets: {target}', f'{TOPOLOGIES_DICT[topology]}', f'param: {int(parameter * 10)}', f'number-of-nodes: {number_of_nodes}'])
 
-                        all_data.write_json(filename=filename)
+                        all_data.write_json(filename=json_filename)
+                        all_data.append_data_in_csv_file(filename=csv_filename, append_in_csv_dict=True)
 
     return all_data
 
@@ -195,3 +206,20 @@ sim.run(REQUESTS_PER_RUN, ATTEMPTS_PER_REQUEST)
 
 # show simulation time
 print(f"\nAll simulations are finished. Simulation time: {datetime.now()-start}")
+
+# sum all json files
+tmp_json: dict = dict()
+data_manager: Data_Manager = Data_Manager()
+for json_filename in glob.glob(f"{PATH}_*.json"):
+    data_manager.load_json(filename=json_filename)
+    loaded_json: dict = data_manager.get_json()
+
+    tmp_json = sum_jsons(json1=tmp_json, json2=loaded_json)
+
+    try:
+        os.remove(json_filename)
+    except:
+        continue
+
+data_manager.update_json(tmp_json)
+data_manager.write_json(f"{PATH}.json")
