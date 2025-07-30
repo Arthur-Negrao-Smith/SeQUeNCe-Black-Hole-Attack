@@ -1,4 +1,4 @@
-from components.data_manager import Data_Manager
+from components.data_manager import Data_Manager, sum_jsons
 from components.network_data import Network_Data
 import components.network_data as nd
 
@@ -175,7 +175,7 @@ class Test_Data_Manager:
 
     def test_sum_jsons(self, data_manager: Data_Manager, json_1: dict, json_2: dict, json_sumed: dict) -> None:
 
-        assert data_manager.sum_jsons(json_1, json_2) == json_sumed
+        assert sum_jsons(json_1, json_2) == json_sumed
 
 
     def test_insert_data_in_json(self, data_manager: Data_Manager, network_data: Network_Data) -> None:

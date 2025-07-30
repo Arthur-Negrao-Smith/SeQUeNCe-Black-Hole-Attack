@@ -36,7 +36,7 @@ class Test_Repeater_Manager:
         node.resource_manager.create_swapping_protocolA()
         assert isinstance(node.get_protocol(), EntanglementSwappingA)
 
-    
+
     def test_creating_swapping_protocolB(self, network: Network) -> None:
 
         node: QuantumRepeater = network.nodes[0]
@@ -67,15 +67,43 @@ class Test_Repeater_Manager:
         nodeC: QuantumRepeater = network.nodes[2]
 
         nodeA.resource_manager._turn_black_hole(new_swap_prob=self.new_swap_prob, targets=None)
+        assert nodeA._is_black_hole == True
         assert nodeA._swap_prob == self.new_swap_prob
         assert nodeA._black_hole_targets is None
 
         nodeB.resource_manager._turn_black_hole(new_swap_prob=self.new_swap_prob, targets={nodeA.name: self.new_swap_prob_to_target})
+        assert nodeB._is_black_hole == True
         assert nodeB._swap_prob == ENTANGLEMENT_SWAPPING_PROB
         assert nodeB._black_hole_targets is not None
         assert nodeB._black_hole_targets[nodeA.name] == self.new_swap_prob_to_target
 
         nodeC.resource_manager._turn_black_hole(new_swap_prob=self.new_swap_prob, targets={nodeB.name: -1})
+        assert nodeC._is_black_hole == True
         assert nodeC._black_hole_targets is not None
         assert nodeC._black_hole_targets[nodeB.name] == self.new_swap_prob
 
+
+    def test_turn_normal_node(self, network: Network) -> None:
+
+
+        nodeA: QuantumRepeater = network.nodes[0]
+        nodeB: QuantumRepeater = network.nodes[1]
+        nodeC: QuantumRepeater = network.nodes[2]
+
+        nodeA.resource_manager._turn_black_hole(new_swap_prob=self.new_swap_prob, targets=None)
+        nodeA.resource_manager._turn_normal_node(new_swap_prob=ENTANGLEMENT_SWAPPING_PROB)
+        assert nodeA._is_black_hole == False
+        assert nodeA._swap_prob == ENTANGLEMENT_SWAPPING_PROB
+        assert nodeA._black_hole_targets is None
+
+        nodeB.resource_manager._turn_black_hole(new_swap_prob=self.new_swap_prob, targets={nodeA.name: self.new_swap_prob_to_target})
+        nodeB.resource_manager._turn_normal_node(new_swap_prob=ENTANGLEMENT_SWAPPING_PROB)
+        assert nodeB._is_black_hole == False
+        assert nodeB._swap_prob == ENTANGLEMENT_SWAPPING_PROB
+        assert nodeB._black_hole_targets is None
+
+        nodeC.resource_manager._turn_black_hole(new_swap_prob=self.new_swap_prob, targets={nodeB.name: -1})
+        nodeC.resource_manager._turn_normal_node(new_swap_prob=ENTANGLEMENT_SWAPPING_PROB)
+        assert nodeC._is_black_hole == False
+        assert nodeC._swap_prob == ENTANGLEMENT_SWAPPING_PROB
+        assert nodeC._black_hole_targets is None
