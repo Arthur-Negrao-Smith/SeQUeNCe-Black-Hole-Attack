@@ -109,16 +109,6 @@ class Network_Data:
         """
         self._data[key][0] = new_string
 
-    def change_list(self, key: str, new_list: list) -> None:
-        """
-        Change any data's list
-
-        Args:
-            key (str): Key to access data
-            new_list (list): List to updates data
-        """
-        self._data[key] = new_list
-
     def get_item(self, item_name) -> Any:
         """
         Get any data's item
