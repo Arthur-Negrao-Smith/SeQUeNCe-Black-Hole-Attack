@@ -38,6 +38,8 @@ TARGETS_PER_BLACK_HOLE: str = "targets_per_black_hole"
 SIMULATION_TIME: str = "simulation_time"
 ATTACK_NAME: str = "attack_name"
 PARAMETER: str = "parameter"
+BLACK_HOLE_SWAP_PROB: str = "black_hole_swap_prob"
+NORMAL_NODE_SWAP_PROB: str = "normal_node_swap_prob"
 
 class Network_Data:
     """
@@ -66,7 +68,9 @@ class Network_Data:
             NUMBER_OF_BLACK_HOLES:[0],
             TARGETS_PER_BLACK_HOLE:[0],
             ATTACK_NAME:["No attack"],
-            PARAMETER:["No parameter"]
+            PARAMETER:["No parameter"],
+            BLACK_HOLE_SWAP_PROB:[-1.0],
+            NORMAL_NODE_SWAP_PROB:[-1.0],
         }
 
     def clear(self) -> None:

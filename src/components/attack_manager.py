@@ -58,6 +58,9 @@ class Attack_Manager:
         for bh in self.network.black_holes.values():
             log.debug(f"{bh.name} is a black hole with targets: {bh._black_hole_targets}")
 
+        # updates the bha swap probability in network data
+        self.network.network_data.change_number(key=nd.BLACK_HOLE_SWAP_PROB, new_number=swap_prob)
+
     def get_black_holes(self) -> dict[str, dict[str, float | int] | None]:
         """
         Get black holes and targets

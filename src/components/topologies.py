@@ -4,6 +4,7 @@ from sequence.components.optical_channel import ClassicalChannel, QuantumChannel
 from .utils.constants import BSM_EFFICIENCY, QCHANNEL_ATTENUATION, QCHANNEL_DISTANCE, CCHANNEL_DISTANCE, CCHANNEL_DELAY, ENTANGLEMENT_SWAPPING_PROB
 from .utils.enums import Topologies
 from .nodes import QuantumRepeater
+import network_data as nd
 
 import networkx as nx
 from copy import copy
@@ -60,6 +61,9 @@ class TopologyGen:
         self.network.update_number_of_nodes(number_of_nodes)
         self.network.update_nodes(nodes)
         self.network.update_normal_nodes(copy(nodes))
+
+        # update the normal nodes swap probability in network data
+        self.network.network_data.change_number(key=nd.NORMAL_NODE_SWAP_PROB, new_number=ENTANGLEMENT_SWAPPING_PROB)
 
         return nodes
 
