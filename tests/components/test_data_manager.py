@@ -10,7 +10,10 @@ TEST_CONSUMED_EPRS: int = -1
 
 
 def remove_test_file(filename: str) -> None:
-    os.remove(filename)
+    try:
+        os.remove(filename)
+    except:
+        return
 
 @pt.fixture
 def network_data() -> Network_Data:
@@ -123,7 +126,8 @@ class Test_Data_Manager:
         remove_test_file(self.test_path_json)
         assert data_manager.get_json() == json_1
 
-    def test_append_data_in_csv(self, data_manager: Data_Manager, network_data: Network_Data) -> None:
+
+    def test_append_data_in_csv_dict(self, data_manager: Data_Manager, network_data: Network_Data) -> None:
 
         other_network_data_consumed_eprs: int = -2
         other_network_data: Network_Data = Network_Data()
@@ -133,11 +137,39 @@ class Test_Data_Manager:
         data_manager.append_data_in_csv_dict()
         data_manager.write_csv(self.test_path_csv)
 
+        other_data_manager: Data_Manager = Data_Manager()
+        other_data_manager.load_csv(filename=self.test_path_csv)
+        remove_test_file(filename=self.test_path_csv)
+
+        assert data_manager.get_csv_dict() == other_data_manager.get_csv_dict()
+
+
+    def test_append_data_in_csv_file(self, data_manager: Data_Manager, network_data: Network_Data) -> None:
+
+        # garantee the file doesn't exists
+        remove_test_file(filename=self.test_path_csv)
+        data_manager.update_data(network_data)
+        data_manager.append_data_in_csv_file(filename=self.test_path_csv, append_in_csv_dict=True)
+
+        assert data_manager._exist_filename(filename=self.test_path_csv) == True
+
+        other_data_manager: Data_Manager = Data_Manager()
+        other_data_manager.load_csv(filename=self.test_path_csv)
+
+        assert other_data_manager.get_csv_dict() == data_manager.get_csv_dict()
+
+        other_network_data_consumed_eprs: int = -2
+        other_network_data: Network_Data = Network_Data()
+        other_network_data.change_number(nd.CONSUMED_EPRS, other_network_data_consumed_eprs)
+
         data_manager.update_data(other_network_data)
         data_manager.append_data_in_csv_file(self.test_path_csv, append_in_csv_dict=True)
+
         assert data_manager.get_csv_dict().get(nd.CONSUMED_EPRS) == [TEST_CONSUMED_EPRS, other_network_data_consumed_eprs]
 
         data_manager.load_csv(self.test_path_csv)
+        remove_test_file(filename=self.test_path_csv)
+
         assert data_manager.get_csv_dict().get(nd.CONSUMED_EPRS) == [TEST_CONSUMED_EPRS, other_network_data_consumed_eprs]
 
 
@@ -147,7 +179,7 @@ class Test_Data_Manager:
 
 
     def test_insert_data_in_json(self, data_manager: Data_Manager, network_data: Network_Data) -> None:
-        
+
         test_keys: list[str] = ["a", "b"]
         final_key: str = "c"
 
