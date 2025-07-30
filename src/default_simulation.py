@@ -1,4 +1,4 @@
-from components.data_manager import Data_Manager
+from components.data_manager import Data_Manager, sum_jsons
 from components.network import Network
 from components.simulations import AsyncSimulator
 from components.utils.constants import ENTANGLEMENT_SWAPPING_PROB
@@ -7,8 +7,9 @@ from random import choice
 from copy import copy
 from datetime import datetime
 import os
+import glob
 
-PATH: str = 'src/data/default_simulation'
+PATH: str = 'src/data/default_simulation/default_simulation'
 
 # Topology constants
 ROWS: int = 3
@@ -39,7 +40,8 @@ def simulation(runs: int, process_id: int, requests_per_run: int, attempts_per_r
         Data_Manager: Return all data in json format within the Data_Manager
     """
 
-    filename: str = f"{PATH}/default_simulation_{process_id}.json"
+    json_filename: str = f"{PATH}_{process_id}.json"
+    csv_filename: str = f"{PATH}.csv"
 
     all_data: Data_Manager = Data_Manager()
 
@@ -63,7 +65,9 @@ def simulation(runs: int, process_id: int, requests_per_run: int, attempts_per_r
 
         all_data.update_data(network.network_data)
         all_data.insert_data_in_json(element_key=(f'run: {runs*process_id + run}'), keys=['no-black-hole'])
-        all_data.write_json(filename=filename)
+        all_data.write_json(filename=json_filename)
+        # append data in csv file
+        all_data.append_data_in_csv_file(filename=csv_filename, append_in_csv_dict=True)
 
     # run simulations with black holes
     for target in TARGETS:
@@ -89,7 +93,10 @@ def simulation(runs: int, process_id: int, requests_per_run: int, attempts_per_r
 
                     all_data.update_data(network.network_data)
                     all_data.insert_data_in_json(element_key=f'run: {(runs*process_id + run)}', keys=['with-black-hole',f'targets: {target}', f'number of bh: {bh_number}', f'intensity: {intensity:.1f}'])
-                    all_data.write_json(filename=filename)
+                    all_data.write_json(filename=json_filename)
+
+                    # append data in csv file
+                    all_data.append_data_in_csv_file(filename=csv_filename, append_in_csv_dict=True)
 
     return all_data
 
@@ -108,3 +115,19 @@ sim.run(REQUESTS_PER_RUN, ATTEMPTS_PER_REQUEST)
 
 # show simulation time
 print(f"\nAll simulations are finished. Simulation time: {datetime.now()-start}")
+
+tmp_json: dict = dict()
+data_manager: Data_Manager = Data_Manager()
+for json_filename in glob.glob(f"{PATH}_*.json"):
+    data_manager.load_json(filename=json_filename)
+    loaded_json: dict = data_manager.get_json()
+
+    tmp_json = sum_jsons(json1=tmp_json, json2=loaded_json)
+
+    try:
+        os.remove(json_filename)
+    except:
+        continue
+
+data_manager.update_json(tmp_json)
+data_manager.write_json(f"{PATH}.json")
