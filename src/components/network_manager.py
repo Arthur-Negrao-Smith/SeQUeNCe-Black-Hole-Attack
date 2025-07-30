@@ -400,8 +400,9 @@ class Network_Manager:
         nodeB.remove_used_protocol()
         node_mid.remove_used_protocol()
 
-        # updates network's data: eprs consumed
+        # updates network's data: eprs consumed, swapping attempts
         self.network.network_data.increment(key=nd.CONSUMED_EPRS, increment_number=2)
+        self.network.network_data.increment(key=nd.TOTAL_SWAPPING_ATTEMPTS)
 
         # check the success
         success: bool = self._is_entangled(nodeA_id=nodeA_id, nodeB_id=nodeB_id, 
