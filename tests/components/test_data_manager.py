@@ -173,11 +173,6 @@ class Test_Data_Manager:
         assert data_manager.get_csv_dict().get(nd.CONSUMED_EPRS) == [TEST_CONSUMED_EPRS, other_network_data_consumed_eprs]
 
 
-    def test_sum_jsons(self, data_manager: Data_Manager, json_1: dict, json_2: dict, json_sumed: dict) -> None:
-
-        assert sum_jsons(json_1, json_2) == json_sumed
-
-
     def test_insert_data_in_json(self, data_manager: Data_Manager, network_data: Network_Data) -> None:
 
         test_keys: list[str] = ["a", "b"]
@@ -192,3 +187,9 @@ class Test_Data_Manager:
             tmp_json = tmp_json[key]
 
         assert tmp_json == data_manager._convert_data_without_lists(network_data)
+
+
+
+def test_sum_jsons(json_1: dict, json_2: dict, json_sumed: dict) -> None:
+
+    assert sum_jsons(json_1, json_2) == json_sumed
