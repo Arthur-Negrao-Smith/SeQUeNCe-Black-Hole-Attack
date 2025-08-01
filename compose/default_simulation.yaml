@@ -7,4 +7,4 @@ services:
     tty: true
     command: python src/default_simulation.py
     volumes:
-      - ./src/data/default_simulation/:/app/src/data/default_simulation
+      - ../src/data/default_simulation/:/app/src/data/default_simulation

@@ -7,4 +7,4 @@ services:
     tty: true
     command: python src/topology_simulation.py
     volumes:
-      - ./src/data/topology_simulation/:/app/src/data/topology_simulation
+      - ../src/data/topology_simulation/:/app/src/data/topology_simulation
