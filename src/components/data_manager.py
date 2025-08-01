@@ -7,10 +7,12 @@ import logging
 
 log: logging.Logger = logging.getLogger(__name__)
 
+
 class Data_Manager:
     """
     Class to manage network's data
     """
+
     def __init__(self) -> None:
         """
         Constructor for Data_Manager
@@ -68,9 +70,11 @@ class Data_Manager:
         if not self._exist_filename(filename):
             return False
 
-        with open(file=filename, mode='r', encoding='utf-8') as file:
-            data: pd.DataFrame = pd.read_csv(file, sep=',', encoding='utf-8', index_col=False)
-            self._csv_dict = data.to_dict(orient='list')
+        with open(file=filename, mode="r", encoding="utf-8") as file:
+            data: pd.DataFrame = pd.read_csv(
+                file, sep=",", encoding="utf-8", index_col=False
+            )
+            self._csv_dict = data.to_dict(orient="list")
             return True
 
     def write_csv(self, filename: str, preserve_old_csv: bool = False) -> None:
@@ -85,13 +89,13 @@ class Data_Manager:
 
         # if file doesn't exist and isn't to preserve old csv
         if not self._exist_filename(filename) or not preserve_old_csv:
-            with open(file=filename, mode='w', encoding='utf-8') as file:
-                data.to_csv(file, sep=',', encoding='utf-8', header=True, index=False)
+            with open(file=filename, mode="w", encoding="utf-8") as file:
+                data.to_csv(file, sep=",", encoding="utf-8", header=True, index=False)
             log.debug(f"The {filename} was created and was writed the data")
             return
 
-        with open(file=filename, mode='a', encoding='utf-8') as file:
-            data.to_csv(file, sep=',', encoding='utf-8', header=False, index=False)
+        with open(file=filename, mode="a", encoding="utf-8") as file:
+            data.to_csv(file, sep=",", encoding="utf-8", header=False, index=False)
             log.debug(f"The {filename} appended the data")
 
     def append_data_in_csv_dict(self) -> None:
@@ -106,7 +110,9 @@ class Data_Manager:
         for key, value in self.get_data().get_all_data().items():
             self._csv_dict[key].append(value[0])
 
-    def append_data_in_csv_file(self, filename: str, append_in_csv_dict: bool = False) -> None:
+    def append_data_in_csv_file(
+        self, filename: str, append_in_csv_dict: bool = False
+    ) -> None:
         """
         Append in a csv file
 
@@ -122,8 +128,8 @@ class Data_Manager:
         # add header if file not exists
         header: bool = not self._exist_filename(filename)
 
-        with open(file=filename, mode='a', encoding='utf-8') as file:
-            data.to_csv(file, sep=',', encoding='utf-8', header=header, index=False)
+        with open(file=filename, mode="a", encoding="utf-8") as file:
+            data.to_csv(file, sep=",", encoding="utf-8", header=header, index=False)
             log.debug(f"The {filename} appended the data")
 
     def update_json(self, json: dict) -> None:
@@ -160,7 +166,7 @@ class Data_Manager:
         elif not self._exist_filename(filename):
             return False
 
-        with open(file=filename, mode='r', encoding='utf-8') as file:
+        with open(file=filename, mode="r", encoding="utf-8") as file:
             self._json = js.load(file)
             log.debug(f"The data in {filename} was loaded")
             return True
@@ -172,7 +178,7 @@ class Data_Manager:
         Args:
             filename (str): Json's filename to write
         """
-        with open(file=filename, mode='w', encoding='utf-8') as file:
+        with open(file=filename, mode="w", encoding="utf-8") as file:
             js.dump(self._json, file, indent=2, ensure_ascii=False)
         log.debug(f"It was writed the data in {filename}")
 
@@ -181,7 +187,7 @@ class Data_Manager:
         Insert data in jason with selected keys and clean data
 
         Args:
-            element_key (Any): Any element's key to access in json 
+            element_key (Any): Any element's key to access in json
             keys (list): List with json's keys in order
         """
         # if key doens't exist, then create key
@@ -190,7 +196,7 @@ class Data_Manager:
         except:
             self._json[keys[0]] = dict()
             tmp_element: dict = self._json[keys[0]]
-        keys = keys[1:] # don't copy the first element
+        keys = keys[1:]  # don't copy the first element
 
         for key in keys:
             # if key doens't exist, then create key
@@ -219,7 +225,7 @@ class Data_Manager:
         Args:
             filename (str): Json's filename to create
         """
-        with open(file=filename, mode='w') as file:
+        with open(file=filename, mode="w") as file:
             log.debug(f"The file '{filename}' was created")
             file.close()
 
@@ -231,18 +237,19 @@ class Data_Manager:
             bool: True if filename is valid, else returns False
         """
         try:
-            with open(file=filename, mode='r', encoding='utf-8') as file:
+            with open(file=filename, mode="r", encoding="utf-8") as file:
                 log.debug(f"The file '{filename}' exists")
                 file.close()
             return True
 
         except FileNotFoundError:
-            log.warning(f"The data wasn't loaded. The filename {filename} doesn't finded")
+            log.warning(f"The filename {filename} doesn't finded")
             return False
 
         except:
             log.warning(f"The data wasn't loaded. An unknown error occurred")
             return False
+
 
 def sum_jsons(json1: dict, json2: dict) -> dict:
     result: dict = json1.copy()
