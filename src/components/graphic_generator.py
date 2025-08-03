@@ -13,7 +13,7 @@ class Graphic_Gen:
         self._x_axle: np.ndarray
 
         # dict[label] = (array, standar_deviation: True or False)
-        self._y_axis: dict[str, tuple[np.ndarray, bool]]
+        self._y_axis: dict[str, tuple[np.ndarray, bool]] = dict()
 
         # dict[label] = array
         self._default_y_axis: dict[str, np.ndarray] | None = None
@@ -52,7 +52,7 @@ class Graphic_Gen:
                 self._plot_colors = dict()
             self._plot_colors[label] = color
 
-            self._y_axis[label] = (axle, standard_deviation)
+        self._y_axis[label] = (axle, standard_deviation)
 
         if default_axle is not None:
             self._append_default_axle(default_axle, label=label)
@@ -87,21 +87,8 @@ class Graphic_Gen:
             path_to_pdf (str | None): Path to save a PDF. If is None don't save a PDF
 
         Returns:
-            int: Returns 0 if not error occurred. Return 1 if length of x axle is different of length of y axle. Return 2 if length of default axle is differet of the Y axle length
+            int: Returns 0 if not error occurred. Return 1 if length of x axle is different of length of y axle.
         """
-        if len(self._x_axle) != len(self._y_axis):
-            log.warning("X axle have a different length of the Y axle length")
-            return 1
-
-        if (self._default_y_axis is not None) and (
-            len(self._y_axis) != len(self._default_y_axis)
-        ):
-            log.warning("Default axle have a different lenght of th Y axle length")
-            return 2
-
-        _, ax = plt.subplots()
-
-        x_array_points: np.ndarray = self._x_axle
 
         # if is None avaliable colors is equal a []
         avaliable_colors: list[str] = (
@@ -110,35 +97,44 @@ class Graphic_Gen:
 
         for label in self._y_axis.keys():
 
-            current_y_tuple: tuple[np.ndarray, bool] = self._y_axis[label]
+            # create array to storage data
+            y_length: int = len(self._y_axis[label][0])
+            y_mean_array: np.ndarray = np.empty(y_length)
+            y_std_array: np.ndarray = np.empty(y_length)
 
-            # if default_y_axis exists
-            if self._default_y_axis is not None:
-                current_axle: np.ndarray = self._default_y_axis[label] - current_y_tuple
-            else:
-                current_axle: np.ndarray = current_y_tuple[0]
+            for point, current_y_array in enumerate(self._y_axis[label][0]):
 
-            mean: np.floating = np.mean(current_axle)
-            std: np.floating = np.std(current_axle)
+                # if default_y_axis exists
+                if self._default_y_axis is not None:
+                    y_points: np.ndarray = self._default_y_axis[label] - current_y_array
+                else:
+                    y_points: np.ndarray = current_y_array
+
+                y_mean_array[point] = np.mean(y_points)
+                y_std_array[point] = np.std(y_points)
+
+            # if x and y have different points number
+            if len(self._x_axle) != len(y_mean_array):
+                log.warning("X axle have a different length of the Y axle length")
+                return 1
 
             # colors isn't None and color is a avaliable color
             if (self._plot_colors is not None) and (label in avaliable_colors):
-                ax.plot(
-                    mean,
+                plt.plot(
+                    self._x_axle,
+                    y_mean_array,
                     label=label,
                     color=self._plot_colors[label].value,
                 )
             # if don't have colors
             else:
-                ax.plot(mean, label=label)
+                plt.plot(self._x_axle, y_mean_array, label=label)
 
             # if axle have a standard deviation
-            if current_y_tuple[1] == True:
-                ax.fill_between(
-                    x_array_points,
-                    mean - std,
-                    mean + std,
-                )
+            if self._y_axis[label][1] == True:
+                plt.errorbar(self._x_axle, y_mean_array, yerr=y_std_array)
+
+            print(f"mean: {y_mean_array}, std: {y_std_array}")
 
         if tittle is not None:
             plt.title(tittle)
