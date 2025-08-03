@@ -16,6 +16,10 @@ README
 .coverage
 .pytest_cache/
 
+# Ignore jupyter notebooks
+*.ipynb
+*.ipynb_checkpoints
+
 # Ignore data
 .json
 .csv
