@@ -132,6 +132,15 @@ class Data_Manager:
             data.to_csv(file, sep=",", encoding="utf-8", header=header, index=False)
             log.debug(f"The {filename} appended the data")
 
+    def csv_to_dataframe(self) -> pd.DataFrame:
+        """
+        Convert csv dict to a pandas DataFrame
+
+        Returns:
+            pandas.DataFrame: Returns a all csv converted in a pandas DataFrame
+        """
+        return pd.DataFrame(self.get_csv_dict())
+
     def update_json(self, json: dict) -> None:
         """
         Updates the json
