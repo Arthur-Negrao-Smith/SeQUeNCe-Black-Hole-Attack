@@ -90,9 +90,8 @@ class Colors(Enum):
     Colors to use in graphs
     """
 
-    RED = "#d62418"
-    ORANGE = "#c97310"
-    YELLOW = "#fcf117"
+    RED = "red"
+    ORANGE = "darkorange"
+    YELLOW = "gold"
     GREEN = "#2fed1a"
     BLUE = "#0c02c7"
-
