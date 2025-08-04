@@ -76,6 +76,7 @@ class Graphic_Gen:
         x_label: str | None = None,
         y_label: str | None = None,
         grid: bool = False,
+        marker: str = ".",
         path_to_pdf: str | None = None,
     ) -> int:
         """
@@ -85,6 +86,8 @@ class Graphic_Gen:
             tittle (str | None): Tittle of the graphic. If is None don't show graphic's tittle
             x_label (str | None): Label to show in x axle. If is None don't show a x label
             y_label (str | None): Label to show in y axle. If is None don't show a y label
+            grid (bool): If is True show the grid in graphic, else, don't show
+            marker (str): Marker to show each point
             path_to_pdf (str | None): Path to save a PDF. If is None don't save a PDF
 
         Returns:
@@ -126,10 +129,11 @@ class Graphic_Gen:
                     y_mean_array,
                     label=label,
                     color=self._plot_colors[label].value,
+                    marker=marker
                 )
             # if don't have colors
             else:
-                plt.plot(self._x_axle, y_mean_array, label=label)
+                plt.plot(self._x_axle, y_mean_array, label=label, marker=marker)
 
             # if axle have a standard deviation
             if self._y_axis[label][1] == True:
