@@ -75,6 +75,7 @@ class Graphic_Gen:
         tittle: str | None = None,
         x_label: str | None = None,
         y_label: str | None = None,
+        grid: bool = False,
         path_to_pdf: str | None = None,
     ) -> int:
         """
@@ -134,8 +135,6 @@ class Graphic_Gen:
             if self._y_axis[label][1] == True:
                 plt.errorbar(self._x_axle, y_mean_array, yerr=y_std_array)
 
-            print(f"mean: {y_mean_array}, std: {y_std_array}")
-
         if tittle is not None:
             plt.title(tittle)
 
@@ -145,6 +144,10 @@ class Graphic_Gen:
         if y_label is not None:
             plt.ylabel(y_label)
 
+        if grid:
+            plt.grid(True, linestyle="--", color="gray", alpha=0.5)
+
+        plt.legend()
         plt.show()
 
         if path_to_pdf is not None:
