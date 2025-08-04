@@ -12,18 +12,22 @@ import logging
 
 log: logging.Logger = logging.getLogger(__name__)
 
+
 class Network:
     """
     Network class to create the quantum network
     """
-    def __init__(self, start_seed: int | float | None = None, display_logs: bool = False) -> None:
+
+    def __init__(
+        self, start_seed: int | float | None = None, display_logs: bool = False
+    ) -> None:
         """
         Network constructor
 
         Args:
             start_seed (int | float | None): Seed to replicate the simulation. Default is None
             display_logs (bool): Show all logs
-        """ 
+        """
 
         if display_logs:
             show_logs()
@@ -38,21 +42,29 @@ class Network:
         self.bsm_nodes: dict[tuple[int, int], BSMNode] = dict()
 
         from .topologies import TopologyGen
+
         self.graph: nx.Graph
         self.topology: Topologies
-        self._topology_generator: Optional[TopologyGen] = TopologyGen(self, start_seed=start_seed)
+        self._topology_generator: Optional[TopologyGen] = TopologyGen(
+            self, start_seed=start_seed
+        )
 
         from .network_manager import Network_Manager
+
         self._network_manager: Optional[Network_Manager] = Network_Manager(self)
 
         from .attack_manager import Attack_Manager
-        self._attack_manager: Optional[Attack_Manager] = Attack_Manager(self, start_seed=start_seed)
+
+        self._attack_manager: Optional[Attack_Manager] = Attack_Manager(
+            self, start_seed=start_seed
+        )
 
         from .network_data import Network_Data
+
         self._network_data: Optional[Network_Data] = Network_Data()
 
         log.debug("Initiated Network")
-    
+
     def destroy(self, preserve_network_data: bool = False) -> None:
         """
         Cleanup all references
@@ -107,19 +119,19 @@ class Network:
         if self._topology_generator is None:
             raise RuntimeError("Topology generator has been destroyed")
         return self._topology_generator
-    
+
     @property
     def network_manager(self):
         if self._network_manager is None:
             raise RuntimeError("Network manager has been destroyed")
         return self._network_manager
-    
+
     @property
     def attack_manager(self):
         if self._attack_manager is None:
             raise RuntimeError("Attack manager has been destroyed")
         return self._attack_manager
-    
+
     @property
     def network_data(self):
         if self._network_data is None:
@@ -133,11 +145,11 @@ class Network:
         Returns:
             list[tuple[int, int]]: List with all edges
         """
-        return self.graph.edges() # type: ignore
+        return self.graph.edges()  # type: ignore
 
     def update_nodes(self, nodes: dict[int, QuantumRepeater]) -> None:
         """
-        Update the network's nodes 
+        Update the network's nodes
 
         Args:
             nodes (dict[int, QuantumRepeater]): New nodes to attach
@@ -146,7 +158,7 @@ class Network:
 
     def update_topology(self, topology: Topologies) -> None:
         """
-        Update the network's topology_name 
+        Update the network's topology_name
 
         Args:
             topology (Topologies): New topology to updates
@@ -154,11 +166,13 @@ class Network:
         self.topology = topology
 
         # update network's data
-        self.network_data.change_string(key=nd.TOPOLOGY, new_string=nd.TOPOLOGIES_DICT[topology])
+        self.network_data.change_string(
+            key=nd.TOPOLOGY, new_string=nd.TOPOLOGIES_DICT[topology]
+        )
 
     def update_graph(self, graph: nx.Graph) -> None:
         """
-        Update the network's graph 
+        Update the network's graph
 
         Args:
             graph (nx.Graph): New graph to updates
@@ -175,7 +189,9 @@ class Network:
         self.number_of_nodes = number_of_nodes
 
         # updates network's data
-        self.network_data.change_number(key=nd.NUMBER_OF_NODES, new_number=number_of_nodes)
+        self.network_data.change_number(
+            key=nd.NUMBER_OF_NODES, new_number=number_of_nodes
+        )
 
     def update_normal_nodes(self, normal_nodes: dict[int, QuantumRepeater]) -> None:
         """
@@ -229,4 +245,6 @@ class Network:
         self.timeline.time = self.timeline.now() + time_to_increment
 
         # updates network's data
-        self.network_data.increment(key=nd.SIMULATION_TIME, increment_number=time_to_increment)
+        self.network_data.increment(
+            key=nd.SIMULATION_TIME, increment_number=time_to_increment
+        )
