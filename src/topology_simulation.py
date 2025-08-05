@@ -161,7 +161,7 @@ def simulation(
                         attempts_per_request=attempts_per_request,
                         requests_per_run=requests_per_run,
                         tmp_parameter=tmp_parameter,
-                        seed=run,
+                        seed=(run * process_id + run),
                     )
 
                     match topology:
@@ -239,7 +239,7 @@ def simulation(
                             tmp_parameter=tmp_parameter,
                             bh_number=bh_number,
                             target=target,
-                            seed=run,
+                            seed=(run * process_id + run),
                         )
 
                         all_data.update_data(tmp_data)
