@@ -50,7 +50,7 @@ def simulation(
     # Run without black holes
     print(f"Network without black hole is running")
     for run in range(runs):
-        seed: int = (run*process_id + run)
+        seed: int = (process_id + run)
         network: Network = Network(start_seed=seed)
         network.topology_generator.grid_topology(ROWS, COLUMNS)
         nodes: list[int] = list(network.nodes.keys())
@@ -86,7 +86,7 @@ def simulation(
                     f"Network with black holes. bh_targets: {target}, bh_number: {bh_number}, intensity: {intensity:.1f}"
                 )
                 for run in range(runs):
-                    seed: int = (run*process_id + run)
+                    seed: int = (process_id + run)
                     network: Network = Network(start_seed=seed)
                     network.topology_generator.grid_topology(ROWS, COLUMNS)
                     network.attack_manager.create_black_holes(
