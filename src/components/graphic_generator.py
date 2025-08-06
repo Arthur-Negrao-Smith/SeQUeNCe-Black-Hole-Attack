@@ -44,7 +44,7 @@ class Graphic_Gen:
             axle (numpy.ndarray[numpy.ndarray]): Array 2D with each inner array is a point
             label (str): Label of axle
             standard_deviation (bool): If is True then standard deviation will plot with axle, else, don't show the standard deviation
-            default_axle (numpy.ndarray[numpy.ndarray] | None): Array 2D with each inner array is a point to calculate the diference with axle y
+            default_axle (numpy.ndarray[numpy.ndarray] | None): 1D array to subtract from each array in `axle`. All arrays are trimmed to the shortest length if `axle` is given. If is None just plot `axle`
             color (Colors | None): Color to add in current plot, if is None plot don't have a color
         """
         if color is not None:
@@ -52,10 +52,23 @@ class Graphic_Gen:
                 self._plot_colors = dict()
             self._plot_colors[label] = color
 
-        self._y_axis[label] = (axle, standard_deviation)
+        y_axle: np.ndarray = axle
 
+        # if have a default_axle
         if default_axle is not None:
+
+            # find the min length
+            axle_min_length: int = min(len(array) for array in y_axle)
+            default_axle_length: int = len(default_axle)
+            min_length: int = min(axle_min_length, default_axle_length)
+
+            # slice the arrays
+            y_axle = np.array([array[:min_length] for array in y_axle])
+            default_axle = np.array(default_axle[:min_length])
+
             self._append_default_axle(default_axle, label=label)
+
+        self._y_axis[label] = (y_axle, standard_deviation)
 
     def _append_default_axle(self, axle: np.ndarray, label: str) -> None:
         """
