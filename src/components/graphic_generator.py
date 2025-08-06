@@ -124,20 +124,25 @@ class Graphic_Gen:
 
             # colors isn't None and color is a avaliable color
             if (self._plot_colors is not None) and (label in avaliable_colors):
-                plt.plot(
-                    self._x_axle,
-                    y_mean_array,
-                    label=label,
-                    color=self._plot_colors[label].value,
-                    marker=marker
-                )
+                color: str | None = self._plot_colors[label].value
             # if don't have colors
             else:
-                plt.plot(self._x_axle, y_mean_array, label=label, marker=marker)
+                color = None
 
             # if axle have a standard deviation
             if self._y_axis[label][1] == True:
-                plt.errorbar(self._x_axle, y_mean_array, yerr=y_std_array)
+                plt.errorbar(
+                    self._x_axle,
+                    y_mean_array,
+                    yerr=y_std_array,
+                    label=label,
+                    marker=marker,
+                    color=color,
+                )
+            else:
+                plt.plot(
+                    self._x_axle, y_mean_array, label=label, marker=marker, color=color
+                )
 
         if tittle is not None:
             plt.title(tittle)
