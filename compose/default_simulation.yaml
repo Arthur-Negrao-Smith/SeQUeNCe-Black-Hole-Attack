@@ -3,7 +3,7 @@ services:
     build:
       context: ..
     image: simulations
-    container_name: dafault_simulation
+    container_name: default_simulation
     tty: true
     command: python src/default_simulation.py
     volumes:
