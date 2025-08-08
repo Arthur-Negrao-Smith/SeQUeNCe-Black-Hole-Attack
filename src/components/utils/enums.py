@@ -15,12 +15,12 @@ class Topologies(Enum):
     Topologies of the network
     """
 
-    BARABASI_ALBERT = "basabasi-albert"
-    ERDOS_RENYI = "erdos-renyi"
-    GRID = "grid"
-    LINE = "line"
-    RING = "ring"
-    STAR = "star"
+    BARABASI_ALBERT = "Barabási-Albert"
+    ERDOS_RENYI = "Erdős-Rényi"
+    GRID = "Grid"
+    LINE = "Line"
+    RING = "Ring"
+    STAR = "Star"
 
 
 class Node_Types(Enum):
