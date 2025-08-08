@@ -6,7 +6,7 @@ from decimal import Decimal
 # for translate enum to string
 TOPOLOGIES_DICT: dict[Topologies, str] = {
     Topologies.BARABASI_ALBERT: "Barabási-Albert",
-    Topologies.ERDOS_RENYI: "Erdős–Rényi",
+    Topologies.ERDOS_RENYI: "Erdős-Rényi",
     Topologies.GRID: "Grid",
     Topologies.LINE: "Line",
     Topologies.RING: "Ring",
