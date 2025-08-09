@@ -1,7 +1,14 @@
 from sequence.topology.topology import BSMNode, SingleAtomBSM
 from sequence.components.optical_channel import ClassicalChannel, QuantumChannel
 
-from .utils.constants import BSM_EFFICIENCY, QCHANNEL_ATTENUATION, QCHANNEL_DISTANCE, CCHANNEL_DISTANCE, CCHANNEL_DELAY, ENTANGLEMENT_SWAPPING_PROB
+from .utils.constants import (
+    BSM_EFFICIENCY,
+    QCHANNEL_ATTENUATION,
+    QCHANNEL_DISTANCE,
+    CCHANNEL_DISTANCE,
+    CCHANNEL_DELAY,
+    ENTANGLEMENT_SWAPPING_PROB,
+)
 from .utils.enums import Topologies
 from .nodes import QuantumRepeater
 import components.network_data as nd
@@ -13,9 +20,11 @@ import logging
 
 log: logging.Logger = logging.getLogger(__name__)
 
+
 # Topologies generator
 class TopologyGen:
     from .network import Network
+
     def __init__(self, network: Network, start_seed: int | float | None = None) -> None:
         """
         TopologyGen constructor
@@ -25,7 +34,7 @@ class TopologyGen:
             start_seed (Optional[int]): Seed to replicate the simulation. Default is None
         """
 
-        self.network: Network = network # type: ignore
+        self.network: Network = network  # type: ignore
 
         self.seed: None | int | float = start_seed
 
@@ -45,16 +54,20 @@ class TopologyGen:
             number_of_nodes (int): Number of nodes on the network
 
         Returns:
-            dict[int, QuantumRepeater]: A dictionary where each key is a unique 
+            dict[int, QuantumRepeater]: A dictionary where each key is a unique
             integer node ID, and each value is the corresponding node instance placed in the grid.
         """
 
         nodes: dict[int, QuantumRepeater] = dict()
         for c in range(0, number_of_nodes):
-            tmp_node: QuantumRepeater = QuantumRepeater(name=f"node[{c}]", timeline=self.network.timeline, swap_prob=ENTANGLEMENT_SWAPPING_PROB)
+            tmp_node: QuantumRepeater = QuantumRepeater(
+                name=f"node[{c}]",
+                timeline=self.network.timeline,
+                swap_prob=ENTANGLEMENT_SWAPPING_PROB,
+            )
 
             if self.seed is not None:
-                tmp_node.set_seed(self.seed) # type: ignore
+                tmp_node.set_seed(self.seed)  # type: ignore
                 self._increment_seed()
             nodes[c] = tmp_node
 
@@ -63,11 +76,15 @@ class TopologyGen:
         self.network.update_normal_nodes(copy(nodes))
 
         # update the normal nodes swap probability in network data
-        self.network.network_data.change_number(key=nd.NORMAL_NODE_SWAP_PROB, new_number=ENTANGLEMENT_SWAPPING_PROB)
+        self.network.network_data.change_number(
+            key=nd.NORMAL_NODE_SWAP_PROB, new_number=ENTANGLEMENT_SWAPPING_PROB
+        )
 
         return nodes
 
-    def _create_BSMNode(self, nodeA_id: int, nodeB_id: int, edge: tuple[int, int]) -> BSMNode:
+    def _create_BSMNode(
+        self, nodeA_id: int, nodeB_id: int, edge: tuple[int, int]
+    ) -> BSMNode:
         """
         Create BSMNode between two nodes
 
@@ -80,22 +97,37 @@ class TopologyGen:
             BSMNode: BSMNode connected with nodeA and nodeB
         """
 
-        bsm_node: BSMNode = BSMNode(name=f'bsm_node({nodeA_id}, {nodeB_id})', timeline=self.network.timeline,
-                                        other_nodes=[f'node[{nodeA_id}]', f'node[{nodeB_id}]'])
+        bsm_node: BSMNode = BSMNode(
+            name=f"bsm_node({nodeA_id}, {nodeB_id})",
+            timeline=self.network.timeline,
+            other_nodes=[f"node[{nodeA_id}]", f"node[{nodeB_id}]"],
+        )
         if self.seed is not None:
-            bsm_node.set_seed(self.seed) # type: ignore
+            bsm_node.set_seed(self.seed)  # type: ignore
             self._increment_seed()
 
-        self.network.bsm_nodes[edge] = bsm_node # adding bsm node in a dict
-        bsm: SingleAtomBSM = bsm_node.get_components_by_type("SingleAtomBSM")[0] # <- Get the bsm without node
-        bsm.update_detectors_params('efficiency', BSM_EFFICIENCY) # <- Change the detector efficiency
+        self.network.bsm_nodes[edge] = bsm_node  # adding bsm node in a dict
+        bsm: SingleAtomBSM = bsm_node.get_components_by_type("SingleAtomBSM")[
+            0
+        ]  # <- Get the bsm without node
+        bsm.update_detectors_params(
+            "efficiency", BSM_EFFICIENCY
+        )  # <- Change the detector efficiency
 
-        log.debug(f"Created {bsm_node.name} to connect node[{nodeA_id}] to node[{nodeB_id}]")
+        log.debug(
+            f"Created {bsm_node.name} to connect node[{nodeA_id}] to node[{nodeB_id}]"
+        )
 
         return bsm_node
 
-    def _connect_quantum_channels(self, nodeA_id: int, nodeB_id: int, bsm_node: BSMNode, 
-                                  qc_attenuation: int, qc_distance: int) -> None:
+    def _connect_quantum_channels(
+        self,
+        nodeA_id: int,
+        nodeB_id: int,
+        bsm_node: BSMNode,
+        qc_attenuation: int,
+        qc_distance: int,
+    ) -> None:
         """
         Connect quantum channels between nodeA, nodeB and bsm
 
@@ -108,11 +140,18 @@ class TopologyGen:
         """
 
         # Quantum channel initiation
-        qc1 = QuantumChannel(name=f'qc({self.network.nodes[nodeA_id].name}, {bsm_node.name})',
-                                timeline=self.network.timeline,
-                            attenuation=qc_attenuation, distance=qc_distance)
-        qc2 = QuantumChannel(name=f'qc({bsm_node.name}, {self.network.nodes[nodeB_id].name})', timeline=self.network.timeline,
-                            attenuation=qc_attenuation, distance=qc_distance)
+        qc1 = QuantumChannel(
+            name=f"qc({self.network.nodes[nodeA_id].name}, {bsm_node.name})",
+            timeline=self.network.timeline,
+            attenuation=qc_attenuation,
+            distance=qc_distance,
+        )
+        qc2 = QuantumChannel(
+            name=f"qc({bsm_node.name}, {self.network.nodes[nodeB_id].name})",
+            timeline=self.network.timeline,
+            attenuation=qc_attenuation,
+            distance=qc_distance,
+        )
 
         qc1.set_ends(self.network.nodes[nodeA_id], bsm_node.name)
         qc2.set_ends(self.network.nodes[nodeB_id], bsm_node.name)
@@ -130,21 +169,37 @@ class TopologyGen:
             nodeB: QuantumRepeater = self.network.nodes[edge[1]]
 
             # connecting nodes with bsm
-            cc = ClassicalChannel(name=f"cc({nodeA.name}, {bsm.name})", timeline=self.network.timeline, 
-                            distance=cc_distance, delay=cc_delay)
+            cc = ClassicalChannel(
+                name=f"cc({nodeA.name}, {bsm.name})",
+                timeline=self.network.timeline,
+                distance=cc_distance,
+                delay=cc_delay,
+            )
             cc.set_ends(nodeA, bsm.name)
 
-            cc = ClassicalChannel(name=f"cc({nodeB.name}, {bsm.name})", timeline=self.network.timeline, 
-                            distance=cc_distance, delay=cc_delay)
+            cc = ClassicalChannel(
+                name=f"cc({nodeB.name}, {bsm.name})",
+                timeline=self.network.timeline,
+                distance=cc_distance,
+                delay=cc_delay,
+            )
             cc.set_ends(nodeB, bsm.name)
 
             # connecting bsm with nodes
-            cc = ClassicalChannel(name=f"cc({bsm.name}, {nodeB.name})", timeline=self.network.timeline, 
-                            distance=cc_distance, delay=cc_delay)
+            cc = ClassicalChannel(
+                name=f"cc({bsm.name}, {nodeB.name})",
+                timeline=self.network.timeline,
+                distance=cc_distance,
+                delay=cc_delay,
+            )
             cc.set_ends(bsm, nodeB.name)
 
-            cc = ClassicalChannel(name=f"cc({bsm.name}, {nodeA.name})", timeline=self.network.timeline, 
-                            distance=cc_distance, delay=cc_delay)
+            cc = ClassicalChannel(
+                name=f"cc({bsm.name}, {nodeA.name})",
+                timeline=self.network.timeline,
+                distance=cc_distance,
+                delay=cc_delay,
+            )
             cc.set_ends(bsm, nodeA.name)
 
     def _connect_classical_channels(self, cc_distance: int, cc_delay: int) -> None:
@@ -165,11 +220,17 @@ class TopologyGen:
                 if nodeA == nodeB:
                     continue
                 # Classical channel initiation
-                cc = ClassicalChannel(name=f"cc({nodeA.name}, {nodeB.name})", timeline=self.network.timeline, 
-                            distance=cc_distance, delay=cc_delay)
+                cc = ClassicalChannel(
+                    name=f"cc({nodeA.name}, {nodeB.name})",
+                    timeline=self.network.timeline,
+                    distance=cc_distance,
+                    delay=cc_delay,
+                )
                 cc.set_ends(nodeA, nodeB.name)
 
-    def _update_network_topology(self, graph: nx.Graph, topology_name: Topologies) -> None:
+    def _update_network_topology(
+        self, graph: nx.Graph, topology_name: Topologies, parameter: str | None = None
+    ) -> None:
         """
         Updates networks's attributes
 
@@ -181,6 +242,9 @@ class TopologyGen:
         self.network.update_topology(topology_name)
         self.network.update_bsm_nodes(dict())
 
+        if parameter is not None:
+            self.network.network_data.change_string(nd.PARAMETER, new_string=parameter)
+
     def _connect_network_channels(self) -> None:
         """
         Connect all channels: Classical and Quantum channels
@@ -189,13 +253,21 @@ class TopologyGen:
             nodeA_id: int = edge[0]
             nodeB_id: int = edge[1]
 
-            bsm_node: BSMNode = self._create_BSMNode(nodeA_id=nodeA_id, nodeB_id=nodeB_id,
-                                            edge=edge)
+            bsm_node: BSMNode = self._create_BSMNode(
+                nodeA_id=nodeA_id, nodeB_id=nodeB_id, edge=edge
+            )
 
-            self._connect_quantum_channels(nodeA_id=nodeA_id, nodeB_id=nodeB_id, bsm_node=bsm_node,
-                            qc_attenuation=QCHANNEL_ATTENUATION, qc_distance=QCHANNEL_DISTANCE)
+            self._connect_quantum_channels(
+                nodeA_id=nodeA_id,
+                nodeB_id=nodeB_id,
+                bsm_node=bsm_node,
+                qc_attenuation=QCHANNEL_ATTENUATION,
+                qc_distance=QCHANNEL_DISTANCE,
+            )
 
-        self._connect_classical_channels(cc_distance=CCHANNEL_DISTANCE, cc_delay=CCHANNEL_DELAY)
+        self._connect_classical_channels(
+            cc_distance=CCHANNEL_DISTANCE, cc_delay=CCHANNEL_DELAY
+        )
         # init network's entities
         self.network.timeline.init()
 
@@ -212,11 +284,15 @@ class TopologyGen:
             Exception: If type of parameter is diferent between args and params_types.
         """
         if len(args) != len(params_types):
-            raise Exception(f"The number of parameters in args is incompatible. args: {args}")
+            raise Exception(
+                f"The number of parameters in args is incompatible. args: {args}"
+            )
 
         for position, param in enumerate(args):
             if not isinstance(param, params_types[position]):
-                raise Exception(f"The type of the prameter is incompatible with needed type by the function. param: {param} in args position: {position}")
+                raise Exception(
+                    f"The type of the prameter is incompatible with needed type by the function. param: {param} in args position: {position}"
+                )
 
     def _increment_seed(self, increment_number: int = 1) -> None:
         """
@@ -230,9 +306,9 @@ class TopologyGen:
 
     def grid_topology(self, rows: int, columns: int) -> dict[int, QuantumRepeater]:
 
-        self._create_nodes(rows*columns)
+        self._create_nodes(rows * columns)
 
-        graph: nx.Graph =  nx.grid_2d_graph(rows, columns)
+        graph: nx.Graph = nx.grid_2d_graph(rows, columns)
         graph = nx.convert_node_labels_to_integers(graph)
 
         self._update_network_topology(graph=graph, topology_name=Topologies.GRID)
@@ -254,31 +330,47 @@ class TopologyGen:
 
         return self.network.nodes
 
-    def erdos_renyi_topology(self, number_of_nodes: int, prob_edge_creation: float) -> dict[int, QuantumRepeater]:
+    def erdos_renyi_topology(
+        self, number_of_nodes: int, prob_edge_creation: float
+    ) -> dict[int, QuantumRepeater]:
 
         self._create_nodes(number_of_nodes)
 
-        graph: nx.Graph = nx.erdos_renyi_graph(number_of_nodes, prob_edge_creation, seed=self.seed)
+        graph: nx.Graph = nx.erdos_renyi_graph(
+            number_of_nodes, prob_edge_creation, seed=self.seed
+        )
         graph = nx.convert_node_labels_to_integers(graph)
 
         self._increment_seed()
 
-        self._update_network_topology(graph=graph, topology_name=Topologies.ERDOS_RENYI)
+        self._update_network_topology(
+            graph=graph,
+            topology_name=Topologies.ERDOS_RENYI,
+            parameter=f"p={prob_edge_creation}",
+        )
 
         self._connect_network_channels()
 
         return self.network.nodes
 
-    def barabasi_albert_topology(self, number_of_nodes: int, edges_to_attach: int) -> dict[int, QuantumRepeater]:
+    def barabasi_albert_topology(
+        self, number_of_nodes: int, edges_to_attach: int
+    ) -> dict[int, QuantumRepeater]:
 
         self._create_nodes(number_of_nodes)
 
-        graph: nx.Graph = nx.barabasi_albert_graph(number_of_nodes, edges_to_attach, seed=self.seed)
+        graph: nx.Graph = nx.barabasi_albert_graph(
+            number_of_nodes, edges_to_attach, seed=self.seed
+        )
         graph = nx.convert_node_labels_to_integers(graph)
 
         self._increment_seed()
 
-        self._update_network_topology(graph=graph, topology_name=Topologies.BARABASI_ALBERT)
+        self._update_network_topology(
+            graph=graph,
+            topology_name=Topologies.BARABASI_ALBERT,
+            parameter=f"m={edges_to_attach}",
+        )
 
         self._connect_network_channels()
 
@@ -288,7 +380,9 @@ class TopologyGen:
 
         self._create_nodes(number_of_nodes)
 
-        graph: nx.Graph = nx.star_graph(number_of_nodes-1) # Star graph has n-1 leaves and 1 center node
+        graph: nx.Graph = nx.star_graph(
+            number_of_nodes - 1
+        )  # Star graph has n-1 leaves and 1 center node
         graph = nx.convert_node_labels_to_integers(graph)
 
         self._update_network_topology(graph=graph, topology_name=Topologies.STAR)
@@ -310,7 +404,9 @@ class TopologyGen:
 
         return self.network.nodes
 
-    def select_topology(self, topology: Topologies, *args) -> dict[int, QuantumRepeater]:
+    def select_topology(
+        self, topology: Topologies, *args
+    ) -> dict[int, QuantumRepeater]:
         """
         Simplified way of choosing a topology
 
