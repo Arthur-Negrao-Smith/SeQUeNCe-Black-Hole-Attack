@@ -21,7 +21,7 @@ ATTACKS_DICT: dict[Attack_Types, str] = {
 
 # Dict keys
 REQUESTS: str = "requests"
-CONSUMED_EPRS: str = "consumed_eprs"
+CONSUMED_EPRS: str = "consummed_eprs"
 NUMBER_OF_NODES: str = "number_of_nodes"
 TOTAL_ROUTE_FIDELITY: str = "total_route_fidelity"
 TOTAL_REQUEST_SUCCESS: str = "total_request_success"
