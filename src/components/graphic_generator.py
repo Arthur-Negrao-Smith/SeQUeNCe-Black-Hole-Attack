@@ -25,7 +25,7 @@ class Graphic_Gen:
         Define x axle of the graphic
 
         Args:
-            axle (ndarray[int]): Array 1D with each index is a x point
+            ndarray[int]: Array 1D with each index is a x point
         """
         self._x_axle = axle
 
@@ -104,7 +104,10 @@ class Graphic_Gen:
             path_to_pdf (str | None): Path to save a PDF. If is None don't save a PDF
 
         Returns:
-            int: Returns 0 if not error occurred. Return 1 if length of x axle is different of length of y axle.
+            int: Status code
+                0   : Success
+                1   : If length of x axle is different of length of y axle
+                2   : If error occurs in PDF save
         """
 
         # if is None avaliable colors is equal a []
@@ -173,5 +176,6 @@ class Graphic_Gen:
                 plt.savefig(path_to_pdf)
             except:
                 log.warning(f"Error to save pdf in path: {path_to_pdf}")
+                return 2
 
         return 0
