@@ -25,7 +25,7 @@ class Graphic_Gen:
         Define x axle of the graphic
 
         Args:
-            axle (numpy.ndarray[int]): Array 1D with each index is a x point
+            axle (ndarray[int]): Array 1D with each index is a x point
         """
         self._x_axle = axle
 
@@ -41,10 +41,10 @@ class Graphic_Gen:
         Append y axle into the graph
 
         Args:
-            axle (numpy.ndarray[numpy.ndarray]): Array 2D with each inner array is a point
+            axle (ndarray[ndarray]): Array 2D with each inner array is a point
             label (str): Label of axle
             standard_deviation (bool): If is True then standard deviation will plot with axle, else, don't show the standard deviation
-            default_axle (numpy.ndarray[numpy.ndarray] | None): 1D array to subtract from each array in `axle`. All arrays are trimmed to the shortest length if `axle` is given. If is None just plot `axle`
+            default_axle (ndarray[ndarray] | None): 2D array to subtract `axle`. All arrays are trimmed to the shortest length if `axle` is given. If is None just plot `axle`
             color (Colors | None): Color to add in current plot, if is None plot don't have a color
         """
         if color is not None:
@@ -58,8 +58,8 @@ class Graphic_Gen:
         if default_axle is not None:
 
             # find the min length
-            axle_min_length: int = min(len(array) for array in y_axle)
-            default_axle_length: int = len(default_axle)
+            axle_min_length: int = min([len(array) for array in y_axle])
+            default_axle_length: int = min([len(array) for array in default_axle])
             min_length: int = min(axle_min_length, default_axle_length)
 
             # slice the arrays
@@ -75,7 +75,7 @@ class Graphic_Gen:
         Append default axle to calculate the diference between y axle
 
         Args:
-            axle (numpy.ndarray): Array 2D with each inner array is a point
+            axle (ndarray[ndarray]): Array 2D with each inner array is a point
             label (str): Label of axle
         """
         if self._default_y_axis is None:
@@ -114,21 +114,17 @@ class Graphic_Gen:
 
         for label in self._y_axis.keys():
 
-            # create array to storage data
-            y_length: int = len(self._y_axis[label][0])
-            y_mean_array: np.ndarray = np.empty(y_length)
-            y_std_array: np.ndarray = np.empty(y_length)
+            # if exists default y axis
+            if self._default_y_axis is not None:
+                y_points: np.ndarray = (
+                    self._default_y_axis[label] - self._y_axis[label][0]
+                )
+            else:
+                y_points: np.ndarray = self._y_axis[label][0]
 
-            for point, current_y_array in enumerate(self._y_axis[label][0]):
-
-                # if default_y_axis exists
-                if self._default_y_axis is not None:
-                    y_points: np.ndarray = self._default_y_axis[label] - current_y_array
-                else:
-                    y_points: np.ndarray = current_y_array
-
-                y_mean_array[point] = np.mean(y_points)
-                y_std_array[point] = np.std(y_points)
+            # convert 2D array in 1D array
+            y_mean_array = np.mean(y_points, axis=1)
+            y_std_array = np.std(y_points, axis=1)
 
             # if x and y have different points number
             if len(self._x_axle) != len(y_mean_array):
