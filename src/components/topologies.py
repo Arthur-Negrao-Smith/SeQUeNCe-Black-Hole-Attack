@@ -1,6 +1,7 @@
 from sequence.topology.topology import BSMNode, SingleAtomBSM
 from sequence.components.optical_channel import ClassicalChannel, QuantumChannel
 
+
 from .utils.constants import (
     BSM_EFFICIENCY,
     QCHANNEL_ATTENUATION,
@@ -11,6 +12,7 @@ from .utils.constants import (
 )
 from .utils.enums import Topologies
 from .nodes import QuantumRepeater
+import components.utils.raises as rs
 import components.network_data as nd
 
 import networkx as nx
@@ -280,17 +282,17 @@ class TopologyGen:
             *args: Collection with args to use in functions.
 
         Raises:
-            Exception: If number of parameters in args is invalid.
-            Exception: If type of parameter is diferent between args and params_types.
+            NumberOfParametersError: If number of parameters in args is invalid.
+            TypeError: If type of parameter is diferent between args and params_types.
         """
         if len(args) != len(params_types):
-            raise Exception(
+            raise rs.NumberOfParametersError(
                 f"The number of parameters in args is incompatible. args: {args}"
             )
 
         for position, param in enumerate(args):
             if not isinstance(param, params_types[position]):
-                raise Exception(
+                raise TypeError(
                     f"The type of the prameter is incompatible with needed type by the function. param: {param} in args position: {position}"
                 )
 
@@ -418,9 +420,9 @@ class TopologyGen:
             dict[int, QuantumRepeater]: Dict with all created nodes.
 
         Raises:
-            Exception: If topology isn't avaliable in function.
-            Exception: If it is different from the number of parameters required by the selected topology's function.
-            Exception: If parameters' type are different of types of parameters required by the selected topology's function.
+            NonExistentFunctionError: If topology isn't avaliable in function.
+            NumberOfParametersError: If it is different from the number of parameters required by the selected topology's function.
+            TypeError: If parameters' type are different of types of parameters required by the selected topology's function.
         """
 
         match topology:
@@ -449,4 +451,4 @@ class TopologyGen:
                 return self.ring_topology(*args)
 
             case _:
-                raise Exception(f"Topology selected isn't avaliable.")
+                raise rs.NonExistentFunctionError(f"Topology selected isn't avaliable.")
