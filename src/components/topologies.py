@@ -78,8 +78,8 @@ class TopologyGen:
         self.network.update_normal_nodes(copy(nodes))
 
         # update the normal nodes swap probability in network data
-        self.network.network_data.change_number(
-            key=nd.NORMAL_NODE_SWAP_PROB, new_number=ENTANGLEMENT_SWAPPING_PROB
+        self.network.network_data.change_value(
+            key=nd.NORMAL_NODE_SWAP_PROB, new_value=ENTANGLEMENT_SWAPPING_PROB
         )
 
         return nodes
@@ -231,7 +231,10 @@ class TopologyGen:
                 cc.set_ends(nodeA, nodeB.name)
 
     def _update_network_topology(
-        self, graph: nx.Graph, topology_name: Topologies, parameter: str | None = None
+        self,
+        graph: nx.Graph,
+        topology_name: Topologies,
+        parameter: int | float | None = None,
     ) -> None:
         """
         Updates networks's attributes
@@ -245,7 +248,7 @@ class TopologyGen:
         self.network.update_bsm_nodes(dict())
 
         if parameter is not None:
-            self.network.network_data.change_string(nd.PARAMETER, new_string=parameter)
+            self.network.network_data.change_value(nd.PARAMETER, new_value=parameter)
 
     def _connect_network_channels(self) -> None:
         """
@@ -348,7 +351,7 @@ class TopologyGen:
         self._update_network_topology(
             graph=graph,
             topology_name=Topologies.ERDOS_RENYI,
-            parameter=f"p={prob_edge_creation}",
+            parameter=prob_edge_creation,
         )
 
         self._connect_network_channels()
@@ -371,7 +374,7 @@ class TopologyGen:
         self._update_network_topology(
             graph=graph,
             topology_name=Topologies.BARABASI_ALBERT,
-            parameter=f"m={edges_to_attach}",
+            parameter=edges_to_attach,
         )
 
         self._connect_network_channels()

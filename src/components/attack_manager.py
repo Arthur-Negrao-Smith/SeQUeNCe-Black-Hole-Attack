@@ -70,11 +70,11 @@ class Attack_Manager:
             )
 
         # updates network's data
-        self.network.network_data.change_number(
-            key=nd.NUMBER_OF_BLACK_HOLES, new_number=number_of_black_holes
+        self.network.network_data.change_value(
+            key=nd.NUMBER_OF_BLACK_HOLES, new_value=number_of_black_holes
         )
-        self.network.network_data.change_number(
-            key=nd.TARGETS_PER_BLACK_HOLE, new_number=targets_per_black_hole
+        self.network.network_data.change_value(
+            key=nd.TARGETS_PER_BLACK_HOLE, new_value=targets_per_black_hole
         )
 
         for bh in self.network.black_holes.values():
@@ -83,11 +83,12 @@ class Attack_Manager:
             )
 
         # updates the bha swap probability in network data
-        self.network.network_data.change_number(
-            key=nd.BLACK_HOLE_SWAP_PROB, new_number=swap_prob
+        self.network.network_data.change_value(
+            key=nd.BLACK_HOLE_SWAP_PROB, new_value=swap_prob
         )
-        self.network.network_data.change_string(
-            key=nd.INTENSITY, new_string=f"i: {ENTANGLEMENT_SWAPPING_PROB-swap_prob:.1f}"
+        self.network.network_data.change_value(
+            key=nd.INTENSITY,
+            new_value=f"i: {ENTANGLEMENT_SWAPPING_PROB-swap_prob:.1f}",
         )
 
     def get_black_holes(self) -> dict[str, dict[str, float | int] | None]:
@@ -113,8 +114,8 @@ class Attack_Manager:
         self._attack_type = attack_type
 
         # updates network's data
-        self.network.network_data.change_string(
-            key=nd.ATTACK_NAME, new_string=nd.ATTACKS_DICT[attack_type]
+        self.network.network_data.change_value(
+            key=nd.ATTACK_TYPE, new_value=attack_type.value
         )
 
     def _create_black_holes_no_targets(

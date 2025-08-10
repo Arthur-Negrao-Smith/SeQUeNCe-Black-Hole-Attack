@@ -166,9 +166,7 @@ class Network:
         self.topology = topology
 
         # update network's data
-        self.network_data.change_string(
-            key=nd.TOPOLOGY, new_string=nd.TOPOLOGIES_DICT[topology]
-        )
+        self.network_data.change_value(key=nd.TOPOLOGY, new_value=topology.value)
 
     def update_graph(self, graph: nx.Graph) -> None:
         """
@@ -189,8 +187,8 @@ class Network:
         self.number_of_nodes = number_of_nodes
 
         # updates network's data
-        self.network_data.change_number(
-            key=nd.NUMBER_OF_NODES, new_number=number_of_nodes
+        self.network_data.change_value(
+            key=nd.NUMBER_OF_NODES, new_value=number_of_nodes
         )
 
     def update_normal_nodes(self, normal_nodes: dict[int, QuantumRepeater]) -> None:
