@@ -15,12 +15,13 @@ class Topologies(Enum):
     Topologies of the network
     """
 
-    BARABASI_ALBERT = "Barabási-Albert"
-    ERDOS_RENYI = "Erdős-Rényi"
-    GRID = "Grid"
-    LINE = "Line"
-    RING = "Ring"
-    STAR = "Star"
+    NOT_DEFINED = -1
+    BARABASI_ALBERT = 0  # "Barabási-Albert"
+    ERDOS_RENYI = 1  # "Erdős-Rényi"
+    GRID = 2  # "Grid"
+    LINE = 3  # "Line"
+    RING = 4  # "Ring"
+    STAR = 5  # "Star"
 
 
 class Node_Types(Enum):
@@ -37,8 +38,9 @@ class Attack_Types(Enum):
     Type of attacks to the network
     """
 
-    BLACK_HOLE = "black-hole"
-    HIJACKING = "hijacking"
+    NO_ATTACK = 0
+    BLACK_HOLE = 1  # "black-hole"
+    HIJACKING = 2  # "hijacking"
 
 
 class Request_Response(Enum):
