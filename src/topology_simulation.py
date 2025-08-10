@@ -36,7 +36,7 @@ GRIDE_NODES: dict[int, tuple[int, int]] = {
 }
 
 # Simulations Params
-RUNS: int = 100
+RUNS: int = 1000
 REQUESTS_PER_RUN: int = 100
 ATTEMPTS_PER_REQUEST: int = 2
 
@@ -163,16 +163,6 @@ def simulation(
                         tmp_parameter=tmp_parameter,
                         seed=(process_id*runs + run),
                     )
-
-                    match topology:
-                        case TP.BARABASI_ALBERT:
-                            tmp_data.change_string(
-                                nd.PARAMETER, new_string=f"m={int(parameter*10)}"
-                            )
-                        case TP.ERDOS_RENYI:
-                            tmp_data.change_string(
-                                nd.PARAMETER, new_string=f"p={parameter}"
-                            )
 
                     all_data.update_data(tmp_data)
 
