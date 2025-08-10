@@ -20,7 +20,7 @@ def remove_test_file(filename: str) -> None:
 @pt.fixture
 def network_data() -> Network_Data:
     data: Network_Data = Network_Data()
-    data.change_number(nd.CONSUMED_EPRS, TEST_CONSUMED_EPRS)
+    data.change_value(nd.CONSUMED_EPRS, TEST_CONSUMED_EPRS)
     return data
 
 
@@ -117,7 +117,7 @@ class Test_Data_Manager:
 
         other_network_data_consumed_eprs: int = -2
         other_network_data: Network_Data = Network_Data()
-        other_network_data.change_number(
+        other_network_data.change_value(
             nd.CONSUMED_EPRS, other_network_data_consumed_eprs
         )
 
@@ -151,7 +151,7 @@ class Test_Data_Manager:
 
         other_network_data_consumed_eprs: int = -2
         other_network_data: Network_Data = Network_Data()
-        other_network_data.change_number(
+        other_network_data.change_value(
             nd.CONSUMED_EPRS, other_network_data_consumed_eprs
         )
 
