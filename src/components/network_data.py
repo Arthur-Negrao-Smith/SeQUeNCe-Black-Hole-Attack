@@ -1,23 +1,6 @@
 from .utils.enums import Attack_Types, Topologies
 
 from typing import Any
-from decimal import Decimal
-
-# for translate enum to string
-TOPOLOGIES_DICT: dict[Topologies, str] = {
-    Topologies.BARABASI_ALBERT: "Barabási-Albert",
-    Topologies.ERDOS_RENYI: "Erdős-Rényi",
-    Topologies.GRID: "Grid",
-    Topologies.LINE: "Line",
-    Topologies.RING: "Ring",
-    Topologies.STAR: "Star",
-}
-
-# for translate enum to string
-ATTACKS_DICT: dict[Attack_Types, str] = {
-    Attack_Types.BLACK_HOLE: "Black-hole",
-    Attack_Types.HIJACKING: "Hijacking",
-}
 
 # Dict keys
 REQUESTS: str = "requests"
@@ -37,7 +20,7 @@ TOPOLOGY: str = "topology"
 NUMBER_OF_BLACK_HOLES: str = "black_holes"
 TARGETS_PER_BLACK_HOLE: str = "targets_per_black_hole"
 SIMULATION_TIME: str = "simulation_time"
-ATTACK_NAME: str = "attack_name"
+ATTACK_TYPE: str = "attack_type"
 PARAMETER: str = "parameter"
 BLACK_HOLE_SWAP_PROB: str = "black_hole_swap_prob"
 NORMAL_NODE_SWAP_PROB: str = "normal_node_swap_prob"
@@ -67,12 +50,12 @@ class Network_Data:
             TOTAL_SWAPPING_SUCCESS: [0],
             TOTAL_SWAPPING_FAILS: [0],
             NUMBER_OF_NODES: [0],
-            TOPOLOGY: ["Not defined"],
+            TOPOLOGY: [Topologies.NOT_DEFINED.value],
             SIMULATION_TIME: [0],
             NUMBER_OF_BLACK_HOLES: [0],
             TARGETS_PER_BLACK_HOLE: [0],
-            ATTACK_NAME: ["No attack"],
-            PARAMETER: ["No parameter"],
+            ATTACK_TYPE: [Attack_Types.NO_ATTACK.value],
+            PARAMETER: [-1.0],
             BLACK_HOLE_SWAP_PROB: [-1.0],
             NORMAL_NODE_SWAP_PROB: [-1.0],
             INTENSITY: ["i: -1.0"],
@@ -94,25 +77,15 @@ class Network_Data:
         """
         self._data[key][0] += increment_number
 
-    def change_number(self, key: str, new_number: int | float) -> None:
+    def change_value(self, key: str, new_value: int | float | str) -> None:
         """
-        Increment any data's number
+        Change a value in network_data
 
         Args:
             key (str): Key to access data
-            new_number (int | float): Number to updates data
+            new_value (int | float | str): New value to replace
         """
-        self._data[key][0] = new_number
-
-    def change_string(self, key: str, new_string: str) -> None:
-        """
-        Change any data's string
-
-        Args:
-            key (str): Key to access data
-            string (str): String to updates data
-        """
-        self._data[key][0] = new_string
+        self._data[key][0] = new_value
 
     def get_item(self, item_name) -> Any:
         """
