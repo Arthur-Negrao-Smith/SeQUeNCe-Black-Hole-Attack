@@ -1,7 +1,9 @@
 from .utils.enums import Colors
 
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 import logging
 
@@ -93,7 +95,7 @@ class Graphic_Gen:
         path_to_pdf: str | None = None,
     ) -> int:
         """
-        Plot the graphic and show
+        Show a linear graphic
 
         Args:
             tittle (str | None): Tittle of the graphic. If is None don't show graphic's tittle
@@ -114,6 +116,9 @@ class Graphic_Gen:
         avaliable_colors: list[str] = (
             list(self._plot_colors.keys()) if self._plot_colors is not None else []
         )
+
+        # fixing the size of graphic
+        plt.figure(figsize=(8, 6))
 
         for label in self._y_axis.keys():
 
@@ -179,3 +184,38 @@ class Graphic_Gen:
                 return 2
 
         return 0
+
+    @staticmethod
+    def plot_heatmap(
+        df: pd.DataFrame,
+        title: str | None = None,
+        annot: bool = True,
+        style: str = "YlGnBu",
+    ) -> None:
+        """
+        Show a heatmap graphic
+
+        Args:
+            df (DataFrame): DataFrame to use data
+            title (str | None): Title of the graphic. If is None don't show title
+            annot (bool): If True show labels in squares, else show only the square
+            style (str): Name of style to show heatmap
+        """
+        num_cols = len(df.columns)
+        fig_width = max(10, num_cols * 0.6)
+        plt.figure(figsize=(fig_width, fig_width))
+
+        ax = sns.heatmap(
+            df,
+            annot=annot,
+            annot_kws={"size": 8},
+            fmt=".2f",
+            cmap=style,
+            square=True,
+            cbar=True,
+        )
+
+        if title is not None:
+            ax.set_title(title)
+
+        plt.show()
