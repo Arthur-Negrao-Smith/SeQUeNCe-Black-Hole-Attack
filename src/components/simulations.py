@@ -26,10 +26,10 @@ class AsyncSimulator:
             need_id (bool): Flag to differentiate each process. To use this option the function should have a 'process_id' with second parameter
 
         Raises:
-            Exception: If cores or runs are less than 1, then except is called
+            ValueError: If cores or runs are less than 1, then except is called
         """
         if runs < 1 or cores < 1:
-            Exception(
+            ValueError(
                 f"Invalid number to parameter runs or cores: runs->{runs}, cores->{cores}"
             )
 
@@ -55,7 +55,7 @@ class AsyncSimulator:
 
         print(f"All simulations were divided in {self.cores} process")
 
-        id: int = 0  # id to indentify process
+        id: int = 0  # id to indentify the process
         tasks: list = []
         with ProcessPoolExecutor(max_workers=self.cores) as executor:
             for task in range(0, self.cores):
