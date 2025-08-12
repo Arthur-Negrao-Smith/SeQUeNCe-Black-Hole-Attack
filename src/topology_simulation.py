@@ -145,8 +145,12 @@ def simulation(
     for topology in TOPOLOGIES:
         for parameter in TOPOLOGY_PARAMS:
 
-            # if it is grid topology and not the first run just ignore and this simulation will used to create a dataset
-            if topology == TP.GRID and parameter != TOPOLOGY_PARAMS[0] and is_a_dataset:
+            # if it is grid topology and not the first run and this simulation will not used to create a dataset just ignore
+            if (
+                topology == TP.GRID
+                and parameter != TOPOLOGY_PARAMS[0]
+                and not is_a_dataset
+            ):
                 continue
 
             for number_of_nodes in NUMBER_OF_NODES:
