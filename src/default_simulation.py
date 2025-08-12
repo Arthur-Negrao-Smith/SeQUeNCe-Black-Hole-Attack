@@ -21,13 +21,17 @@ BLACK_HOLES_NUMBER: list[int] = [1, 3, 5]
 INTENSITIES: list[float] = [0.1 * i for i in range(1, 8)]
 
 # Simulations Params
-RUNS: int = 1000
+RUNS: int = 5000
 REQUESTS_PER_RUN: int = 100
 ATTEMPTS_PER_REQUEST: int = 2
 
 
 def simulation(
-    runs: int, process_id: int, requests_per_run: int, attempts_per_request: int
+    runs: int,
+    process_id: int,
+    requests_per_run: int,
+    attempts_per_request: int,
+    is_a_dataset: bool,
 ) -> Data_Manager:
     """
     Simulation to simulation a black hole attack to a entanglement network with grid topology
@@ -37,6 +41,7 @@ def simulation(
         process_id (int): Id to identify process to use AsyncSimulator
         requests_per_run (int): Total requests calls per run
         attempts_per_request (int): Total attempts to try per request
+        is_a_dataset (bool): If the data will used to create a dataset. If is True all simulations will be equally balanced
 
     Returns:
         Data_Manager: Return all data in json format within the Data_Manager
@@ -47,10 +52,17 @@ def simulation(
 
     all_data: Data_Manager = Data_Manager()
 
+    if is_a_dataset:
+        total_default_runs = (
+            runs * len(TARGETS) * len(BLACK_HOLES_NUMBER) * len(INTENSITIES)
+        )
+    else:
+        total_default_runs = runs
+
     # Run without black holes
-    print(f"Network without black hole is running")
-    for run in range(runs):
-        seed: int = (process_id*runs + run)
+    print(f"Network without black hole is running {total_default_runs} runs")
+    for run in range(total_default_runs):
+        seed: int = process_id * total_default_runs + run
         network: Network = Network(start_seed=seed)
         network.topology_generator.grid_topology(ROWS, COLUMNS)
         nodes: list[int] = list(network.nodes.keys())
@@ -71,10 +83,7 @@ def simulation(
             )
 
         all_data.update_data(network.network_data)
-        all_data.insert_data_in_json(
-            element_key=(f"run: {runs*process_id + run}"), keys=["no-black-hole"]
-        )
-        all_data.write_json(filename=json_filename)
+
         # append data in csv file
         all_data.append_data_in_csv_file(filename=csv_filename, append_in_csv_dict=True)
 
@@ -86,7 +95,9 @@ def simulation(
                     f"Network with black holes. bh_targets: {target}, bh_number: {bh_number}, intensity: {intensity:.1f}"
                 )
                 for run in range(runs):
-                    seed: int = (process_id*runs + run)
+
+                    seed: int = process_id * runs + run
+
                     network: Network = Network(start_seed=seed)
                     network.topology_generator.grid_topology(ROWS, COLUMNS)
                     network.attack_manager.create_black_holes(
@@ -112,16 +123,6 @@ def simulation(
                         )
 
                     all_data.update_data(network.network_data)
-                    all_data.insert_data_in_json(
-                        element_key=f"run: {(runs*process_id + run)}",
-                        keys=[
-                            "with-black-hole",
-                            f"targets: {target}",
-                            f"number of bh: {bh_number}",
-                            f"intensity: {intensity:.1f}",
-                        ],
-                    )
-                    all_data.write_json(filename=json_filename)
 
                     # append data in csv file
                     all_data.append_data_in_csv_file(
@@ -136,6 +137,10 @@ cores: int | None = os.cpu_count()
 if cores is None:
     cores = 4  # max cores in your machine
 
+# limite cores to reproduce the experiment
+if cores > 16:
+    cores = 16
+
 # calculate time
 start: datetime = datetime.now()
 
@@ -143,23 +148,11 @@ start: datetime = datetime.now()
 sim = AsyncSimulator(
     simulation_function=simulation, runs=RUNS, cores=cores - 1, need_id=True
 )
-sim.run(REQUESTS_PER_RUN, ATTEMPTS_PER_REQUEST)
+sim.run(
+    requests_per_run=REQUESTS_PER_RUN,
+    attempts_per_request=ATTEMPTS_PER_REQUEST,
+    is_a_dataset=False,
+)
 
 # show simulation time
 print(f"\nAll simulations are finished. Simulation time: {datetime.now()-start}")
-
-tmp_json: dict = dict()
-data_manager: Data_Manager = Data_Manager()
-for json_filename in glob.glob(f"{PATH}_*.json"):
-    data_manager.load_json(filename=json_filename)
-    loaded_json: dict = data_manager.get_json()
-
-    tmp_json = sum_jsons(json1=tmp_json, json2=loaded_json)
-
-    try:
-        os.remove(json_filename)
-    except:
-        continue
-
-data_manager.update_json(tmp_json)
-data_manager.write_json(f"{PATH}.json")

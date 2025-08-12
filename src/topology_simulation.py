@@ -2,7 +2,7 @@ from components.data_manager import Data_Manager, sum_jsons
 from components.network import Network
 from components.simulations import AsyncSimulator
 from components.utils.enums import Topologies as TP
-from components.network_data import TOPOLOGIES_DICT, Network_Data
+from components.network_data import Network_Data
 import components.network_data as nd
 
 from random import choice
@@ -110,7 +110,11 @@ def sim_attacked_network(
 
 
 def simulation(
-    runs: int, process_id: int, requests_per_run: int, attempts_per_request: int
+    runs: int,
+    process_id: int,
+    requests_per_run: int,
+    attempts_per_request: int,
+    is_a_dataset: bool,
 ) -> Data_Manager:
     """
     Simulation to simulation a black hole attack to a entanglement network with grid topology
@@ -120,6 +124,7 @@ def simulation(
         process_id (int): Id to identify process to use AsyncSimulator
         requests_per_run (int): Total requests calls per run
         attempts_per_request (int): Total attempts to try per request
+        is_a_dataset (bool): If the data will used to create a dataset. If is True all simulations will be equally balanced
 
     Returns:
         Data_Manager: Return all data in json format within the Data_Manager
@@ -130,20 +135,26 @@ def simulation(
 
     all_data: Data_Manager = Data_Manager()
 
+    if is_a_dataset:
+        total_default_runs: int = runs * len(TARGETS)
+    else:
+        total_default_runs = runs
+
     # Run without black holes
-    print(f"Network without black hole is running")
+    print(f"Network without black hole is running {total_default_runs} runs")
     for topology in TOPOLOGIES:
         for parameter in TOPOLOGY_PARAMS:
 
-            # if it is grid topology and not the first run just ignore
-            if topology == TP.GRID and parameter != TOPOLOGY_PARAMS[0]:
+            # if it is grid topology and not the first run just ignore and this simulation will used to create a dataset
+            if topology == TP.GRID and parameter != TOPOLOGY_PARAMS[0] and is_a_dataset:
                 continue
 
-            print(
-                f"No BHA >> topology: {TOPOLOGIES_DICT[topology]}, param: {int(parameter * 10)}"
-            )
-
             for number_of_nodes in NUMBER_OF_NODES:
+
+                print(
+                    f"No BHA >> topology: {topology.value}, param: {int(parameter * 10)}, number-of-nodes: {number_of_nodes}"
+                )
+
                 tmp_parameter: list | tuple[int, int]
 
                 # to select param for each topology
@@ -155,38 +166,17 @@ def simulation(
                     case _:
                         tmp_parameter = GRIDE_NODES[number_of_nodes]
 
-                for run in range(runs):
+                for run in range(total_default_runs):
                     tmp_data: Network_Data = sim_normal_network(
                         topology=topology,
                         attempts_per_request=attempts_per_request,
                         requests_per_run=requests_per_run,
                         tmp_parameter=tmp_parameter,
-                        seed=(process_id*runs + run),
+                        seed=(process_id * total_default_runs + run),
                     )
 
                     all_data.update_data(tmp_data)
 
-                    if topology == TP.GRID:
-                        all_data.insert_data_in_json(
-                            element_key=(f"run: {runs*process_id + run}"),
-                            keys=[
-                                "no-black-hole",
-                                TOPOLOGIES_DICT[topology],
-                                f"number-of-nodes: {number_of_nodes}",
-                            ],
-                        )
-                    else:
-                        all_data.insert_data_in_json(
-                            element_key=(f"run: {runs*process_id + run}"),
-                            keys=[
-                                "no-black-hole",
-                                TOPOLOGIES_DICT[topology],
-                                f"param: {int(parameter*10)}",
-                                f"number-of-nodes: {number_of_nodes}",
-                            ],
-                        )
-
-                    all_data.write_json(filename=json_filename)
                     all_data.append_data_in_csv_file(
                         filename=csv_filename, append_in_csv_dict=True
                     )
@@ -203,7 +193,7 @@ def simulation(
 
                 for number_of_nodes in NUMBER_OF_NODES:
                     print(
-                        f"BHA >> targets: {target}, topology: {TOPOLOGIES_DICT[topology]}, param: {int(parameter * 10)}, number-of-nodes: {number_of_nodes}"
+                        f"BHA >> targets: {target}, topology: {topology.value}, param: {int(parameter * 10)}, number-of-nodes: {number_of_nodes}"
                     )
 
                     bh_number: int = int(
@@ -229,34 +219,11 @@ def simulation(
                             tmp_parameter=tmp_parameter,
                             bh_number=bh_number,
                             target=target,
-                            seed=(process_id*runs + run),
+                            seed=(process_id * runs + run),
                         )
 
                         all_data.update_data(tmp_data)
 
-                        if topology == TP.GRID:
-                            all_data.insert_data_in_json(
-                                element_key=f"run: {(runs*process_id + run)}",
-                                keys=[
-                                    "with-black-hole",
-                                    f"targets: {target}",
-                                    f"{TOPOLOGIES_DICT[topology]}",
-                                    f"number-of-nodes: {number_of_nodes}",
-                                ],
-                            )
-                        else:
-                            all_data.insert_data_in_json(
-                                element_key=f"run: {(runs*process_id + run)}",
-                                keys=[
-                                    "with-black-hole",
-                                    f"targets: {target}",
-                                    f"{TOPOLOGIES_DICT[topology]}",
-                                    f"param: {int(parameter * 10)}",
-                                    f"number-of-nodes: {number_of_nodes}",
-                                ],
-                            )
-
-                        all_data.write_json(filename=json_filename)
                         all_data.append_data_in_csv_file(
                             filename=csv_filename, append_in_csv_dict=True
                         )
@@ -269,6 +236,10 @@ cores: int | None = os.cpu_count()
 if cores is None:
     cores = 4  # max cores in your machine
 
+# limite cores to reproduce the experiment
+if cores > 16:
+    cores = 16
+
 # calculate time
 start: datetime = datetime.now()
 
@@ -276,24 +247,11 @@ start: datetime = datetime.now()
 sim = AsyncSimulator(
     simulation_function=simulation, runs=RUNS, cores=cores - 1, need_id=True
 )
-sim.run(REQUESTS_PER_RUN, ATTEMPTS_PER_REQUEST)
+sim.run(
+    requests_per_run=REQUESTS_PER_RUN,
+    attempts_per_request=ATTEMPTS_PER_REQUEST,
+    is_a_dataset=False,
+)
 
 # show simulation time
 print(f"\nAll simulations are finished. Simulation time: {datetime.now()-start}")
-
-# sum all json files
-tmp_json: dict = dict()
-data_manager: Data_Manager = Data_Manager()
-for json_filename in glob.glob(f"{PATH}_*.json"):
-    data_manager.load_json(filename=json_filename)
-    loaded_json: dict = data_manager.get_json()
-
-    tmp_json = sum_jsons(json1=tmp_json, json2=loaded_json)
-
-    try:
-        os.remove(json_filename)
-    except:
-        continue
-
-data_manager.update_json(tmp_json)
-data_manager.write_json(f"{PATH}.json")
