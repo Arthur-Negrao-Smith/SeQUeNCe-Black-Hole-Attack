@@ -66,7 +66,7 @@ class Graphic_Gen:
 
             # slice the arrays
             y_axle = np.array([array[:min_length] for array in y_axle])
-            default_axle = np.array(default_axle[:min_length])
+            default_axle = np.array([array[:min_length] for array in default_axle])
 
             self._append_default_axle(default_axle, label=label)
 
