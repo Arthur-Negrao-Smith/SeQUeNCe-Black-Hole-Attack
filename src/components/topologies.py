@@ -1,7 +1,6 @@
 from sequence.topology.topology import BSMNode, SingleAtomBSM
 from sequence.components.optical_channel import ClassicalChannel, QuantumChannel
 
-
 from .utils.constants import (
     BSM_EFFICIENCY,
     QCHANNEL_ATTENUATION,
@@ -16,6 +15,7 @@ import components.utils.raises as rs
 import components.network_data as nd
 
 import networkx as nx
+from itertools import permutations
 from copy import copy
 from typing import Any
 import logging
@@ -48,6 +48,26 @@ class TopologyGen:
         """
         self.network = None
 
+    def _create_single_repeater(self, id: int) -> QuantumRepeater:
+        """
+        Create a QuantumRepeater
+
+        Args:
+            id (int): Node's id
+
+        Returns:
+            QuantumRepeater: Created QuantumRepeater
+        """
+        node: QuantumRepeater = QuantumRepeater(
+            name=f"node[{id}]",
+            timeline=self.network.timeline,
+            swap_prob=ENTANGLEMENT_SWAPPING_PROB,
+        )
+        node.set_seed(self.seed)  # type: ignore
+        self._increment_seed()
+
+        return node
+
     def _create_nodes(self, number_of_nodes: int) -> dict[int, QuantumRepeater]:
         """
         Create all grid nodes and return them in a dictionary
@@ -62,15 +82,7 @@ class TopologyGen:
 
         nodes: dict[int, QuantumRepeater] = dict()
         for c in range(0, number_of_nodes):
-            tmp_node: QuantumRepeater = QuantumRepeater(
-                name=f"node[{c}]",
-                timeline=self.network.timeline,
-                swap_prob=ENTANGLEMENT_SWAPPING_PROB,
-            )
-
-            if self.seed is not None:
-                tmp_node.set_seed(self.seed)  # type: ignore
-                self._increment_seed()
+            tmp_node: QuantumRepeater = self._create_single_repeater(c)
             nodes[c] = tmp_node
 
         self.network.update_number_of_nodes(number_of_nodes)
@@ -215,20 +227,15 @@ class TopologyGen:
 
         self._connect_bsm_classical_channels(cc_distance=cc_distance, cc_delay=cc_delay)
 
-        nodes: list[QuantumRepeater] = self.network.nodes.values()
-        for nodeA in nodes:
-            for nodeB in nodes:
-                # Optimization to don't produce unnecessary connections
-                if nodeA == nodeB:
-                    continue
-                # Classical channel initiation
-                cc = ClassicalChannel(
-                    name=f"cc({nodeA.name}, {nodeB.name})",
-                    timeline=self.network.timeline,
-                    distance=cc_distance,
-                    delay=cc_delay,
-                )
-                cc.set_ends(nodeA, nodeB.name)
+        nodes = list(self.network.nodes.values())
+        for nodeA, nodeB in permutations(nodes, 2):
+            cc = ClassicalChannel(
+                name=f"cc({nodeA.name}, {nodeB.name})",
+                timeline=self.network.timeline,
+                distance=cc_distance,
+                delay=cc_delay,
+            )
+            cc.set_ends(nodeA, nodeB.name)
 
     def _update_network_topology(
         self,
