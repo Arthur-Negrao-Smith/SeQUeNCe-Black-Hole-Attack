@@ -2,6 +2,8 @@ from sequence.topology.topology import BSMNode
 from sequence.entanglement_management.entanglement_protocol import EntanglementProtocol
 from sequence.components.memory import Memory
 
+from math import sqrt
+
 from .utils.enums import (
     Directions,
     Entanglement_Response,
@@ -339,7 +341,7 @@ class Network_Manager:
                 if is None than state is phi plus
         """
         if entanglement_state is None:
-            SQRT_HALF: float = 0.5**0.5
+            SQRT_HALF: float = sqrt(0.5)
             state: list[float | int] = [SQRT_HALF, 0, 0, SQRT_HALF]  # phi plus
 
         memoA: Memory = self.network.nodes[nodeA_id].resource_manager.get_memory(
