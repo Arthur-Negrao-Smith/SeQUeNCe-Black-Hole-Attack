@@ -173,15 +173,14 @@ class Graphic_Gen:
         if grid:
             plt.grid(True, linestyle="--", color="gray", alpha=0.5)
 
-        plt.legend()
-        plt.show()
-
         if path_to_pdf is not None:
             try:
                 plt.savefig(path_to_pdf)
             except:
                 log.warning(f"Error to save pdf in path: {path_to_pdf}")
-                return 2
+
+        plt.legend()
+        plt.show()
 
         return 0
 
