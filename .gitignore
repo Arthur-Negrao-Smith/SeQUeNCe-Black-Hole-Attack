@@ -179,3 +179,6 @@ cython_debug/
 # Jsons and CSVs
 *.json
 *.csv
+
+# PDFs
+*.pdf
