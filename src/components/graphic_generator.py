@@ -220,6 +220,6 @@ class Graphic_Gen:
             ax.set_title(title)
 
         if path_to_pdf is not None:
-            plt.savefig(path_to_pdf)
+            plt.savefig(path_to_pdf, bbox_inches="tight")
 
         plt.show()
