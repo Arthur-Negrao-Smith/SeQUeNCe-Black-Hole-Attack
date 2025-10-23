@@ -173,13 +173,14 @@ class Graphic_Gen:
         if grid:
             plt.grid(True, linestyle="--", color="gray", alpha=0.5)
 
+        plt.legend()
+
         if path_to_pdf is not None:
             try:
                 plt.savefig(path_to_pdf)
             except:
                 log.warning(f"Error to save pdf in path: {path_to_pdf}")
 
-        plt.legend()
         plt.show()
 
         return 0
@@ -190,6 +191,7 @@ class Graphic_Gen:
         title: str | None = None,
         annot: bool = True,
         style: str = "YlGnBu",
+        path_to_pdf: str | None = None,
     ) -> None:
         """
         Show a heatmap graphic
@@ -216,5 +218,8 @@ class Graphic_Gen:
 
         if title is not None:
             ax.set_title(title)
+
+        if path_to_pdf is not None:
+            plt.savefig(path_to_pdf)
 
         plt.show()
