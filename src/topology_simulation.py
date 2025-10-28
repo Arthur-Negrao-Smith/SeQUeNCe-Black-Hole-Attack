@@ -1,15 +1,13 @@
-from components.data_manager import Data_Manager, sum_jsons
+from components.data_manager import Data_Manager
 from components.network import Network
 from components.simulations import AsyncSimulator
 from components.utils.enums import Topologies as TP
 from components.network_data import Network_Data
-import components.network_data as nd
 
 from random import choice
 from copy import copy
 from datetime import datetime
 import os
-import glob
 
 PATH: str = "src/data/topology_simulation/topology_simulation"
 
@@ -53,7 +51,7 @@ def sim_normal_network(
     network.topology_generator.select_topology(topology, *tmp_parameter)
     nodes: list[int] = list(network.nodes.keys())
 
-    for requests in range(requests_per_run):
+    for _ in range(requests_per_run):
         tmp_nodes: list[int] = copy(nodes)
 
         nodeA_id: int = choice(tmp_nodes)
@@ -90,7 +88,7 @@ def sim_attacked_network(
     )
     nodes: list[int] = list(network.nodes.keys())
 
-    for request in range(requests_per_run):
+    for _ in range(requests_per_run):
         tmp_nodes: list[int] = copy(nodes)
 
         nodeA_id: int = choice(tmp_nodes)
@@ -130,7 +128,6 @@ def simulation(
         Data_Manager: Return all data in json format within the Data_Manager
     """
 
-    json_filename: str = f"{PATH}_{process_id}.json"
     csv_filename: str = f"{PATH}.csv"
 
     all_data: Data_Manager = Data_Manager()
@@ -170,13 +167,14 @@ def simulation(
                     case _:
                         tmp_parameter = GRIDE_NODES[number_of_nodes]
 
-                for run in range(total_default_runs):
+                seed: int = process_id
+                for _ in range(total_default_runs):
                     tmp_data: Network_Data = sim_normal_network(
                         topology=topology,
                         attempts_per_request=attempts_per_request,
                         requests_per_run=requests_per_run,
                         tmp_parameter=tmp_parameter,
-                        seed=(process_id * total_default_runs + run),
+                        seed=seed,
                     )
 
                     all_data.update_data(tmp_data)
@@ -184,6 +182,9 @@ def simulation(
                     all_data.append_data_in_csv_file(
                         filename=csv_filename, append_in_csv_dict=True
                     )
+
+                    # update the seed
+                    seed += 1
 
     # run simulations with black holes
     print("Network with black holes is running.")
@@ -215,7 +216,8 @@ def simulation(
                         case _:
                             tmp_parameter = GRIDE_NODES[number_of_nodes]
 
-                    for run in range(runs):
+                    seed: int = process_id
+                    for _ in range(runs):
                         tmp_data: Network_Data = sim_attacked_network(
                             topology=topology,
                             attempts_per_request=attempts_per_request,
@@ -223,7 +225,7 @@ def simulation(
                             tmp_parameter=tmp_parameter,
                             bh_number=bh_number,
                             target=target,
-                            seed=(process_id * runs + run),
+                            seed=seed,
                         )
 
                         all_data.update_data(tmp_data)
@@ -232,6 +234,9 @@ def simulation(
                             filename=csv_filename, append_in_csv_dict=True
                         )
 
+                        # update the seed
+                        seed += 1
+
     return all_data
 
 
@@ -239,10 +244,6 @@ def simulation(
 cores: int | None = os.cpu_count()
 if cores is None:
     cores = 4  # max cores in your machine
-
-# limite cores to reproduce the experiment
-if cores > 16:
-    cores = 16
 
 # calculate time
 start: datetime = datetime.now()
@@ -254,7 +255,7 @@ sim = AsyncSimulator(
 sim.run(
     requests_per_run=REQUESTS_PER_RUN,
     attempts_per_request=ATTEMPTS_PER_REQUEST,
-    is_a_dataset=False,
+    is_a_dataset=True,
 )
 
 # show simulation time

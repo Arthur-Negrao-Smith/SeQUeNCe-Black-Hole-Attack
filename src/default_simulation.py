@@ -1,4 +1,4 @@
-from components.data_manager import Data_Manager, sum_jsons
+from components.data_manager import Data_Manager
 from components.network import Network
 from components.simulations import AsyncSimulator
 from components.utils.constants import ENTANGLEMENT_SWAPPING_PROB
@@ -7,7 +7,6 @@ from random import choice
 from copy import copy
 from datetime import datetime
 import os
-import glob
 
 PATH: str = "src/data/default_simulation/default_simulation"
 
@@ -47,7 +46,6 @@ def simulation(
         Data_Manager: Return all data in json format within the Data_Manager
     """
 
-    json_filename: str = f"{PATH}_{process_id}.json"
     csv_filename: str = f"{PATH}.csv"
 
     all_data: Data_Manager = Data_Manager()
@@ -61,13 +59,13 @@ def simulation(
 
     # Run without black holes
     print(f"Network without black hole is running {total_default_runs} runs")
-    for run in range(total_default_runs):
-        seed: int = process_id * total_default_runs + run
+    seed: int = process_id
+    for _ in range(total_default_runs):
         network: Network = Network(start_seed=seed)
         network.topology_generator.grid_topology(ROWS, COLUMNS)
         nodes: list[int] = list(network.nodes.keys())
 
-        for requests in range(requests_per_run):
+        for _ in range(requests_per_run):
             tmp_nodes: list[int] = copy(nodes)
 
             nodeA_id: int = choice(tmp_nodes)
@@ -87,6 +85,9 @@ def simulation(
         # append data in csv file
         all_data.append_data_in_csv_file(filename=csv_filename, append_in_csv_dict=True)
 
+        # update the seed
+        seed += 1
+
     # run simulations with black holes
     for target in TARGETS:
         for bh_number in BLACK_HOLES_NUMBER:
@@ -94,9 +95,8 @@ def simulation(
                 print(
                     f"Network with black holes. bh_targets: {target}, bh_number: {bh_number}, intensity: {intensity:.1f}"
                 )
-                for run in range(runs):
-
-                    seed: int = process_id * runs + run
+                seed: int = process_id
+                for _ in range(runs):
 
                     network: Network = Network(start_seed=seed)
                     network.topology_generator.grid_topology(ROWS, COLUMNS)
@@ -107,7 +107,7 @@ def simulation(
                     )
                     nodes: list[int] = list(network.nodes.keys())
 
-                    for request in range(requests_per_run):
+                    for _ in range(requests_per_run):
                         tmp_nodes: list[int] = copy(nodes)
 
                         nodeA_id: int = choice(tmp_nodes)
@@ -129,6 +129,8 @@ def simulation(
                         filename=csv_filename, append_in_csv_dict=True
                     )
 
+                    seed += 1  # update seed
+
     return all_data
 
 
@@ -136,10 +138,6 @@ def simulation(
 cores: int | None = os.cpu_count()
 if cores is None:
     cores = 4  # max cores in your machine
-
-# limite cores to reproduce the experiment
-if cores > 16:
-    cores = 16
 
 # calculate time
 start: datetime = datetime.now()
@@ -151,7 +149,7 @@ sim = AsyncSimulator(
 sim.run(
     requests_per_run=REQUESTS_PER_RUN,
     attempts_per_request=ATTEMPTS_PER_REQUEST,
-    is_a_dataset=False,
+    is_a_dataset=True,
 )
 
 # show simulation time

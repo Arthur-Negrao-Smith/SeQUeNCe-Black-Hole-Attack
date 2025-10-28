@@ -40,12 +40,13 @@ class AsyncSimulator:
         self.simulation_function: Callable[..., Any] = simulation_function
         self.need_id: bool = need_id
 
-    def run(self, **kwargs) -> list:
+    def run(self, *args, **kwargs) -> list:
         """
         Run all simulations
 
         Args:
-            **kwargs (Any): All ordened args to simulations without `runs` and `process_id` parameters
+            *args (Any): All ordened args to simulations without `runs` and `process_id` parameters
+            **kwargs (Any): All keyword args to simulations without `runs` and `process_id` parameters
 
         Returns:
             list: List with all data
@@ -68,14 +69,18 @@ class AsyncSimulator:
                             self.simulation_function,
                             runs=tmp_runs_per_task,
                             process_id=id,
+                            *args,
                             **kwargs,
                         )
                     )
-                    id += 1
+                    id += tmp_runs_per_task  # update the id
                 else:
                     tasks.append(
                         executor.submit(
-                            self.simulation_function, runs=tmp_runs_per_task, **kwargs
+                            self.simulation_function,
+                            runs=tmp_runs_per_task,
+                            *args,
+                            **kwargs,
                         )
                     )
 
