@@ -93,6 +93,7 @@ class Graphic_Gen:
         grid: bool = False,
         marker: str = ".",
         path_to_pdf: str | None = None,
+        **kwargs: dict,
     ) -> int:
         """
         Show a linear graphic
@@ -104,6 +105,7 @@ class Graphic_Gen:
             grid (bool): If is True show the grid in graphic, else, don't show
             marker (str): Marker to show each point
             path_to_pdf (str | None): Path to save a PDF. If is None don't save a PDF
+            kwargs (dict): Any other named graph parameter
 
         Returns:
             int: Status code
@@ -162,13 +164,16 @@ class Graphic_Gen:
                 )
 
         if tittle is not None:
-            plt.title(tittle)
+            plt.title(tittle, fontsize=kwargs.pop("titlesize", 20))
 
         if x_label is not None:
-            plt.xlabel(x_label)
+            plt.xlabel(x_label, fontsize=kwargs.get("fontsize", 14))
 
         if y_label is not None:
-            plt.ylabel(y_label)
+            plt.ylabel(y_label, fontsize=kwargs.pop("fontsize", 14))
+
+        # size of ticks label
+        plt.tick_params(axis="both", labelsize=kwargs.pop("labelsize", 11))
 
         if grid:
             plt.grid(True, linestyle="--", color="gray", alpha=0.5)
@@ -220,6 +225,6 @@ class Graphic_Gen:
             ax.set_title(title)
 
         if path_to_pdf is not None:
-            plt.savefig(path_to_pdf, bbox_inches="tight")
+            plt.savefig(path_to_pdf)
 
         plt.show()
