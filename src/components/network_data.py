@@ -24,7 +24,6 @@ ATTACK_TYPE: str = "Attack Type"
 PARAMETER: str = "Parameter"
 BLACK_HOLE_SWAP_PROB: str = "Black Hole Swap Prob"
 NORMAL_NODE_SWAP_PROB: str = "Normal Node Swap Prob"
-INTENSITY: str = "Intensity"
 
 
 class Network_Data:
@@ -58,7 +57,6 @@ class Network_Data:
             PARAMETER: [-1.0],
             BLACK_HOLE_SWAP_PROB: [-1.0],
             NORMAL_NODE_SWAP_PROB: [-1.0],
-            INTENSITY: ["i: -1.0"],
         }
 
     def clear(self) -> None:
