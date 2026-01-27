@@ -4,10 +4,10 @@ FROM python:3.12.10-slim
 WORKDIR /app
 
 # Install libs python
-COPY requirements.txt ./
+COPY pyproject.toml ./
 
 RUN python -m pip install --upgrade pip
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir .
 
 # Copy all data to workdir
 COPY . .

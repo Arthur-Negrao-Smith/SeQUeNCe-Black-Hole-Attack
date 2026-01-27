@@ -1,3 +1,40 @@
+[project]
+name = "quantum-bha"
+authors = [
+    {name = "Arthur Negrão Smith", email = "arthur.smith@icen.ufpa.br"},
+]
+description = "A tool to simulate a Quantum Black Hole Attack"
+readme = "README.md"
+
+requires-python = ">= 3.10"
+dependencies = [
+    "sequence == 0.7.2",
+    "numpy >= 2.0.0",
+    "networkx >= 3.0.0",
+    "pandas >= 2.0.0",
+    "pytest >= 8.0.0",
+    "pytest-cov >= 6.0.0",
+    "seaborn >= 0.12.0",
+    "scikit-learn >= 1.6.0",
+]
+dynamic = ["version"]
+
+# pyright
+[tool.pyright]
+typeCheckingMode = "standard"
+
+include = ["src"]
+
+exclude = [
+    "**/.venv",
+    "**/__pycache__",
+    "**/build",
+    "**/.pytest_cache",
+    ".git",
+    "**/.ipynb_checkpoints",
+    ".coverage",
+]
+
 # pytest config
 [tool.pytest.ini_options]
 minversion = "6.0"
