@@ -1,8 +1,14 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .network import Network
+
 from .utils.enums import Attack_Types
-from .utils.constants import ENTANGLEMENT_SWAPPING_PROB
 from .nodes import QuantumRepeater
 import components.network_data as nd
 
+from weakref import ref, ReferenceType
 from random import Random
 import logging
 
@@ -14,8 +20,6 @@ class Attack_Manager:
     Class to manage attacks to network
     """
 
-    from .network import Network
-
     def __init__(self, network: Network, start_seed: int | float | None):
         """
         Constructor for Attack Manager
@@ -25,14 +29,19 @@ class Attack_Manager:
             start_seed (int | float | None): Seed to reproduct results
         """
         self._attack_type: Attack_Types
-        self.network: Network = network  # type: ignore
+        self._network_ref: ReferenceType[Network] = ref(network)
         self.random_gen: Random = Random(start_seed)
 
-    def destroy(self) -> None:
+    @property
+    def network(self) -> Network:
         """
-        Cleanup all references
+        Get the owner network reference
         """
-        self.network = None
+        network: Network | None = self._network_ref()
+        if network is None:
+            raise RuntimeError("The network has been destroyed")
+
+        return network
 
     def create_black_holes(
         self,
@@ -85,10 +94,6 @@ class Attack_Manager:
         # updates the bha swap probability in network data
         self.network.network_data.change_value(
             key=nd.BLACK_HOLE_SWAP_PROB, new_value=swap_prob
-        )
-        self.network.network_data.change_value(
-            key=nd.INTENSITY,
-            new_value=f"i: {ENTANGLEMENT_SWAPPING_PROB-swap_prob:.1f}",
         )
 
     def get_black_holes(self) -> dict[str, dict[str, float | int] | None]:

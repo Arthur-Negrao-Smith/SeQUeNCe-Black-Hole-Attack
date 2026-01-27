@@ -1,3 +1,9 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from .network import Network
+
 from sequence.topology.topology import BSMNode, SingleAtomBSM
 from sequence.components.optical_channel import ClassicalChannel, QuantumChannel
 
@@ -15,9 +21,9 @@ import components.utils.raises as rs
 import components.network_data as nd
 
 import networkx as nx
+from weakref import ReferenceType, ref
 from itertools import permutations
 from copy import copy
-from typing import Any
 import logging
 
 log: logging.Logger = logging.getLogger(__name__)
@@ -25,7 +31,6 @@ log: logging.Logger = logging.getLogger(__name__)
 
 # Topologies generator
 class TopologyGen:
-    from .network import Network
 
     def __init__(self, network: Network, start_seed: int | float | None = None) -> None:
         """
@@ -36,17 +41,22 @@ class TopologyGen:
             start_seed (Optional[int]): Seed to replicate the simulation. Default is None
         """
 
-        self.network: Network = network  # type: ignore
+        self._network_ref: ReferenceType[Network] = ref(network)
 
         self.seed: None | int | float = start_seed
 
         log.debug("TopologyGen initiated")
 
-    def destroy(self) -> None:
+    @property
+    def network(self) -> Network:
         """
-        Cleanup all references
+        Get the owner network
         """
-        self.network = None
+        network: Network | None = self._network_ref()
+        if network is None:
+            raise RuntimeError("The network has been destroyed")
+
+        return network
 
     def _create_single_repeater(self, id: int) -> QuantumRepeater:
         """

@@ -7,10 +7,15 @@ from .utils.logger import show_logs
 import components.network_data as nd
 
 import networkx as nx
-from typing import Optional
+from typing import Self
 import logging
 
 log: logging.Logger = logging.getLogger(__name__)
+
+from .topologies import TopologyGen
+from .network_manager import Network_Manager
+from .attack_manager import Attack_Manager
+from .network_data import Network_Data
 
 
 class Network:
@@ -41,53 +46,39 @@ class Network:
         self.black_holes: dict[int, QuantumRepeater] = dict()
         self.bsm_nodes: dict[tuple[int, int], BSMNode] = dict()
 
-        from .topologies import TopologyGen
-
         self.graph: nx.Graph
         self.topology: Topologies
-        self._topology_generator: Optional[TopologyGen] = TopologyGen(
+        self.topology_generator: TopologyGen = TopologyGen(
             self, start_seed=start_seed
         )
 
-        from .network_manager import Network_Manager
+        self.network_manager: Network_Manager = Network_Manager(self)
 
-        self._network_manager: Optional[Network_Manager] = Network_Manager(self)
-
-        from .attack_manager import Attack_Manager
-
-        self._attack_manager: Optional[Attack_Manager] = Attack_Manager(
+        self.attack_manager: Attack_Manager = Attack_Manager(
             self, start_seed=start_seed
         )
 
-        from .network_data import Network_Data
-
-        self._network_data: Optional[Network_Data] = Network_Data()
+        self.network_data: Network_Data = Network_Data()
 
         log.debug("Initiated Network")
 
-    def destroy(self, preserve_network_data: bool = False) -> None:
+    def __enter__(self) -> Self:
+        """
+        Enter in a with statement
+        """
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback) -> bool:
+        """
+        Exit of a with statement
+        """
+        self.destroy()
+        return False
+
+    def destroy(self) -> None:
         """
         Cleanup all references
-
-        Args:
-            preserve_network_data (bool): If it's False then cleanup all network's data, else it preserves all network's data
         """
-        if self._topology_generator is not None:
-            self._topology_generator.destroy()
-            self._topology_generator = None
-
-        if self._network_manager is not None:
-            self._network_manager.destroy()
-            self._network_manager = None
-
-        if self._attack_manager is not None:
-            self._attack_manager.destroy()
-            self._attack_manager = None
-
-        if self._network_data is not None and not preserve_network_data:
-            self._network_data.clear()
-            self._network_data = None
-
         # destroy all quantum repeaters
         for node in self.nodes.values():
             node.destroy()
@@ -113,30 +104,6 @@ class Network:
             labels (bool): Bool to show labels
         """
         nx.draw(self.graph, with_labels=labels)
-
-    @property
-    def topology_generator(self):
-        if self._topology_generator is None:
-            raise RuntimeError("Topology generator has been destroyed")
-        return self._topology_generator
-
-    @property
-    def network_manager(self):
-        if self._network_manager is None:
-            raise RuntimeError("Network manager has been destroyed")
-        return self._network_manager
-
-    @property
-    def attack_manager(self):
-        if self._attack_manager is None:
-            raise RuntimeError("Attack manager has been destroyed")
-        return self._attack_manager
-
-    @property
-    def network_data(self):
-        if self._network_data is None:
-            raise RuntimeError("Network data has been destroyed")
-        return self._network_data
 
     def edges(self) -> list[tuple[int, int]]:
         """

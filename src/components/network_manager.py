@@ -1,3 +1,9 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING, Optional, Type
+
+if TYPE_CHECKING:
+    from .network import Network
+
 from sequence.topology.topology import BSMNode
 from sequence.entanglement_management.entanglement_protocol import EntanglementProtocol
 from sequence.components.memory import Memory
@@ -19,7 +25,7 @@ from .utils.constants import (
 import components.network_data as nd
 
 import networkx as nx
-from typing import Optional, Type
+from weakref import ref, ReferenceType
 import logging
 
 log: logging.Logger = logging.getLogger(__name__)
@@ -30,8 +36,6 @@ class Network_Manager:
     Manager to control the network's protocols and requests
     """
 
-    from .network import Network
-
     def __init__(self, network: Network) -> None:
         """
         Constructor for Network Manager
@@ -39,15 +43,21 @@ class Network_Manager:
         Args:
             network (Network): Network to manage
         """
-        self.network: Network = network  # type: ignore
+        self._network_ref: ReferenceType[Network] = ref(network)
 
         log.debug(f"Network Manager initiated")
 
-    def destroy(self) -> None:
+    @property
+    def network(self) -> Network:
         """
-        Cleanup all references
+        Get the owner network
         """
-        self.network = None
+        network: Network | None = self._network_ref()
+        if network is None:
+            raise RuntimeError("The network has been destroyed")
+
+        return network
+
 
     def request(
         self,
