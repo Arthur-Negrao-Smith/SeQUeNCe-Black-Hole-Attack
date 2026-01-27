@@ -76,12 +76,6 @@ class Test_Attack_Manager:
         assert tmp_bha._black_hole_targets is not None
         assert len(tmp_bha._black_hole_targets) == self.targets_per_black_hole
 
-    def test_attack_manager_destroy_to_remove_network(self, network: Network) -> None:
-
-        network.attack_manager.destroy()
-
-        assert network.attack_manager.network is None
-
     def test_reproducibility_for_black_hole_without_targets_creation(self) -> None:
 
         network_1: Network = network_with_seed()

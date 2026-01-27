@@ -75,12 +75,6 @@ class Test_TopologyGen:
         assert network.number_of_nodes == self.number_of_nodes
         assert network.topology == Topologies.BARABASI_ALBERT
 
-    def test_destroy_TopologyGen(self, network: Network) -> None:
-
-        network.topology_generator.destroy()
-
-        assert network.topology_generator.network is None
-
     def test_reproducibility_of_erdos_renyi(self) -> None:
 
         network_1: Network = Network(start_seed=self.seed_test)

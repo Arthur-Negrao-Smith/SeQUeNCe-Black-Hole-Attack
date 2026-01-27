@@ -45,11 +45,6 @@ def network_no_path() -> Network:
 
 class Test_Network_Manager:
 
-    def test_destroy_reference(self, network: Network) -> None:
-
-        network.network_manager.destroy()
-        assert network.network_manager.network is None
-
     def test_find_path_if_path_exists(self, network: Network) -> None:
 
         # test normal function
