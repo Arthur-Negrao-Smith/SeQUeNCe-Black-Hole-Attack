@@ -1,5 +1,6 @@
 from components.data_manager import Data_Manager
 from components.network import Network
+from components.network_data import Network_Data
 from components.simulations import AsyncSimulator
 from components.utils.constants import ENTANGLEMENT_SWAPPING_PROB
 
@@ -20,7 +21,7 @@ BLACK_HOLES_NUMBER: list[int] = [1, 3, 5]
 INTENSITIES: list[float] = [0.1 * i for i in range(1, 8)]
 
 # Simulations Params
-RUNS: int = 5000
+RUNS: int = 10_000
 REQUESTS_PER_RUN: int = 100
 ATTEMPTS_PER_REQUEST: int = 2
 
@@ -61,26 +62,29 @@ def simulation(
     print(f"Network without black hole is running {total_default_runs} runs")
     seed: int = process_id
     for _ in range(total_default_runs):
-        network: Network = Network(start_seed=seed)
-        network.topology_generator.grid_topology(ROWS, COLUMNS)
-        nodes: list[int] = list(network.nodes.keys())
+        network_data = Network_Data()
+        with Network(start_seed=seed) as network:
+            network.topology_generator.grid_topology(ROWS, COLUMNS)
+            nodes: list[int] = list(network.nodes.keys())
 
-        for _ in range(requests_per_run):
-            tmp_nodes: list[int] = copy(nodes)
+            for _ in range(requests_per_run):
+                tmp_nodes: list[int] = copy(nodes)
 
-            nodeA_id: int = choice(tmp_nodes)
-            tmp_nodes.remove(nodeA_id)
+                nodeA_id: int = choice(tmp_nodes)
+                tmp_nodes.remove(nodeA_id)
 
-            nodeB_id: int = choice(tmp_nodes)
+                nodeB_id: int = choice(tmp_nodes)
 
-            network.network_manager.request(
-                nodeA_id=nodeA_id,
-                nodeB_id=nodeB_id,
-                max_attempts_per_entanglement=attempts_per_request,
-                max_request_attempts=2,
-            )
+                network.network_manager.request(
+                    nodeA_id=nodeA_id,
+                    nodeB_id=nodeB_id,
+                    max_attempts_per_entanglement=attempts_per_request,
+                    max_request_attempts=2,
+                )
 
-        all_data.update_data(network.network_data)
+            network_data = network.network_data
+
+        all_data.update_data(network_data)
 
         # append data in csv file
         all_data.append_data_in_csv_file(filename=csv_filename, append_in_csv_dict=True)
@@ -97,32 +101,34 @@ def simulation(
                 )
                 seed: int = process_id
                 for _ in range(runs):
-
-                    network: Network = Network(start_seed=seed)
-                    network.topology_generator.grid_topology(ROWS, COLUMNS)
-                    network.attack_manager.create_black_holes(
-                        number_of_black_holes=bh_number,
-                        swap_prob=(ENTANGLEMENT_SWAPPING_PROB - intensity),
-                        targets_per_black_hole=target,
-                    )
-                    nodes: list[int] = list(network.nodes.keys())
-
-                    for _ in range(requests_per_run):
-                        tmp_nodes: list[int] = copy(nodes)
-
-                        nodeA_id: int = choice(tmp_nodes)
-                        tmp_nodes.remove(nodeA_id)
-
-                        nodeB_id: int = choice(tmp_nodes)
-
-                        network.network_manager.request(
-                            nodeA_id=nodeA_id,
-                            nodeB_id=nodeB_id,
-                            max_attempts_per_entanglement=attempts_per_request,
-                            max_request_attempts=2,
+                    network_data: Network_Data = Network_Data()
+                    with Network(start_seed=seed) as network:
+                        network.topology_generator.grid_topology(ROWS, COLUMNS)
+                        network.attack_manager.create_black_holes(
+                            number_of_black_holes=bh_number,
+                            swap_prob=(ENTANGLEMENT_SWAPPING_PROB - intensity),
+                            targets_per_black_hole=target,
                         )
+                        nodes: list[int] = list(network.nodes.keys())
 
-                    all_data.update_data(network.network_data)
+                        for _ in range(requests_per_run):
+                            tmp_nodes: list[int] = copy(nodes)
+
+                            nodeA_id: int = choice(tmp_nodes)
+                            tmp_nodes.remove(nodeA_id)
+
+                            nodeB_id: int = choice(tmp_nodes)
+
+                            network.network_manager.request(
+                                nodeA_id=nodeA_id,
+                                nodeB_id=nodeB_id,
+                                max_attempts_per_entanglement=attempts_per_request,
+                                max_request_attempts=2,
+                            )
+
+                        network_data = network.network_data
+
+                    all_data.update_data(network_data)
 
                     # append data in csv file
                     all_data.append_data_in_csv_file(
@@ -134,23 +140,25 @@ def simulation(
     return all_data
 
 
-# select cores number
-cores: int | None = os.cpu_count()
-if cores is None:
-    cores = 4  # max cores in your machine
+if __name__ == "__main__":
 
-# calculate time
-start: datetime = datetime.now()
+    # select cores number
+    cores: int | None = os.cpu_count()
+    if cores is None:
+        cores = 4  # max cores in your machine
 
-# remove 1 core to avoid operation system's errors
-sim = AsyncSimulator(
-    simulation_function=simulation, runs=RUNS, cores=cores - 1, need_id=True
-)
-sim.run(
-    requests_per_run=REQUESTS_PER_RUN,
-    attempts_per_request=ATTEMPTS_PER_REQUEST,
-    is_a_dataset=True,
-)
+    # calculate time
+    start: datetime = datetime.now()
 
-# show simulation time
-print(f"\nAll simulations are finished. Simulation time: {datetime.now()-start}")
+    # remove 1 core to avoid operation system's errors
+    sim = AsyncSimulator(
+        simulation_function=simulation, runs=RUNS, cores=cores - 1, need_id=True
+    )
+    sim.run(
+        requests_per_run=REQUESTS_PER_RUN,
+        attempts_per_request=ATTEMPTS_PER_REQUEST,
+        is_a_dataset=True,
+    )
+
+    # show simulation time
+    print(f"\nAll simulations are finished. Simulation time: {datetime.now()-start}")
