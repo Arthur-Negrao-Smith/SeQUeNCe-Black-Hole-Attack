@@ -46,28 +46,31 @@ def sim_normal_network(
     tmp_parameter: list | tuple[int, int],
     seed: int | float | None = None,
 ) -> Network_Data:
-    network: Network = Network(start_seed=seed)
 
-    network.topology_generator.select_topology(topology, *tmp_parameter)
-    nodes: list[int] = list(network.nodes.keys())
+    network_data: Network_Data = Network_Data()
+    with Network(start_seed=seed) as network:
 
-    for _ in range(requests_per_run):
-        tmp_nodes: list[int] = copy(nodes)
+        network.topology_generator.select_topology(topology, *tmp_parameter)
+        nodes: list[int] = list(network.nodes.keys())
 
-        nodeA_id: int = choice(tmp_nodes)
-        tmp_nodes.remove(nodeA_id)
+        for _ in range(requests_per_run):
+            tmp_nodes: list[int] = copy(nodes)
 
-        nodeB_id: int = choice(tmp_nodes)
+            nodeA_id: int = choice(tmp_nodes)
+            tmp_nodes.remove(nodeA_id)
 
-        network.network_manager.request(
-            nodeA_id=nodeA_id,
-            nodeB_id=nodeB_id,
-            max_attempts_per_entanglement=attempts_per_request,
-            max_request_attempts=2,
-        )
+            nodeB_id: int = choice(tmp_nodes)
 
-    network.destroy(preserve_network_data=True)  # cleanup all network
-    return network.network_data
+            network.network_manager.request(
+                nodeA_id=nodeA_id,
+                nodeB_id=nodeB_id,
+                max_attempts_per_entanglement=attempts_per_request,
+                max_request_attempts=2,
+            )
+
+        network_data = network.network_data
+
+    return network_data
 
 
 def sim_attacked_network(
@@ -79,32 +82,35 @@ def sim_attacked_network(
     target: int,
     seed: int | float | None = None,
 ) -> Network_Data:
-    network: Network = Network(start_seed=seed)
-    network.topology_generator.select_topology(topology, *tmp_parameter)
-    network.attack_manager.create_black_holes(
-        number_of_black_holes=bh_number,
-        swap_prob=SWAP_PROB,
-        targets_per_black_hole=target,
-    )
-    nodes: list[int] = list(network.nodes.keys())
 
-    for _ in range(requests_per_run):
-        tmp_nodes: list[int] = copy(nodes)
-
-        nodeA_id: int = choice(tmp_nodes)
-        tmp_nodes.remove(nodeA_id)
-
-        nodeB_id: int = choice(tmp_nodes)
-
-        network.network_manager.request(
-            nodeA_id=nodeA_id,
-            nodeB_id=nodeB_id,
-            max_attempts_per_entanglement=attempts_per_request,
-            max_request_attempts=2,
+    network_data: Network_Data = Network_Data()
+    with Network(start_seed=seed) as network:
+        network.topology_generator.select_topology(topology, *tmp_parameter)
+        network.attack_manager.create_black_holes(
+            number_of_black_holes=bh_number,
+            swap_prob=SWAP_PROB,
+            targets_per_black_hole=target,
         )
+        nodes: list[int] = list(network.nodes.keys())
 
-    network.destroy(preserve_network_data=True)  # cleanup all network
-    return network.network_data
+        for _ in range(requests_per_run):
+            tmp_nodes: list[int] = copy(nodes)
+
+            nodeA_id: int = choice(tmp_nodes)
+            tmp_nodes.remove(nodeA_id)
+
+            nodeB_id: int = choice(tmp_nodes)
+
+            network.network_manager.request(
+                nodeA_id=nodeA_id,
+                nodeB_id=nodeB_id,
+                max_attempts_per_entanglement=attempts_per_request,
+                max_request_attempts=2,
+            )
+
+        network_data = network.network_data
+
+    return network_data
 
 
 def simulation(
@@ -240,23 +246,25 @@ def simulation(
     return all_data
 
 
-# select cores number
-cores: int | None = os.cpu_count()
-if cores is None:
-    cores = 4  # max cores in your machine
+if __name__ == "__main__":
 
-# calculate time
-start: datetime = datetime.now()
+    # select cores number
+    cores: int | None = os.cpu_count()
+    if cores is None:
+        cores = 4  # max cores in your machine
 
-# remove 1 core to avoid operation system's errors
-sim = AsyncSimulator(
-    simulation_function=simulation, runs=RUNS, cores=cores - 1, need_id=True
-)
-sim.run(
-    requests_per_run=REQUESTS_PER_RUN,
-    attempts_per_request=ATTEMPTS_PER_REQUEST,
-    is_a_dataset=True,
-)
+    # calculate time
+    start: datetime = datetime.now()
 
-# show simulation time
-print(f"\nAll simulations are finished. Simulation time: {datetime.now()-start}")
+    # remove 1 core to avoid operation system's errors
+    sim = AsyncSimulator(
+        simulation_function=simulation, runs=RUNS, cores=cores - 1, need_id=True
+    )
+    sim.run(
+        requests_per_run=REQUESTS_PER_RUN,
+        attempts_per_request=ATTEMPTS_PER_REQUEST,
+        is_a_dataset=True,
+    )
+
+    # show simulation time
+    print(f"\nAll simulations are finished. Simulation time: {datetime.now()-start}")
