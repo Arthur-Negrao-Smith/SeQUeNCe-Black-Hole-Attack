@@ -46,12 +46,14 @@ exclude = [
 # formatter
 [tool.black]
 line-length = 88
+target-version = ['py310']
 include = '\.pyi?$'
 extend-exclude = '''
-(
-    test/*
-    | */__pycache__.py
-)
+/(
+    __pycache__
+    | build
+    | dist
+)/
 '''
 
 # pytest config
