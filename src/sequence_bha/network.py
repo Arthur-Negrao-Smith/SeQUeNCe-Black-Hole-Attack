@@ -48,9 +48,7 @@ class Network:
 
         self.graph: nx.Graph
         self.topology: Topologies
-        self.topology_generator: TopologyGen = TopologyGen(
-            self, start_seed=start_seed
-        )
+        self.topology_generator: TopologyGen = TopologyGen(self, start_seed=start_seed)
 
         self.network_manager: Network_Manager = Network_Manager(self)
 

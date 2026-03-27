@@ -58,7 +58,6 @@ class Network_Manager:
 
         return network
 
-
     def request(
         self,
         nodeA_id: int,

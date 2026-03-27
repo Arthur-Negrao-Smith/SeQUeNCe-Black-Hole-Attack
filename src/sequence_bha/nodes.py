@@ -5,14 +5,22 @@ from sequence.entanglement_management.entanglement_protocol import EntanglementP
 from sequence.message import Message
 from sequence.components.photon import Photon
 
-from .utils.constants import MEMORY_FIDELITY, MEMORY_FREQUENCY, MEMORY_EFFICIENCY, MEMORY_COHERENCE_TIME, MEMORY_WAVELENGTH
+from .utils.constants import (
+    MEMORY_FIDELITY,
+    MEMORY_FREQUENCY,
+    MEMORY_EFFICIENCY,
+    MEMORY_COHERENCE_TIME,
+    MEMORY_WAVELENGTH,
+)
 
 from typing import Type
+
 
 class QuantumRepeater(Node):
     """
     Quantum Router to increase the entanglement range on the Network
     """
+
     def __init__(self, name: str, timeline: Timeline, swap_prob: float) -> None:
         """
         Constructor for QuantumRepeater
@@ -25,20 +33,37 @@ class QuantumRepeater(Node):
         super().__init__(name, timeline)
 
         # create memories
-        self.left_memo_name: str = f'{name}.left_memo'
-        self.right_memo_name: str = f'{name}.right_memo'
+        self.left_memo_name: str = f"{name}.left_memo"
+        self.right_memo_name: str = f"{name}.right_memo"
 
-        left_memo: Memory = Memory(self.left_memo_name, timeline, MEMORY_FIDELITY, MEMORY_FREQUENCY, MEMORY_EFFICIENCY, MEMORY_COHERENCE_TIME, MEMORY_WAVELENGTH)
-        right_memo: Memory = Memory(self.right_memo_name, timeline, MEMORY_FIDELITY, MEMORY_FREQUENCY, MEMORY_EFFICIENCY, MEMORY_COHERENCE_TIME, MEMORY_WAVELENGTH)
+        left_memo: Memory = Memory(
+            self.left_memo_name,
+            timeline,
+            MEMORY_FIDELITY,
+            MEMORY_FREQUENCY,
+            MEMORY_EFFICIENCY,
+            MEMORY_COHERENCE_TIME,
+            MEMORY_WAVELENGTH,
+        )
+        right_memo: Memory = Memory(
+            self.right_memo_name,
+            timeline,
+            MEMORY_FIDELITY,
+            MEMORY_FREQUENCY,
+            MEMORY_EFFICIENCY,
+            MEMORY_COHERENCE_TIME,
+            MEMORY_WAVELENGTH,
+        )
 
         left_memo.add_receiver(self)
         right_memo.add_receiver(self)
-        
+
         self.add_component(left_memo)
         self.add_component(right_memo)
 
         # Manager to control resources
         from .resource_managers import RepeaterManager
+
         self.resource_manager: RepeaterManager = RepeaterManager(self)
 
         # initial entanglement swapping probability
@@ -64,8 +89,8 @@ class QuantumRepeater(Node):
     def receive_message(self, src: str, msg: Message) -> None:
         self.protocols[0].received_message(src, msg)
 
-    def get(self, photon: Photon, **kwargs) -> None: # type: ignore
-        self.send_qubit(kwargs['dst'], photon)
+    def get(self, photon: Photon, **kwargs) -> None:  # type: ignore
+        self.send_qubit(kwargs["dst"], photon)
 
     def run_protocol(self) -> None:
         """
@@ -78,7 +103,7 @@ class QuantumRepeater(Node):
         Get the first protocol on the queue
         """
         return self.protocols[0]
-    
+
     def remove_used_protocol(self) -> None:
         """
         remove first protocol on the queue

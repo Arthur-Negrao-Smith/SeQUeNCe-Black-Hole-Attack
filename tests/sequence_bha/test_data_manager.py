@@ -6,7 +6,6 @@ import pytest as pt
 import pandas as pd
 import os
 
-
 TEST_CONSUMED_EPRS: int = -1
 
 
