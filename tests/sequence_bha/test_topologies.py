@@ -1,5 +1,5 @@
-from components.network import Network
-from components.utils.enums import Topologies
+from sequence_bha.network import Network
+from sequence_bha.utils.enums import Topologies
 import pytest as pt
 
 

@@ -1,8 +1,8 @@
-from components.data_manager import Data_Manager
-from components.network import Network
-from components.simulations import AsyncSimulator
-from components.utils.enums import Topologies as TP
-from components.network_data import Network_Data
+from sequence_bha.data_manager import Data_Manager
+from sequence_bha.network import Network
+from sequence_bha.simulations import AsyncSimulator
+from sequence_bha.utils.enums import Topologies as TP
+from sequence_bha.network_data import Network_Data
 
 from random import choice
 from copy import copy

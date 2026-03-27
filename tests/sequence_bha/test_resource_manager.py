@@ -1,7 +1,7 @@
-from components.network import Network
-from components.nodes import QuantumRepeater
-from components.utils.enums import Directions
-from components.utils.constants import ENTANGLEMENT_SWAPPING_PROB
+from sequence_bha.network import Network
+from sequence_bha.nodes import QuantumRepeater
+from sequence_bha.utils.enums import Directions
+from sequence_bha.utils.constants import ENTANGLEMENT_SWAPPING_PROB
 from sequence.entanglement_management.swapping import EntanglementSwappingA, EntanglementSwappingB
 from sequence.entanglement_management.generation import EntanglementGenerationA
 from sequence.kernel.timeline import Timeline

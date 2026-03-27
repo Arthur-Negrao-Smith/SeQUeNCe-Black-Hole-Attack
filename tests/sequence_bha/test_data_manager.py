@@ -1,6 +1,6 @@
-from components.data_manager import Data_Manager, sum_jsons
-from components.network_data import Network_Data
-import components.network_data as nd
+from sequence_bha.data_manager import Data_Manager, sum_jsons
+from sequence_bha.network_data import Network_Data
+import sequence_bha.network_data as nd
 
 import pytest as pt
 import pandas as pd
@@ -60,7 +60,7 @@ def json_sumed() -> dict:
 
 
 class Test_Data_Manager:
-    test_path: str = "tests/components/test-path"
+    test_path: str = "tests/sequence_bha/test-path"
     test_path_csv = f"{test_path}.csv.test"
     test_path_json = f"{test_path}.json.test"
 
