@@ -17,8 +17,8 @@ from .utils.constants import (
 )
 from .utils.enums import Topologies
 from .nodes import QuantumRepeater
-import sequence_bha.utils.raises as rs
-import sequence_bha.network_data as nd
+import quantum_bha.utils.raises as rs
+import quantum_bha.network_data as nd
 
 import networkx as nx
 from weakref import ReferenceType, ref

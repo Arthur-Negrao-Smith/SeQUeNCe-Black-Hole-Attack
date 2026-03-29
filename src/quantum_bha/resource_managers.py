@@ -6,7 +6,7 @@ from sequence.entanglement_management.swapping import (
 )
 from sequence.entanglement_management.generation import EntanglementGenerationA
 
-from sequence_bha.nodes import QuantumRepeater
+from quantum_bha.nodes import QuantumRepeater
 
 from .utils.constants import SWAP_DEGRADATION
 from .utils.enums import Directions

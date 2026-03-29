@@ -6,7 +6,7 @@ if TYPE_CHECKING:
 
 from .utils.enums import Attack_Types
 from .nodes import QuantumRepeater
-import sequence_bha.network_data as nd
+import quantum_bha.network_data as nd
 
 from weakref import ref, ReferenceType
 from random import Random

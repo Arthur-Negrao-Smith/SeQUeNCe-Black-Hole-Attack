@@ -1,5 +1,5 @@
-from sequence_bha.nodes import QuantumRepeater
-from sequence_bha.utils.enums import Directions
+from quantum_bha.nodes import QuantumRepeater
+from quantum_bha.utils.enums import Directions
 from sequence.kernel.timeline import Timeline
 from sequence.entanglement_management.swapping import EntanglementSwappingA
 import pytest as pt

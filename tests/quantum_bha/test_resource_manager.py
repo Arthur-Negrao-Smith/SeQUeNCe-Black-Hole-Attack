@@ -1,7 +1,7 @@
-from sequence_bha.network import Network
-from sequence_bha.nodes import QuantumRepeater
-from sequence_bha.utils.enums import Directions
-from sequence_bha.utils.constants import ENTANGLEMENT_SWAPPING_PROB
+from quantum_bha.network import Network
+from quantum_bha.nodes import QuantumRepeater
+from quantum_bha.utils.enums import Directions
+from quantum_bha.utils.constants import ENTANGLEMENT_SWAPPING_PROB
 from sequence.entanglement_management.swapping import (
     EntanglementSwappingA,
     EntanglementSwappingB,

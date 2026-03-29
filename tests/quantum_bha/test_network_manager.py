@@ -1,10 +1,10 @@
 from sequence.kernel.timeline import Timeline
-from sequence_bha.network import Network
-from sequence_bha.utils.enums import Request_Response
+from quantum_bha.network import Network
+from quantum_bha.utils.enums import Request_Response
 import networkx as nx
 import pytest as pt
 
-from sequence_bha.nodes import QuantumRepeater
+from quantum_bha.nodes import QuantumRepeater
 
 
 @pt.fixture

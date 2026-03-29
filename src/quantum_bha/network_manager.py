@@ -22,7 +22,7 @@ from .utils.constants import (
     SWAPPING_INCREMENT_TIME,
     ENTANGLEMENT_INCREMENT_TIME,
 )
-import sequence_bha.network_data as nd
+import quantum_bha.network_data as nd
 
 import networkx as nx
 from weakref import ref, ReferenceType

@@ -1,5 +1,5 @@
-from sequence_bha.network import Network
-from sequence_bha.utils.enums import Topologies
+from quantum_bha.network import Network
+from quantum_bha.utils.enums import Topologies
 import pytest as pt
 
 

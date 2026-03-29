@@ -31,7 +31,7 @@ where = ["src"]
 [tool.pyright]
 typeCheckingMode = "standard"
 
-include = ["src/sequence_bha"]
+include = ["src/quantum_bha"]
 
 exclude = [
     "**/.venv",

@@ -1,6 +1,6 @@
-from sequence_bha.network import Network
-from sequence_bha.nodes import QuantumRepeater
-from sequence_bha.utils.enums import Attack_Types
+from quantum_bha.network import Network
+from quantum_bha.nodes import QuantumRepeater
+from quantum_bha.utils.enums import Attack_Types
 import pytest as pt
 
 

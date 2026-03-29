@@ -1,5 +1,5 @@
-import sequence_bha.network_data as nd
-from sequence_bha.network_data import Network_Data
+import quantum_bha.network_data as nd
+from quantum_bha.network_data import Network_Data
 
 
 class TestNetwork_Data:
