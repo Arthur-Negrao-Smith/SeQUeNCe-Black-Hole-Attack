@@ -1,6 +1,6 @@
-from .utils.enums import Attack_Types, Topologies
-
 from typing import Any
+
+from ..utils.enums import Attack_Types, Topologies
 
 # Dict keys
 REQUESTS: str = "Requests"

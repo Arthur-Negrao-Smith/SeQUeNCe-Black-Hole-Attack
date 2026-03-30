@@ -1,11 +1,10 @@
-from .utils.enums import Colors
-
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-
 import logging
+
+from ..utils.enums import Colors
 
 log: logging.Logger = logging.getLogger(__name__)
 
