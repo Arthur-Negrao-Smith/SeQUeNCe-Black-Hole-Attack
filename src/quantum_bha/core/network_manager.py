@@ -4,29 +4,27 @@ from typing import TYPE_CHECKING, Optional, Type
 if TYPE_CHECKING:
     from .network import Network
 
+from math import sqrt
 from sequence.topology.topology import BSMNode
 from sequence.entanglement_management.entanglement_protocol import EntanglementProtocol
 from sequence.components.memory import Memory
+import networkx as nx
+from weakref import ref, ReferenceType
+import logging
 
-from math import sqrt
-
-from .utils.enums import (
+from ..utils.enums import (
     Directions,
     Entanglement_Response,
     Request_Response,
     Swapping_Response,
 )
-from .nodes import QuantumRepeater
-from .utils.constants import (
+from .node import QuantumRepeater
+from ..utils.constants import (
     ENTANGLEMENT_FIDELITY,
     SWAPPING_INCREMENT_TIME,
     ENTANGLEMENT_INCREMENT_TIME,
 )
-import quantum_bha.network_data as nd
-
-import networkx as nx
-from weakref import ref, ReferenceType
-import logging
+from ..analytics import network_data as nd
 
 log: logging.Logger = logging.getLogger(__name__)
 
@@ -423,12 +421,12 @@ class Network_Manager:
         entangled: bool = False
         attempts: int = max_attempts
         while (not entangled) and (attempts != 0):
-            nodeA.resource_manager.create_entanglement_protocol(
+            nodeA.behavior.create_entanglement_protocol(
                 memory_position=Directions.RIGHT,
                 middle_node=bsm_node.name,
                 other_node=nodeB.name,
             )
-            nodeB.resource_manager.create_entanglement_protocol(
+            nodeB.behavior.create_entanglement_protocol(
                 memory_position=Directions.LEFT,
                 middle_node=bsm_node.name,
                 other_node=nodeA.name,
@@ -515,9 +513,9 @@ class Network_Manager:
             )
             return Swapping_Response.NO_ENTANGLED
 
-        nodeA.resource_manager.create_swapping_protocolB(Directions.RIGHT)
-        node_mid.resource_manager.create_swapping_protocolA()
-        nodeB.resource_manager.create_swapping_protocolB(Directions.LEFT)
+        nodeA.behavior.create_swapping_protocolB(Directions.RIGHT)
+        node_mid.behavior.create_swapping_protocolA()
+        nodeB.behavior.create_swapping_protocolB(Directions.LEFT)
 
         self._pair_Swapping_protocols(
             nodeA_id=nodeA_id, nodeB_id=nodeB_id, node_mid_id=node_mid_id

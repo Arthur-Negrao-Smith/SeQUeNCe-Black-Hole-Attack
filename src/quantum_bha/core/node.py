@@ -1,12 +1,14 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING, Type
+
 from sequence.kernel.timeline import Timeline
 from sequence.topology.node import Node
 from sequence.components.memory import Memory
 from sequence.entanglement_management.entanglement_protocol import EntanglementProtocol
 from sequence.message import Message
 from sequence.components.photon import Photon
-from typing import TYPE_CHECKING
 
-from .utils.constants import (
+from ..utils.constants import (
     MEMORY_FIDELITY,
     MEMORY_FREQUENCY,
     MEMORY_EFFICIENCY,
@@ -15,9 +17,9 @@ from .utils.constants import (
 )
 
 if TYPE_CHECKING:
-    from .behavior import NodeBehavior, DefaultBehavior
+    from ..attack.behavior import NodeBehavior
 
-from typing import TYPE_CHECKING, Type
+from ..attack.behavior import DefaultBehavior
 
 
 class QuantumRepeater(Node):

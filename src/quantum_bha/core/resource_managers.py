@@ -1,14 +1,15 @@
+from __future__ import annotations
+from typing import Type, TYPE_CHECKING
+
 from sequence.protocol import Protocol
 from sequence.components.memory import Memory
 from abc import ABC, abstractmethod
-from typing import Type, TYPE_CHECKING
+import logging
 
-from .utils.enums import Directions
+from ..utils.enums import Directions
 
 if TYPE_CHECKING:
-    from .nodes import QuantumRepeater
-
-import logging
+    from .node import QuantumRepeater
 
 log: logging.Logger = logging.getLogger(__name__)
 

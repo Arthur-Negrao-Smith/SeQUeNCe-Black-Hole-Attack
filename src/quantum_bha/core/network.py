@@ -1,21 +1,19 @@
 from sequence.kernel.timeline import Timeline
 from sequence.topology.topology import BSMNode
-
-from .nodes import QuantumRepeater
-from .utils.enums import Topologies
-from .utils.logger import show_logs
-import quantum_bha.network_data as nd
-
 import networkx as nx
 from typing import Self
 import logging
 
-log: logging.Logger = logging.getLogger(__name__)
-
-from .topologies import TopologyGen
+from .node import QuantumRepeater
 from .network_manager import Network_Manager
-from .attack_manager import Attack_Manager
-from .network_data import Network_Data
+from ..utils.enums import Topologies
+from ..utils.logger import show_logs
+from ..analytics import network_data as nd
+from ..topology.topologies import TopologyGen
+from ..attack.attack_manager import Attack_Manager
+from ..analytics.network_data import Network_Data
+
+log: logging.Logger = logging.getLogger(__name__)
 
 
 class Network:
