@@ -1,5 +1,4 @@
 from concurrent.futures import ProcessPoolExecutor
-
 from collections.abc import Callable
 from typing import Any
 
