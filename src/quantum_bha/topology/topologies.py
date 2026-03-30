@@ -1,13 +1,19 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
-if TYPE_CHECKING:
-    from .network import Network
 
 from sequence.topology.topology import BSMNode, SingleAtomBSM
 from sequence.components.optical_channel import ClassicalChannel, QuantumChannel
+import networkx as nx
+from weakref import ReferenceType, ref
+from itertools import permutations
+from copy import copy
+import logging
 
-from .utils.constants import (
+if TYPE_CHECKING:
+    from ..core.network import Network
+
+from ..utils.constants import (
     BSM_EFFICIENCY,
     QCHANNEL_ATTENUATION,
     QCHANNEL_DISTANCE,
@@ -15,16 +21,10 @@ from .utils.constants import (
     CCHANNEL_DELAY,
     ENTANGLEMENT_SWAPPING_PROB,
 )
-from .utils.enums import Topologies
-from .nodes import QuantumRepeater
-import quantum_bha.utils.raises as rs
-import quantum_bha.network_data as nd
-
-import networkx as nx
-from weakref import ReferenceType, ref
-from itertools import permutations
-from copy import copy
-import logging
+from ..utils.enums import Topologies
+from ..utils import raises as rs
+from ..core.node import QuantumRepeater
+from ..analytics import network_data as nd
 
 log: logging.Logger = logging.getLogger(__name__)
 
