@@ -1,16 +1,17 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from .network import Network
-
-from .utils.enums import Attack_Types
-from .nodes import QuantumRepeater
-import quantum_bha.network_data as nd
-
 from weakref import ref, ReferenceType
 from random import Random
 import logging
+
+from ..analytics import network_data as nd
+from ..core.node import QuantumRepeater
+from ..utils.enums import Attack_Types
+from .factory import AttackFactory
+
+if TYPE_CHECKING:
+    from ..core.network import Network
 
 log: logging.Logger = logging.getLogger(__name__)
 
@@ -155,8 +156,8 @@ class Attack_Manager:
 
             # change the entanglement swapping probability
             tmp_node: QuantumRepeater = self.network.nodes[tmp_id]
-            tmp_node.resource_manager._turn_black_hole(
-                new_swap_prob=swap_prob, targets=None
+            AttackFactory.turn_into_black_hole(
+                node=tmp_node, swap_prob=swap_prob, targets=None
             )
 
             # add to black holes
@@ -236,8 +237,8 @@ class Attack_Manager:
                 targets_counter -= 1
 
             # turn the node in a black hole
-            tmp_bh_node.resource_manager._turn_black_hole(
-                new_swap_prob=swap_prob, targets=tmp_targets
+            AttackFactory.turn_into_black_hole(
+                node=tmp_bh_node, swap_prob=swap_prob, targets=tmp_targets
             )
             self.network.black_holes[tmp_bh_id] = tmp_bh_node
 

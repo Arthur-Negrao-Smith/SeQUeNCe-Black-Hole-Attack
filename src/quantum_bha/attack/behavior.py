@@ -1,19 +1,20 @@
-from abc import ABC, abstractmethod
+from __future__ import annotations
 from typing import TYPE_CHECKING
-from weakref import ReferenceType, ref
 
+from abc import ABC, abstractmethod
+from weakref import ReferenceType, ref
+from sequence.components.memory import Memory
 from sequence.network_management.reservation import (
     EntanglementGenerationA,
     EntanglementSwappingA,
     EntanglementSwappingB,
 )
-from sequence.topology.node import Memory
 
-from .utils.constants import SWAP_DEGRADATION
-from .utils.enums import Directions
+from ..utils.constants import SWAP_DEGRADATION
+from ..utils.enums import Directions
 
 if TYPE_CHECKING:
-    from .nodes import QuantumRepeater
+    from ..core.node import QuantumRepeater
 
 
 class NodeBehavior(ABC):
@@ -111,7 +112,7 @@ class DefaultBehavior(NodeBehavior):
         self.owner.protocols.append(protocol)
 
 
-class BHBehaviour(NodeBehavior):
+class BHBehavior(NodeBehavior):
     """
     Black Hole Repeater behavior.
     """
@@ -120,14 +121,14 @@ class BHBehaviour(NodeBehavior):
         self,
         owner: QuantumRepeater,
         swap_prob: float | int | None = None,
-        black_hole_targets: dict[str, float | int] | None = None,
+        targets: dict[str, float | int] | None = None,
     ) -> None:
         super().__init__(owner)
 
         if swap_prob is not None:
             self.owner.swap_prob = swap_prob
 
-        self._black_hole_targets: dict[str, float | int] | None = black_hole_targets
+        self._black_hole_targets: dict[str, float | int] | None = targets
 
     def create_swapping_protocolA(self) -> None:
         left_memo: Memory = self.owner.resource_manager.get_memory(Directions.LEFT)
@@ -160,3 +161,15 @@ class BHBehaviour(NodeBehavior):
                 )
 
         self.owner.protocols.append(protocol)
+
+
+# TODO: Create a hijacked behavior
+class HijackedBehavior(NodeBehavior):
+    def __init__(
+        self, owner: QuantumRepeater, helpers: tuple[int, ...] | None = None
+    ) -> None:
+        super().__init__(owner)
+        self._helpers = helpers
+
+    def create_swapping_protocolA(self) -> None:
+        return super().create_swapping_protocolA()
