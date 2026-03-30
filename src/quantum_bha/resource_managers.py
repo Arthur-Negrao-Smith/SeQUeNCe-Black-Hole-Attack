@@ -9,7 +9,7 @@ from sequence.entanglement_management.generation import EntanglementGenerationA
 from quantum_bha.nodes import QuantumRepeater
 
 from .utils.constants import SWAP_DEGRADATION
-from .utils.enums import Directions
+from .utils.enums import Directions, Node_Types
 
 from abc import ABC, abstractmethod
 from typing import Type
@@ -167,7 +167,7 @@ class RepeaterManager(BaseManager):
         self, new_swap_prob: float | int, targets: dict[str, float | int] | None
     ) -> None:
         """
-        Turn the node in a black hole to affect pwapping protocol A
+        Turn the node in a black hole to affect swapping protocol A
 
         Args:
             new_swap_prob (float | int): New entanglement probability
@@ -190,6 +190,15 @@ class RepeaterManager(BaseManager):
                 self.owner._black_hole_targets[node_name] = new_swap_prob
             else:
                 self.owner._black_hole_targets[node_name] = prob
+
+    def _turn_hijacked_node(self, helpers: tuple[int, ...] | None) -> None:
+        """
+        Turn the node in a hijacked node to redirect entanglement swapping requests.
+
+        Args:
+            helpers (tuple[int, ...] | None): Nodes to help the redirections. A random helper will receive the request, otherwise the request stops in self node.
+        """
+        self.owner.type = Node_Types.HIJACKED_REPEATER
 
     def _turn_normal_node(self, new_swap_prob: int | float) -> None:
         """

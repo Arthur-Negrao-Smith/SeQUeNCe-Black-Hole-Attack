@@ -1,3 +1,4 @@
+from quantum_bha.utils.enums import Node_Types
 from sequence.kernel.timeline import Timeline
 from sequence.topology.node import Node
 from sequence.components.memory import Memory

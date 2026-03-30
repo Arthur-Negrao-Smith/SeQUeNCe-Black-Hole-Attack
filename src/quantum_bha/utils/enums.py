@@ -32,6 +32,10 @@ class Node_Types(Enum):
     QUANTUM_REPEATER = "quantum-repeater"
     BSM_NODE = "bsm-node"
 
+    # attacks
+    BLACK_HOLE_REPEATER = "black-hole-repeater"
+    HIJACKED_REPEATER = "hijacked-repeater"
+
 
 class Attack_Types(Enum):
     """
