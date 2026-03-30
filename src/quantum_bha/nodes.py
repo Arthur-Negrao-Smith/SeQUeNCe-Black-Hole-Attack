@@ -1,10 +1,10 @@
-from quantum_bha.utils.enums import Node_Types
 from sequence.kernel.timeline import Timeline
 from sequence.topology.node import Node
 from sequence.components.memory import Memory
 from sequence.entanglement_management.entanglement_protocol import EntanglementProtocol
 from sequence.message import Message
 from sequence.components.photon import Photon
+from typing import TYPE_CHECKING
 
 from .utils.constants import (
     MEMORY_FIDELITY,
@@ -14,7 +14,10 @@ from .utils.constants import (
     MEMORY_WAVELENGTH,
 )
 
-from typing import Type
+if TYPE_CHECKING:
+    from .behavior import NodeBehavior, DefaultBehavior
+
+from typing import TYPE_CHECKING, Type
 
 
 class QuantumRepeater(Node):
@@ -67,6 +70,9 @@ class QuantumRepeater(Node):
 
         self.resource_manager: RepeaterManager = RepeaterManager(self)
 
+        # initial node behavior
+        self.behavior: NodeBehavior = DefaultBehavior(self)
+
         # initial entanglement swapping probability
         self._swap_prob: float | int = swap_prob
 
@@ -107,6 +113,35 @@ class QuantumRepeater(Node):
 
     def remove_used_protocol(self) -> None:
         """
-        remove first protocol on the queue
+        Remove first protocol on the queue
         """
         self.protocols.pop(0)
+
+    def set_behavior(self, behavior: NodeBehavior) -> None:
+        """
+        Set the default node's behavior.
+
+        Args:
+            behavior (NodeBehavior): The new behavior.
+        """
+        self.behavior = behavior
+
+    @property
+    def swap_prob(self) -> float:
+        """
+        Get the default entanglement swapping probability
+
+        Returns:
+            float: Return the default entanglement swapping probability
+        """
+        return self._swap_prob
+
+    @swap_prob.setter
+    def swap_prob(self, new_prob: float | int) -> None:
+        """
+        Set the default entanglement swapping probability
+
+        Args:
+            new_prob (float | int): New entanglement swapping probability
+        """
+        self._swap_prob = new_prob
